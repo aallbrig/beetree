@@ -1,0 +1,3 @@
+T("do thing")
+S(T("do thing") T("do other thing"))
+F(C("query thing") T("do thing"))
