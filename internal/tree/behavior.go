@@ -9,29 +9,33 @@ const (
 )
 
 type Behavior interface {
+	Name() string
 	Execute() Status
 }
 
 type Task struct {
-	Name string
-	Run  func() Status
+	Run func() Status
 }
 
 func (t *Task) Execute() Status {
 	return t.Run()
 }
+func (t *Task) Name() string {
+	return "Task"
+}
 
 type Condition struct {
-	Name  string
 	Check func() Status
 }
 
 func (c *Condition) Execute() Status {
 	return c.Check()
 }
+func (c *Condition) Name() string {
+	return "Condition"
+}
 
 type Sequence struct {
-	Name     string
 	Children []Behavior
 }
 
@@ -44,9 +48,11 @@ func (s *Sequence) Execute() Status {
 	}
 	return Success
 }
+func (s *Sequence) Name() string {
+	return "Sequence"
+}
 
 type Fallback struct {
-	Name     string
 	Children []Behavior
 }
 
@@ -59,9 +65,11 @@ func (f *Fallback) Execute() Status {
 	}
 	return Failure
 }
+func (f *Fallback) Name() string {
+	return "Fallback"
+}
 
 type Decorator struct {
-	Name     string
 	Child    Behavior
 	Decorate func(Status) Status
 }
@@ -69,9 +77,11 @@ type Decorator struct {
 func (d *Decorator) Execute() Status {
 	return d.Decorate(d.Child.Execute())
 }
+func (d *Decorator) Name() string {
+	return "Decorator"
+}
 
 type Parallel struct {
-	Name     string
 	Children []Behavior
 	Policy   func([]Status) Status
 }
@@ -82,4 +92,7 @@ func (p *Parallel) Execute() Status {
 		results[i] = child.Execute()
 	}
 	return p.Policy(results)
+}
+func (p *Parallel) Name() string {
+	return "Parallel"
 }
