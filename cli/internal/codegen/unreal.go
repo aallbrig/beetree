@@ -72,8 +72,54 @@ func (g *UnrealGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error
 		IsStub:  false,
 	})
 
-	// Task stubs for actions
+	// Custom node stubs (processed first for richer templates)
 	seen := make(map[string]bool)
+	for _, cn := range spec.CustomNodes {
+		if seen[cn.Name] {
+			continue
+		}
+		seen[cn.Name] = true
+
+		params := make([]ParameterData, len(cn.Parameters))
+		for j, p := range cn.Parameters {
+			params[j] = ParameterData{Name: p.Name, Type: p.Type, Default: p.Default}
+		}
+
+		stubData := struct {
+			SourceFile       string
+			Name             string
+			Description      string
+			Parameters       []ParameterData
+			BlackboardReads  []string
+			BlackboardWrites []string
+		}{data.SourceFile, cn.Name, cn.Description, params, cn.BlackboardReads, cn.BlackboardWrites}
+
+		if cn.Type == "action" {
+			h, err := g.render("custom_task.h.tmpl", stubData)
+			if err != nil {
+				return nil, fmt.Errorf("custom task header %s: %w", cn.Name, err)
+			}
+			cpp, err := g.render("custom_task.cpp.tmpl", stubData)
+			if err != nil {
+				return nil, fmt.Errorf("custom task source %s: %w", cn.Name, err)
+			}
+			files = append(files, GeneratedFile{Path: "BTTask_" + cn.Name + ".h", Content: h, IsStub: true})
+			files = append(files, GeneratedFile{Path: "BTTask_" + cn.Name + ".cpp", Content: cpp, IsStub: true})
+		} else {
+			h, err := g.render("custom_decorator.h.tmpl", stubData)
+			if err != nil {
+				return nil, fmt.Errorf("custom decorator header %s: %w", cn.Name, err)
+			}
+			cpp, err := g.render("custom_decorator.cpp.tmpl", stubData)
+			if err != nil {
+				return nil, fmt.Errorf("custom decorator source %s: %w", cn.Name, err)
+			}
+			files = append(files, GeneratedFile{Path: "BTDecorator_" + cn.Name + ".h", Content: h, IsStub: true})
+			files = append(files, GeneratedFile{Path: "BTDecorator_" + cn.Name + ".cpp", Content: cpp, IsStub: true})
+		}
+	}
+
+	// Task stubs for actions
 	actions := CollectActions(&spec.Tree)
 	for _, a := range actions {
 		className := a.Node

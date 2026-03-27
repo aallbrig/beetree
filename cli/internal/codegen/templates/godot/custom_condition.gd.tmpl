@@ -1,0 +1,16 @@
+{{ stubHeader .SourceFile "#" }}
+extends Node
+class_name {{ .Name }}Condition
+
+## Custom condition node: {{ .Name }}
+## {{ .Description }}
+{{ range .Parameters }}
+@export var {{ .Name | snake }}: {{ .Type | gdscriptType }}{{ if .Default }} = {{ .Default | gdscriptDefault }}{{ end }}
+{{ end }}
+func initialize(blackboard: Node) -> void:
+	# TODO: Initialize condition state
+	pass
+
+func evaluate(blackboard: Node) -> bool:
+	# TODO: Implement condition check
+	return false

@@ -1,0 +1,21 @@
+{{ stubHeader .SourceFile "#" }}
+extends Node
+class_name {{ .Name }}Action
+
+## Custom action node: {{ .Name }}
+## {{ .Description }}
+{{ range .Parameters }}
+@export var {{ .Name | snake }}: {{ .Type | gdscriptType }}{{ if .Default }} = {{ .Default | gdscriptDefault }}{{ end }}
+{{ end }}
+func initialize(blackboard: Node) -> void:
+	# TODO: Initialize action state
+	pass
+
+func tick(blackboard: Node, delta: float) -> int:
+	# TODO: Implement action logic
+	# Return 0 for Success, 1 for Failure, 2 for Running
+	return 0
+
+func terminate(blackboard: Node, status: int) -> void:
+	# TODO: Cleanup when action ends
+	pass

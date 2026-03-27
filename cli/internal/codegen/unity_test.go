@@ -159,3 +159,25 @@ func TestUnityGenerator_ValidCSharp(t *testing.T) {
 		}
 	}
 }
+
+func TestUnityGenerator_CustomNodeStubs(t *testing.T) {
+	spec := sampleSpec()
+	gen := NewUnityGenerator()
+	files, err := gen.Generate(spec)
+	require.NoError(t, err)
+
+	// Custom node "DetectNearbyEnemy" is type "condition" — should get a condition stub
+	// even if not directly referenced in the tree as a unique class
+	var found bool
+	for _, f := range files {
+		if f.Path == "DetectNearbyEnemyCondition.cs" {
+			found = true
+			assert.True(t, f.IsStub)
+			assert.Contains(t, f.Content, "DetectNearbyEnemy")
+			assert.Contains(t, f.Content, "DetectionRadius")
+			assert.Contains(t, f.Content, "BTParameter")
+			assert.Contains(t, f.Content, "Blackboard reads: target")
+		}
+	}
+	assert.True(t, found, "should generate stub for custom node DetectNearbyEnemy")
+}

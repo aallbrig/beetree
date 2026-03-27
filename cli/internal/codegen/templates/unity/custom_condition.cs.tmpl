@@ -1,0 +1,28 @@
+{{ stubHeader .SourceFile "//" }}
+using UnityEngine;
+
+namespace BeeTree
+{
+    /// <summary>
+    /// Custom condition node: {{ .Name }}
+    /// {{ .Description }}
+    /// </summary>
+    public class {{ .Name }}Condition : BTCondition
+    {
+{{ range .Parameters }}        [BTParameter] public {{ .Type | csharpType }} {{ .Name | pascal }}{{ if .Default }} = {{ .Default | csharpDefault }}{{ end }};
+{{ end }}
+{{ if .BlackboardReads }}        // Blackboard reads: {{ range $i, $k := .BlackboardReads }}{{ if $i }}, {{ end }}{{ $k }}{{ end }}
+{{ end }}{{ if .BlackboardWrites }}        // Blackboard writes: {{ range $i, $k := .BlackboardWrites }}{{ if $i }}, {{ end }}{{ $k }}{{ end }}
+{{ end }}
+        public override void OnInitialize(BTBlackboard blackboard)
+        {
+            // TODO: Initialize condition state
+        }
+
+        public override bool Evaluate(BTBlackboard blackboard)
+        {
+            // TODO: Implement condition check
+            return false;
+        }
+    }
+}

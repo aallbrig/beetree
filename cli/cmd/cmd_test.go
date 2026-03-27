@@ -21,6 +21,7 @@ func executeCommand(args ...string) (string, error) {
 	generateDryRun = false
 	generateOverwrite = false
 	generateOutput = ""
+	generateAll = false
 	renderFormat = "ascii"
 
 	err := rootCmd.Execute()
@@ -388,9 +389,45 @@ func TestGenerateCommand_Overwrite(t *testing.T) {
 func TestGenerateCommand_NoArgs(t *testing.T) {
 	_, err := executeCommand("generate", "unity")
 	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "specify a .beetree.yaml file or use --all")
 }
 
 func TestGenerateCommand_InvalidEngine(t *testing.T) {
-	_, err := executeCommand("generate", "invalid")
+	_, err := executeCommand("generate", "invalid", "test.yaml")
 	assert.Error(t, err)
+}
+
+func TestGenerateCommand_AllFlag(t *testing.T) {
+	tmpDir := t.TempDir()
+	treesDir := filepath.Join(tmpDir, "trees")
+	require.NoError(t, os.MkdirAll(treesDir, 0755))
+
+	specContent := `version: "1.0"
+metadata:
+  name: patrol
+tree:
+  type: action
+  name: do_patrol
+  node: DoPatrol
+`
+	require.NoError(t, os.WriteFile(filepath.Join(treesDir, "patrol.beetree.yaml"), []byte(specContent), 0644))
+
+	origDir, _ := os.Getwd()
+	require.NoError(t, os.Chdir(tmpDir))
+	defer os.Chdir(origDir)
+
+	output, err := executeCommand("generate", "unity", "--all", "--dry-run")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Dry run")
+}
+
+func TestGenerateCommand_AllFlagNoFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	require.NoError(t, os.Chdir(tmpDir))
+	defer os.Chdir(origDir)
+
+	_, err := executeCommand("generate", "unity", "--all")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no .beetree.yaml files found")
 }

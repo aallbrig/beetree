@@ -1,0 +1,25 @@
+{{ stubHeader .SourceFile "//" }}
+#pragma once
+
+#include "CoreMinimal.h"
+#include "BehaviorTree/BTDecorator.h"
+#include "BTDecorator_{{ .Name }}.generated.h"
+
+/**
+ * Custom condition decorator: {{ .Name }}
+ * {{ .Description }}
+ */
+UCLASS()
+class UBTDecorator_{{ .Name }} : public UBTDecorator
+{
+    GENERATED_BODY()
+
+public:
+    UBTDecorator_{{ .Name }}();
+{{ range .Parameters }}
+    UPROPERTY(EditAnywhere, Category = "BeeTree")
+    {{ .Type | unrealType }} {{ .Name | pascal }}{{ if .Default }} = {{ .Default }}{{ end }};
+{{ end }}
+protected:
+    virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+};

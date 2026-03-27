@@ -253,3 +253,73 @@ func TestValidate_CustomNodeInvalidType(t *testing.T) {
 	require.NotEmpty(t, errs)
 	assert.Contains(t, errs[0].Error(), "custom node")
 }
+
+func TestValidate_SubtreeDuplicateName(t *testing.T) {
+	spec := &model.TreeSpec{
+		Version:  "1.0",
+		Metadata: model.Metadata{Name: "test"},
+		Tree:     model.NodeSpec{Type: "action", Name: "do_it", Node: "DoIt"},
+		Subtrees: []model.SubtreeRef{
+			{Name: "patrol", File: "subtrees/patrol.beetree.yaml"},
+			{Name: "patrol", File: "subtrees/patrol2.beetree.yaml"},
+		},
+	}
+
+	errs := Validate(spec)
+	require.NotEmpty(t, errs)
+	assert.Contains(t, errs[0].Error(), "duplicate name")
+}
+
+func TestValidate_SubtreeMissingFile(t *testing.T) {
+	spec := &model.TreeSpec{
+		Version:  "1.0",
+		Metadata: model.Metadata{Name: "test"},
+		Tree:     model.NodeSpec{Type: "action", Name: "do_it", Node: "DoIt"},
+		Subtrees: []model.SubtreeRef{
+			{Name: "patrol", File: ""},
+		},
+	}
+
+	errs := Validate(spec)
+	require.NotEmpty(t, errs)
+	assert.Contains(t, errs[0].Error(), "file is required")
+}
+
+func TestValidate_SubtreeRefNotFound(t *testing.T) {
+	spec := &model.TreeSpec{
+		Version:  "1.0",
+		Metadata: model.Metadata{Name: "test"},
+		Tree: model.NodeSpec{
+			Type: "sequence",
+			Name: "root",
+			Children: []model.NodeSpec{
+				{Type: "subtree", Name: "use_patrol", Ref: "nonexistent"},
+			},
+		},
+	}
+
+	errs := Validate(spec)
+	require.NotEmpty(t, errs)
+	assert.Contains(t, errs[0].Error(), "subtree ref")
+	assert.Contains(t, errs[0].Error(), "nonexistent")
+}
+
+func TestValidate_SubtreeRefValid(t *testing.T) {
+	spec := &model.TreeSpec{
+		Version:  "1.0",
+		Metadata: model.Metadata{Name: "test"},
+		Tree: model.NodeSpec{
+			Type: "sequence",
+			Name: "root",
+			Children: []model.NodeSpec{
+				{Type: "subtree", Name: "use_patrol", Ref: "patrol"},
+			},
+		},
+		Subtrees: []model.SubtreeRef{
+			{Name: "patrol", File: "subtrees/patrol.beetree.yaml"},
+		},
+	}
+
+	errs := Validate(spec)
+	assert.Empty(t, errs)
+}

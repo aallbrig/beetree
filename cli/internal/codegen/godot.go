@@ -64,8 +64,47 @@ func (g *GodotGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 		IsStub:  false,
 	})
 
-	// Action stubs
+	// Custom node stubs (processed first for richer templates)
 	seen := make(map[string]bool)
+	for _, cn := range spec.CustomNodes {
+		if seen[cn.Name] {
+			continue
+		}
+		seen[cn.Name] = true
+
+		params := make([]ParameterData, len(cn.Parameters))
+		for j, p := range cn.Parameters {
+			params[j] = ParameterData{Name: p.Name, Type: p.Type, Default: p.Default}
+		}
+
+		stubData := struct {
+			SourceFile       string
+			Name             string
+			Description      string
+			Parameters       []ParameterData
+			BlackboardReads  []string
+			BlackboardWrites []string
+		}{data.SourceFile, cn.Name, cn.Description, params, cn.BlackboardReads, cn.BlackboardWrites}
+
+		tmplName := "custom_action.gd.tmpl"
+		suffix := "_action.gd"
+		if cn.Type == "condition" {
+			tmplName = "custom_condition.gd.tmpl"
+			suffix = "_condition.gd"
+		}
+
+		content, err := g.render(tmplName, stubData)
+		if err != nil {
+			return nil, fmt.Errorf("custom node %s: %w", cn.Name, err)
+		}
+		files = append(files, GeneratedFile{
+			Path:    ToSnakeCase(cn.Name) + suffix,
+			Content: content,
+			IsStub:  true,
+		})
+	}
+
+	// Action stubs
 	actions := CollectActions(&spec.Tree)
 	for _, a := range actions {
 		className := a.Node

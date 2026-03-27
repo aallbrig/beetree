@@ -1,0 +1,18 @@
+{{ stubHeader .SourceFile "//" }}
+#include "BTTask_{{ .Name }}.h"
+
+UBTTask_{{ .Name }}::UBTTask_{{ .Name }}()
+{
+    NodeName = TEXT("{{ .Name }}");
+}
+
+EBTNodeResult::Type UBTTask_{{ .Name }}::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+{
+    // TODO: Implement action logic
+    return EBTNodeResult::Succeeded;
+}
+
+void UBTTask_{{ .Name }}::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+{
+    // TODO: Implement tick logic for running tasks
+}

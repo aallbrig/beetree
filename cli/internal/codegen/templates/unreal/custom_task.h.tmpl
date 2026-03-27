@@ -1,0 +1,27 @@
+{{ stubHeader .SourceFile "//" }}
+#pragma once
+
+#include "CoreMinimal.h"
+#include "BehaviorTree/BTTaskNode.h"
+#include "BTTask_{{ .Name }}.generated.h"
+
+/**
+ * Custom action task: {{ .Name }}
+ * {{ .Description }}
+ */
+UCLASS()
+class UBTTask_{{ .Name }} : public UBTTaskNode
+{
+    GENERATED_BODY()
+
+public:
+    UBTTask_{{ .Name }}();
+{{ range .Parameters }}
+    UPROPERTY(EditAnywhere, Category = "BeeTree")
+    {{ .Type | unrealType }} {{ .Name | pascal }}{{ if .Default }} = {{ .Default }}{{ end }};
+{{ end }}
+    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+protected:
+    virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+};

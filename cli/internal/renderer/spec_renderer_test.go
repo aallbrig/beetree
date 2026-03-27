@@ -129,3 +129,58 @@ func TestRenderMermaid_NestedTree(t *testing.T) {
 	assert.Contains(t, output, "has_target")
 	assert.Contains(t, output, "shoot")
 }
+
+func TestRenderDOT_SimpleTree(t *testing.T) {
+	node := &model.NodeSpec{
+		Type: "selector",
+		Name: "root",
+		Children: []model.NodeSpec{
+			{Type: "action", Name: "attack"},
+			{Type: "action", Name: "patrol"},
+		},
+	}
+
+	output := RenderDOT(node)
+	assert.Contains(t, output, "digraph")
+	assert.Contains(t, output, "root")
+	assert.Contains(t, output, "attack")
+	assert.Contains(t, output, "patrol")
+	assert.Contains(t, output, "->")
+}
+
+func TestRenderDOT_NestedTree(t *testing.T) {
+	node := &model.NodeSpec{
+		Type: "selector",
+		Name: "root",
+		Children: []model.NodeSpec{
+			{
+				Type: "sequence",
+				Name: "engage",
+				Children: []model.NodeSpec{
+					{Type: "condition", Name: "has_target"},
+					{Type: "action", Name: "shoot"},
+				},
+			},
+		},
+	}
+
+	output := RenderDOT(node)
+	assert.Contains(t, output, "digraph")
+	assert.Contains(t, output, "engage")
+	assert.Contains(t, output, "has_target")
+	assert.Contains(t, output, "->")
+}
+
+func TestRenderDOT_Decorator(t *testing.T) {
+	node := &model.NodeSpec{
+		Type:      "decorator",
+		Name:      "repeat_patrol",
+		Decorator: "repeat",
+		Children: []model.NodeSpec{
+			{Type: "action", Name: "patrol"},
+		},
+	}
+
+	output := RenderDOT(node)
+	assert.Contains(t, output, "DEC:repeat")
+}

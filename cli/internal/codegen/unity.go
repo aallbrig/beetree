@@ -23,6 +23,7 @@ func NewUnityGenerator() *UnityGenerator {
 	funcMap := TemplateFuncs()
 	funcMap["csharpType"] = csharpType
 	funcMap["csharpNodeType"] = csharpNodeType
+	funcMap["csharpDefault"] = csharpDefault
 
 	tmpl := template.Must(
 		template.New("unity").Funcs(funcMap).ParseFS(unityTemplates, "templates/unity/*.tmpl"),
@@ -63,8 +64,54 @@ func (g *UnityGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 		IsStub:  false,
 	})
 
-	// Action stubs (unique by class name)
+	// Custom node stubs (processed first — richer templates with parameters)
 	seen := make(map[string]bool)
+	for _, cn := range spec.CustomNodes {
+		if seen[cn.Name] {
+			continue
+		}
+		seen[cn.Name] = true
+
+		params := make([]ParameterData, len(cn.Parameters))
+		for j, p := range cn.Parameters {
+			params[j] = ParameterData{Name: p.Name, Type: p.Type, Default: p.Default}
+		}
+
+		stubData := struct {
+			SourceFile       string
+			Name             string
+			Description      string
+			Parameters       []ParameterData
+			BlackboardReads  []string
+			BlackboardWrites []string
+		}{
+			SourceFile:       data.SourceFile,
+			Name:             cn.Name,
+			Description:      cn.Description,
+			Parameters:       params,
+			BlackboardReads:  cn.BlackboardReads,
+			BlackboardWrites: cn.BlackboardWrites,
+		}
+
+		tmplName := "custom_action.cs.tmpl"
+		suffix := "Action.cs"
+		if cn.Type == "condition" {
+			tmplName = "custom_condition.cs.tmpl"
+			suffix = "Condition.cs"
+		}
+
+		content, err := g.render(tmplName, stubData)
+		if err != nil {
+			return nil, fmt.Errorf("custom node %s: %w", cn.Name, err)
+		}
+		files = append(files, GeneratedFile{
+			Path:    cn.Name + suffix,
+			Content: content,
+			IsStub:  true,
+		})
+	}
+
+	// Action stubs (unique by class name, skip custom nodes already generated)
 	actions := CollectActions(&spec.Tree)
 	for _, a := range actions {
 		className := a.Node
@@ -95,7 +142,7 @@ func (g *UnityGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 		})
 	}
 
-	// Condition stubs (unique by class name)
+	// Condition stubs (unique by class name, skip custom nodes already generated)
 	conditions := CollectConditions(&spec.Tree)
 	for _, c := range conditions {
 		className := c.Node
@@ -153,6 +200,25 @@ func csharpType(btType string) string {
 		return "object"
 	default:
 		return "object"
+	}
+}
+
+func csharpDefault(val interface{}) string {
+	if val == nil {
+		return "default"
+	}
+	switch v := val.(type) {
+	case bool:
+		if v {
+			return "true"
+		}
+		return "false"
+	case string:
+		return fmt.Sprintf("\"%s\"", v)
+	case float64:
+		return fmt.Sprintf("%gf", v)
+	default:
+		return fmt.Sprintf("%v", v)
 	}
 }
 

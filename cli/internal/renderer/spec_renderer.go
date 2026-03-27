@@ -124,3 +124,44 @@ func formatShape(id, label, shape string) string {
 		return fmt.Sprintf("[%s]", label)
 	}
 }
+
+// RenderDOT renders a NodeSpec as a Graphviz DOT digraph.
+func RenderDOT(node *model.NodeSpec) string {
+	var sb strings.Builder
+	sb.WriteString("digraph BehaviorTree {\n")
+	sb.WriteString("    rankdir=TB;\n")
+	sb.WriteString("    node [fontname=\"Arial\"];\n")
+	counter := 0
+	renderDOTNode(&sb, node, "", &counter)
+	sb.WriteString("}\n")
+	return sb.String()
+}
+
+func renderDOTNode(sb *strings.Builder, node *model.NodeSpec, parentID string, counter *int) {
+	*counter++
+	id := fmt.Sprintf("n%d", *counter)
+
+	label := nodeLabel(node)
+	shape := dotShape(node.Type)
+
+	sb.WriteString(fmt.Sprintf("    %s [label=%q, shape=%s];\n", id, label, shape))
+
+	if parentID != "" {
+		sb.WriteString(fmt.Sprintf("    %s -> %s;\n", parentID, id))
+	}
+
+	for i := range node.Children {
+		renderDOTNode(sb, &node.Children[i], id, counter)
+	}
+}
+
+func dotShape(nodeType string) string {
+	switch {
+	case model.IsLeafType(nodeType):
+		return "ellipse"
+	case model.IsCompositeType(nodeType):
+		return "box"
+	default:
+		return "hexagon"
+	}
+}

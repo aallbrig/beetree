@@ -1,0 +1,13 @@
+{{ stubHeader .SourceFile "//" }}
+#include "BTDecorator_{{ .Name }}.h"
+
+UBTDecorator_{{ .Name }}::UBTDecorator_{{ .Name }}()
+{
+    NodeName = TEXT("{{ .Name }}");
+}
+
+bool UBTDecorator_{{ .Name }}::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
+{
+    // TODO: Implement condition check
+    return false;
+}
