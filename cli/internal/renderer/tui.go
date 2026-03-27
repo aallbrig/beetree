@@ -25,17 +25,17 @@ func getBehaviorDescription(b tree.Behavior) string {
 
 	switch behavior := b.(type) {
 	case *tree.Task:
-		return fmt.Sprintf("Task: %s", behavior.Name)
+		return fmt.Sprintf("Task: %s", behavior.Name())
 	case *tree.Condition:
-		return fmt.Sprintf("Condition: %s", behavior.Name)
+		return fmt.Sprintf("Condition: %s", behavior.Name())
 	case *tree.Decorator:
-		return fmt.Sprintf("Decorator: %s", behavior.Name)
+		return fmt.Sprintf("Decorator: %s", behavior.Name())
 	case *tree.Sequence:
-		return fmt.Sprintf("Sequence: %s", behavior.Name)
+		return fmt.Sprintf("Sequence: %s", behavior.Name())
 	case *tree.Fallback:
-		return fmt.Sprintf("Fallback: %s", behavior.Name)
+		return fmt.Sprintf("Fallback: %s", behavior.Name())
 	case *tree.Parallel:
-		return fmt.Sprintf("Parellel: %s", behavior.Name)
+		return fmt.Sprintf("Parallel: %s", behavior.Name())
 	default:
 		return "Unknown Behavior"
 	}
