@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/aallbrig/beetree-cli/internal/registry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,6 +25,12 @@ func executeCommand(args ...string) (string, error) {
 	generateOutput = ""
 	generateAll = false
 	renderFormat = "ascii"
+	browseTag = ""
+	browseSort = "recent"
+	pushPublic = true
+	pushPrivate = false
+	pushTags = nil
+	pushDesc = ""
 
 	err := rootCmd.Execute()
 	return buf.String(), err
@@ -430,4 +438,142 @@ func TestGenerateCommand_AllFlagNoFiles(t *testing.T) {
 	_, err := executeCommand("generate", "unity", "--all")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no .beetree.yaml files found")
+}
+
+// --- Registry command tests ---
+
+func setupTestRegistry(t *testing.T) *registry.LocalClient {
+	t.Helper()
+	tmpDir := t.TempDir()
+	client := registry.NewLocalClient(filepath.Join(tmpDir, "registry"))
+	registryClientOverride = client
+	t.Cleanup(func() { registryClientOverride = nil })
+	return client
+}
+
+func TestRegistryLogin(t *testing.T) {
+	tmpDir := t.TempDir()
+	registryClientOverride = registry.NewLocalClient(filepath.Join(tmpDir, "reg"))
+	t.Cleanup(func() { registryClientOverride = nil })
+	output, err := executeCommand("registry", "login", "test-token")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Logged in")
+}
+
+func TestRegistryLogout(t *testing.T) {
+	tmpDir := t.TempDir()
+	registryClientOverride = registry.NewLocalClient(filepath.Join(tmpDir, "reg"))
+	t.Cleanup(func() { registryClientOverride = nil })
+	output, err := executeCommand("registry", "logout")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Logged out")
+}
+
+func TestRegistryBrowseEmpty(t *testing.T) {
+	setupTestRegistry(t)
+	output, err := executeCommand("registry", "browse")
+	require.NoError(t, err)
+	assert.Contains(t, output, "No trees found")
+}
+
+func TestRegistryBrowseWithTrees(t *testing.T) {
+	client := setupTestRegistry(t)
+	ctx := context.Background()
+	require.NoError(t, client.Login(ctx, "user"))
+	_, err := client.Push(ctx, []byte(`version: "1.0"
+metadata:
+  name: patrol-ai
+tree:
+  type: action
+  name: do_it
+  node: DoIt
+`), registry.PushOptions{Public: true, Description: "A patrol tree", Tags: []string{"ai"}})
+	require.NoError(t, err)
+
+	output, err := executeCommand("registry", "browse")
+	require.NoError(t, err)
+	assert.Contains(t, output, "patrol-ai")
+	assert.Contains(t, output, "1 tree(s) found")
+}
+
+func TestRegistrySearch(t *testing.T) {
+	client := setupTestRegistry(t)
+	ctx := context.Background()
+	require.NoError(t, client.Login(ctx, "user"))
+	_, err := client.Push(ctx, []byte(`version: "1.0"
+metadata:
+  name: enemy-combat
+tree:
+  type: action
+  name: fight
+  node: Fight
+`), registry.PushOptions{Public: true})
+	require.NoError(t, err)
+
+	output, err := executeCommand("registry", "search", "combat")
+	require.NoError(t, err)
+	assert.Contains(t, output, "enemy-combat")
+}
+
+func TestRegistrySearchNoResults(t *testing.T) {
+	setupTestRegistry(t)
+	output, err := executeCommand("registry", "search", "nonexistent")
+	require.NoError(t, err)
+	assert.Contains(t, output, "No trees found")
+}
+
+func TestRegistryPushAndPull(t *testing.T) {
+	client := setupTestRegistry(t)
+	ctx := context.Background()
+	require.NoError(t, client.Login(ctx, "testuser"))
+
+	tmpDir := t.TempDir()
+	specFile := filepath.Join(tmpDir, "test.beetree.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
+metadata:
+  name: pull-test
+tree:
+  type: action
+  name: do_it
+  node: DoIt
+`), 0644))
+
+	// Push
+	output, err := executeCommand("registry", "push", specFile, "--description", "test tree")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Published")
+	assert.Contains(t, output, "pull-test")
+
+	// Pull
+	origDir, _ := os.Getwd()
+	require.NoError(t, os.Chdir(tmpDir))
+	defer os.Chdir(origDir)
+
+	output, err = executeCommand("registry", "pull", "testuser/pull-test")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Pulled")
+
+	// Verify downloaded file
+	pulled, err := os.ReadFile(filepath.Join(tmpDir, "trees", "pull-test.beetree.yaml"))
+	require.NoError(t, err)
+	assert.Contains(t, string(pulled), "pull-test")
+}
+
+func TestRegistryPushNotAuthenticated(t *testing.T) {
+	setupTestRegistry(t)
+
+	tmpDir := t.TempDir()
+	specFile := filepath.Join(tmpDir, "test.beetree.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
+metadata:
+  name: test
+tree:
+  type: action
+  name: do_it
+  node: DoIt
+`), 0644))
+
+	_, err := executeCommand("registry", "push", specFile)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not authenticated")
 }
