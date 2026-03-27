@@ -31,6 +31,7 @@ func executeCommand(args ...string) (string, error) {
 	pushPrivate = false
 	pushTags = nil
 	pushDesc = ""
+	simulateOverrides = nil
 
 	err := rootCmd.Execute()
 	return buf.String(), err
@@ -576,4 +577,139 @@ tree:
 	_, err := executeCommand("registry", "push", specFile)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not authenticated")
+}
+
+// --- Simulate command tests ---
+
+func TestSimulateCommand(t *testing.T) {
+	tmpDir := t.TempDir()
+	specFile := filepath.Join(tmpDir, "test.beetree.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
+metadata:
+  name: test
+tree:
+  type: sequence
+  name: root
+  children:
+    - type: action
+      name: patrol
+      node: Patrol
+`), 0644))
+
+	output, err := executeCommand("simulate", specFile)
+	require.NoError(t, err)
+	assert.Contains(t, output, "root")
+	assert.Contains(t, output, "SUCCESS")
+	assert.Contains(t, output, "patrol")
+}
+
+func TestSimulateCommand_WithOverride(t *testing.T) {
+	tmpDir := t.TempDir()
+	specFile := filepath.Join(tmpDir, "test.beetree.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
+metadata:
+  name: test
+tree:
+  type: sequence
+  name: root
+  children:
+    - type: condition
+      name: check
+      node: Check
+    - type: action
+      name: do_it
+      node: DoIt
+`), 0644))
+
+	output, err := executeCommand("simulate", specFile, "--override", "check=FAILURE")
+	require.NoError(t, err)
+	assert.Contains(t, output, "FAILURE")
+}
+
+// --- Diff command tests ---
+
+func TestDiffCommand_Identical(t *testing.T) {
+	tmpDir := t.TempDir()
+	specA := filepath.Join(tmpDir, "a.beetree.yaml")
+	require.NoError(t, os.WriteFile(specA, []byte(`version: "1.0"
+metadata:
+  name: test
+tree:
+  type: action
+  name: patrol
+  node: Patrol
+`), 0644))
+
+	output, err := executeCommand("diff", specA, specA)
+	require.NoError(t, err)
+	assert.Contains(t, output, "No differences")
+}
+
+func TestDiffCommand_WithChanges(t *testing.T) {
+	tmpDir := t.TempDir()
+	specA := filepath.Join(tmpDir, "a.beetree.yaml")
+	require.NoError(t, os.WriteFile(specA, []byte(`version: "1.0"
+metadata:
+  name: test
+  description: old
+tree:
+  type: action
+  name: patrol
+  node: Patrol
+`), 0644))
+
+	specB := filepath.Join(tmpDir, "b.beetree.yaml")
+	require.NoError(t, os.WriteFile(specB, []byte(`version: "1.0"
+metadata:
+  name: test
+  description: new
+tree:
+  type: action
+  name: patrol
+  node: Patrol
+`), 0644))
+
+	output, err := executeCommand("diff", specA, specB)
+	require.NoError(t, err)
+	assert.Contains(t, output, "metadata.description")
+	assert.Contains(t, output, "old")
+	assert.Contains(t, output, "new")
+}
+
+// --- Doctor command tests ---
+
+func TestDoctorCommand(t *testing.T) {
+	tmpDir := t.TempDir()
+	origDir, _ := os.Getwd()
+	require.NoError(t, os.Chdir(tmpDir))
+	defer os.Chdir(origDir)
+
+	output, err := executeCommand("doctor")
+	// Should warn about missing trees/ but not fail hard
+	assert.Error(t, err) // 1 issue: missing trees/
+	assert.Contains(t, output, "BeeTree Doctor")
+	assert.Contains(t, output, "Go version")
+}
+
+func TestDoctorCommand_WithValidSpec(t *testing.T) {
+	tmpDir := t.TempDir()
+	treesDir := filepath.Join(tmpDir, "trees")
+	require.NoError(t, os.MkdirAll(treesDir, 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(treesDir, "test.beetree.yaml"), []byte(`version: "1.0"
+metadata:
+  name: test
+tree:
+  type: action
+  name: patrol
+  node: Patrol
+`), 0644))
+
+	origDir, _ := os.Getwd()
+	require.NoError(t, os.Chdir(tmpDir))
+	defer os.Chdir(origDir)
+
+	output, err := executeCommand("doctor")
+	require.NoError(t, err)
+	assert.Contains(t, output, "All checks passed")
+	assert.Contains(t, output, "test.beetree.yaml: valid")
 }
