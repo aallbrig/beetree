@@ -1,0 +1,35 @@
+{{ genHeader .SourceFile "#" }}
+extends Node
+class_name {{ .TreeClassName }}TreeDefinition
+
+## Tree definition for {{ .TreeClassName }}.
+## {{ .Description }}
+
+var blackboard: {{ .TreeClassName }}Blackboard
+
+func _ready() -> void:
+	blackboard = {{ .TreeClassName }}Blackboard.new()
+	add_child(blackboard)
+
+func tick(delta: float) -> int:
+	return _tick_node({{ template "gdBuildNode" .RootNode }}, delta)
+
+func _tick_node(node: Dictionary, delta: float) -> int:
+	# Status: 0 = Success, 1 = Failure, 2 = Running
+	match node.type:
+		"sequence":
+			for child in node.children:
+				var result = _tick_node(child, delta)
+				if result != 0:
+					return result
+			return 0
+		"selector":
+			for child in node.children:
+				var result = _tick_node(child, delta)
+				if result != 1:
+					return result
+			return 1
+		_:
+			return node.tick.call(blackboard, delta)
+
+{{ define "gdBuildNode" }}{"type": "{{ .Type }}", "name": "{{ .Name }}"{{ if .Children }}, "children": [{{ range $i, $child := .Children }}{{ if $i }}, {{ end }}{{ template "gdBuildNode" $child }}{{ end }}]{{ else }}, "tick": Callable(self, "_tick_{{ .Name }}"){{ end }}}{{ end }}

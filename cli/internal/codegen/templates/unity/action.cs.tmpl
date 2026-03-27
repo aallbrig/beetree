@@ -1,0 +1,28 @@
+{{ stubHeader .SourceFile "//" }}
+using UnityEngine;
+
+namespace BeeTree
+{
+    /// <summary>
+    /// Action node: {{ .ClassName }}
+    /// </summary>
+    public class {{ .ClassName }}Action : BTAction
+    {
+        public override void OnInitialize(BTBlackboard blackboard)
+        {
+            // TODO: Initialize action state
+        }
+
+        public override BTStatus OnTick(BTBlackboard blackboard, float deltaTime)
+        {
+            // TODO: Implement action logic
+            // Return BTStatus.Success, BTStatus.Failure, or BTStatus.Running
+            return BTStatus.Success;
+        }
+
+        public override void OnTerminate(BTBlackboard blackboard, BTStatus status)
+        {
+            // TODO: Cleanup when action ends
+        }
+    }
+}

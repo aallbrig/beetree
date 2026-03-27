@@ -1,0 +1,19 @@
+{{ genHeader .SourceFile "//" }}
+#pragma once
+
+#include "CoreMinimal.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "{{ .TreeClassName }}TreeDefinition.generated.h"
+
+/**
+ * Tree definition for {{ .TreeClassName }}.
+ * {{ .Description }}
+ */
+UCLASS()
+class U{{ .TreeClassName }}TreeDefinition : public UBehaviorTree
+{
+    GENERATED_BODY()
+
+public:
+    U{{ .TreeClassName }}TreeDefinition();
+};

@@ -1,0 +1,23 @@
+{{ stubHeader .SourceFile "//" }}
+using UnityEngine;
+
+namespace BeeTree
+{
+    /// <summary>
+    /// Condition node: {{ .ClassName }}
+    /// </summary>
+    public class {{ .ClassName }}Condition : BTCondition
+    {
+        public override void OnInitialize(BTBlackboard blackboard)
+        {
+            // TODO: Initialize condition state
+        }
+
+        public override bool Evaluate(BTBlackboard blackboard)
+        {
+            // TODO: Implement condition check
+            // Return true for Success, false for Failure
+            return false;
+        }
+    }
+}

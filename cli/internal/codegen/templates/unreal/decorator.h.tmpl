@@ -1,0 +1,21 @@
+{{ stubHeader .SourceFile "//" }}
+#pragma once
+
+#include "CoreMinimal.h"
+#include "BehaviorTree/BTDecorator.h"
+#include "BTDecorator_{{ .ClassName }}.generated.h"
+
+/**
+ * Condition decorator: {{ .ClassName }}
+ */
+UCLASS()
+class UBTDecorator_{{ .ClassName }} : public UBTDecorator
+{
+    GENERATED_BODY()
+
+public:
+    UBTDecorator_{{ .ClassName }}();
+
+protected:
+    virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+};

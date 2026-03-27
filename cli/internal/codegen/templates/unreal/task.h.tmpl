@@ -1,0 +1,23 @@
+{{ stubHeader .SourceFile "//" }}
+#pragma once
+
+#include "CoreMinimal.h"
+#include "BehaviorTree/BTTaskNode.h"
+#include "BTTask_{{ .ClassName }}.generated.h"
+
+/**
+ * Action task: {{ .ClassName }}
+ */
+UCLASS()
+class UBTTask_{{ .ClassName }} : public UBTTaskNode
+{
+    GENERATED_BODY()
+
+public:
+    UBTTask_{{ .ClassName }}();
+
+    virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+
+protected:
+    virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+};

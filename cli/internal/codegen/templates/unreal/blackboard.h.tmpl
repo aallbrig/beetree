@@ -1,0 +1,22 @@
+{{ genHeader .SourceFile "//" }}
+#pragma once
+
+#include "CoreMinimal.h"
+#include "BehaviorTree/BlackboardData.h"
+#include "{{ .TreeClassName }}Blackboard.generated.h"
+
+/**
+ * Blackboard for {{ .TreeClassName }} behavior tree.
+ * {{ .Description }}
+ */
+UCLASS()
+class U{{ .TreeClassName }}Blackboard : public UBlackboardData
+{
+    GENERATED_BODY()
+
+public:
+{{ range .Blackboard }}    /** {{ .Description }} */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BeeTree")
+    {{ .Type | unrealType }} {{ .Name | pascal }};
+{{ end }}
+};

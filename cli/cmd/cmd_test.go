@@ -16,6 +16,13 @@ func executeCommand(args ...string) (string, error) {
 	rootCmd.SetOut(buf)
 	rootCmd.SetErr(buf)
 	rootCmd.SetArgs(args)
+
+	// Reset flags to defaults between test runs
+	generateDryRun = false
+	generateOverwrite = false
+	generateOutput = ""
+	renderFormat = "ascii"
+
 	err := rootCmd.Execute()
 	return buf.String(), err
 }
@@ -240,4 +247,150 @@ tree:
 	require.NoError(t, err)
 	assert.Contains(t, output, "graph TD")
 	assert.Contains(t, output, "-->")
+}
+
+var generateTestYAML = `
+version: "1.0"
+metadata:
+  name: "test-tree"
+  description: "Test behavior tree"
+blackboard:
+  - name: "target"
+    type: "object"
+  - name: "health"
+    type: "float"
+    default: 100.0
+tree:
+  type: "selector"
+  name: "root"
+  children:
+    - type: "condition"
+      name: "has_target"
+      node: "HasTarget"
+    - type: "action"
+      name: "attack"
+      node: "Attack"
+    - type: "action"
+      name: "patrol"
+      node: "Patrol"
+`
+
+func TestGenerateCommand_Unity(t *testing.T) {
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "test.beetree.yaml")
+	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	outDir := filepath.Join(dir, "output")
+
+	output, err := executeCommand("generate", "unity", specFile, "--output", outDir)
+	require.NoError(t, err)
+	assert.Contains(t, output, "Generated")
+
+	// Verify files were written
+	assert.FileExists(t, filepath.Join(outDir, "TestTreeBlackboard.cs"))
+	assert.FileExists(t, filepath.Join(outDir, "TestTreeTreeDefinition.cs"))
+	assert.FileExists(t, filepath.Join(outDir, "AttackAction.cs"))
+	assert.FileExists(t, filepath.Join(outDir, "PatrolAction.cs"))
+	assert.FileExists(t, filepath.Join(outDir, "HasTargetCondition.cs"))
+}
+
+func TestGenerateCommand_Unreal(t *testing.T) {
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "test.beetree.yaml")
+	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	outDir := filepath.Join(dir, "output")
+
+	output, err := executeCommand("generate", "unreal", specFile, "--output", outDir)
+	require.NoError(t, err)
+	assert.Contains(t, output, "Generated")
+
+	assert.FileExists(t, filepath.Join(outDir, "TestTreeBlackboard.h"))
+	assert.FileExists(t, filepath.Join(outDir, "BTTask_Attack.h"))
+	assert.FileExists(t, filepath.Join(outDir, "BTTask_Attack.cpp"))
+}
+
+func TestGenerateCommand_Godot(t *testing.T) {
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "test.beetree.yaml")
+	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	outDir := filepath.Join(dir, "output")
+
+	output, err := executeCommand("generate", "godot", specFile, "--output", outDir)
+	require.NoError(t, err)
+	assert.Contains(t, output, "Generated")
+
+	assert.FileExists(t, filepath.Join(outDir, "test_tree_blackboard.gd"))
+	assert.FileExists(t, filepath.Join(outDir, "attack_action.gd"))
+	assert.FileExists(t, filepath.Join(outDir, "patrol_action.gd"))
+}
+
+func TestGenerateCommand_DryRun(t *testing.T) {
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "test.beetree.yaml")
+	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	outDir := filepath.Join(dir, "output")
+
+	output, err := executeCommand("generate", "unity", specFile, "--output", outDir, "--dry-run")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Dry run")
+
+	// Output dir should NOT be created
+	_, statErr := os.Stat(outDir)
+	assert.True(t, os.IsNotExist(statErr), "dry-run should not create files")
+}
+
+func TestGenerateCommand_SkipExistingStubs(t *testing.T) {
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "test.beetree.yaml")
+	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	outDir := filepath.Join(dir, "output")
+
+	// First generate
+	_, err := executeCommand("generate", "unity", specFile, "--output", outDir)
+	require.NoError(t, err)
+
+	// Modify a stub
+	stubPath := filepath.Join(outDir, "AttackAction.cs")
+	os.WriteFile(stubPath, []byte("// my custom code"), 0644)
+
+	// Second generate — should skip existing stubs
+	output, err := executeCommand("generate", "unity", specFile, "--output", outDir)
+	require.NoError(t, err)
+	assert.Contains(t, output, "skipped")
+
+	// Stub should still have custom content
+	content, _ := os.ReadFile(stubPath)
+	assert.Contains(t, string(content), "my custom code")
+}
+
+func TestGenerateCommand_Overwrite(t *testing.T) {
+	dir := t.TempDir()
+	specFile := filepath.Join(dir, "test.beetree.yaml")
+	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	outDir := filepath.Join(dir, "output")
+
+	// First generate
+	_, err := executeCommand("generate", "unity", specFile, "--output", outDir)
+	require.NoError(t, err)
+
+	// Modify a stub
+	stubPath := filepath.Join(outDir, "AttackAction.cs")
+	os.WriteFile(stubPath, []byte("// my custom code"), 0644)
+
+	// Second generate with --overwrite
+	_, err = executeCommand("generate", "unity", specFile, "--output", outDir, "--overwrite")
+	require.NoError(t, err)
+
+	// Stub should be regenerated
+	content, _ := os.ReadFile(stubPath)
+	assert.Contains(t, string(content), "EDIT THIS FILE")
+}
+
+func TestGenerateCommand_NoArgs(t *testing.T) {
+	_, err := executeCommand("generate", "unity")
+	assert.Error(t, err)
+}
+
+func TestGenerateCommand_InvalidEngine(t *testing.T) {
+	_, err := executeCommand("generate", "invalid")
+	assert.Error(t, err)
 }

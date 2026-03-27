@@ -1,0 +1,18 @@
+{{ genHeader .SourceFile "#" }}
+extends Node
+class_name {{ .TreeClassName }}Blackboard
+
+## Blackboard for {{ .TreeClassName }} behavior tree.
+## {{ .Description }}
+
+{{ range .Blackboard }}## {{ .Description }}
+var {{ .Name }}: {{ .Type | gdscriptType }}{{ if .Default }} = {{ .Default | gdscriptDefault }}{{ end }}
+{{ end }}
+func get_var(key: String) -> Variant:
+	return get(key)
+
+func set_var(key: String, value: Variant) -> void:
+	set(key, value)
+
+func has_var(key: String) -> bool:
+	return key in get_property_list().map(func(p): return p.name)

@@ -1,0 +1,14 @@
+{{ stubHeader .SourceFile "#" }}
+extends Node
+class_name {{ .ClassName }}Condition
+
+## Condition node: {{ .ClassName }}
+
+func initialize(blackboard: Node) -> void:
+	# TODO: Initialize condition state
+	pass
+
+func evaluate(blackboard: Node) -> bool:
+	# TODO: Implement condition check
+	# Return true for Success, false for Failure
+	return false

@@ -1,0 +1,25 @@
+{{ genHeader .SourceFile "//" }}
+using System.Collections.Generic;
+
+namespace BeeTree
+{
+    /// <summary>
+    /// Blackboard for {{ .TreeClassName }} behavior tree.
+    /// {{ .Description }}
+    /// </summary>
+    public class {{ .TreeClassName }}Blackboard
+    {
+        private readonly Dictionary<string, object> _data = new Dictionary<string, object>();
+{{ range .Blackboard }}
+        /// <summary>{{ .Description }}</summary>
+        public {{ .Type | csharpType }} {{ .Name | pascal }}
+        {
+            get => _data.ContainsKey("{{ .Name }}") ? ({{ .Type | csharpType }})_data["{{ .Name }}"] : default;
+            set => _data["{{ .Name }}"] = value;
+        }
+{{ end }}
+        public T Get<T>(string key) => _data.ContainsKey(key) ? (T)_data[key] : default;
+        public void Set<T>(string key, T value) => _data[key] = value;
+        public bool Has(string key) => _data.ContainsKey(key);
+    }
+}

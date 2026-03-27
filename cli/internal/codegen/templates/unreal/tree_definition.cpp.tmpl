@@ -1,0 +1,10 @@
+{{ genHeader .SourceFile "//" }}
+#include "{{ .TreeClassName }}TreeDefinition.h"
+#include "BehaviorTree/BTCompositeNode.h"
+
+U{{ .TreeClassName }}TreeDefinition::U{{ .TreeClassName }}TreeDefinition()
+{
+    // Tree structure: {{ .TreeClassName }}
+    // Root: {{ .RootNode.Type }} ({{ .RootNode.Name }})
+    // Auto-generated tree topology — see .beetree.yaml for structure
+}

@@ -1,0 +1,22 @@
+{{ genHeader .SourceFile "//" }}
+using System.Collections.Generic;
+
+namespace BeeTree
+{
+    /// <summary>
+    /// Tree definition for {{ .TreeClassName }}.
+    /// {{ .Description }}
+    /// </summary>
+    public static class {{ .TreeClassName }}TreeDefinition
+    {
+        public static BTNode Build({{ .TreeClassName }}Blackboard blackboard)
+        {
+            return {{ template "buildNode" .RootNode }};
+        }
+    }
+}
+{{ define "buildNode" }}new {{ .Type | csharpNodeType }}("{{ .Name }}"{{ if .Children }}, new BTNode[]
+            {
+                {{ range $i, $child := .Children }}{{ if $i }},
+                {{ end }}{{ template "buildNode" $child }}{{ end }}
+            }{{ end }}){{ end }}
