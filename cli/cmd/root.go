@@ -17,11 +17,11 @@ Define behavior trees in an engine-agnostic .beetree.yaml specification,
 then generate native code for Unity (C#), Unreal (C++), and Godot (GDScript).
 
 Quick start:
-  beetree init              Initialize a new project
-  beetree new <name>        Create a behavior tree
-  beetree builder [file]    Launch the interactive TUI editor
-  beetree validate <file>   Validate a tree spec
-  beetree generate <engine> <file>  Generate engine code`,
+  beetree init                    Initialize a new project
+  beetree new <name>              Create a behavior tree
+  beetree builder [file]          Launch the interactive TUI editor
+  beetree validate <file>         Validate a tree spec
+  beetree generate unity <file>   Generate engine code (unity/unreal/godot)`,
 }
 
 func Execute() {
