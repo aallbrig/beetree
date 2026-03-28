@@ -40,6 +40,7 @@ func executeCommand(args ...string) (string, error) {
 	nodeEditNode = ""
 	nodeEditDecorator = ""
 	nodeFilter = ""
+	renderFormat = "ascii"
 
 	err := rootCmd.Execute()
 	return buf.String(), err
@@ -236,7 +237,7 @@ tree:
 `
 	os.WriteFile(specFile, []byte(yamlContent), 0644)
 
-	output, err := executeCommand("render", "ascii", specFile)
+	output, err := executeCommand("render", specFile)
 	require.NoError(t, err)
 	assert.Contains(t, output, "SEL")
 	assert.Contains(t, output, "root")
@@ -261,7 +262,7 @@ tree:
 `
 	os.WriteFile(specFile, []byte(yamlContent), 0644)
 
-	output, err := executeCommand("render", "mermaid", specFile)
+	output, err := executeCommand("render", "--format", "mermaid", specFile)
 	require.NoError(t, err)
 	assert.Contains(t, output, "graph TD")
 	assert.Contains(t, output, "-->")
