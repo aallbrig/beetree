@@ -407,8 +407,9 @@ func TestGenerateCommand_NoArgs(t *testing.T) {
 }
 
 func TestGenerateCommand_InvalidEngine(t *testing.T) {
-	_, err := executeCommand("generate", "invalid", "test.yaml")
-	assert.Error(t, err)
+	output, _ := executeCommand("generate", "invalid", "test.yaml")
+	// Cobra treats unknown subcommands as an error and shows usage
+	assert.Contains(t, output, "Usage")
 }
 
 func TestGenerateCommand_AllFlag(t *testing.T) {

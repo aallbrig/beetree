@@ -18,7 +18,7 @@ var (
 )
 
 var generateCmd = &cobra.Command{
-	Use:   "generate <engine> <file>",
+	Use:   "generate",
 	Short: "Generate engine-specific code from a .beetree.yaml spec",
 	Long: `Generate native game engine code from a .beetree.yaml specification.
 
@@ -31,45 +31,42 @@ First run generates everything including stubs. Subsequent runs regenerate
 tree definitions but skip existing stubs unless --overwrite is passed.
 
 Use --all to generate for all .beetree.yaml files found in the trees/ directory.`,
-	Args: cobra.RangeArgs(1, 2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		engineName := args[0]
-
-		gen, err := getGenerator(engineName)
-		if err != nil {
-			return err
-		}
-
-		if generateAll {
-			return generateAllSpecs(cmd, gen, engineName)
-		}
-
-		if len(args) < 2 {
-			return fmt.Errorf("specify a .beetree.yaml file or use --all")
-		}
-
-		return generateSingleSpec(cmd, gen, args[1], engineName)
-	},
 }
 
-func getGenerator(engine string) (codegen.Generator, error) {
-	switch engine {
-	case "unity":
-		return codegen.NewUnityGenerator(), nil
-	case "unreal":
-		return codegen.NewUnrealGenerator(), nil
-	case "godot":
-		return codegen.NewGodotGenerator(), nil
-	default:
-		return nil, fmt.Errorf("unknown engine %q — supported: unity, unreal, godot", engine)
+func addGenerateFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVar(&generateOutput, "output", "", "Output directory for generated code")
+	cmd.Flags().BoolVar(&generateDryRun, "dry-run", false, "Preview what would be generated")
+	cmd.Flags().BoolVar(&generateOverwrite, "overwrite", false, "Overwrite existing stub files")
+	cmd.Flags().BoolVar(&generateAll, "all", false, "Generate for all .beetree.yaml files in trees/")
+}
+
+func makeEngineCmd(engineName, engineDesc string, newGen func() codegen.Generator) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   fmt.Sprintf("%s <file>", engineName),
+		Short: fmt.Sprintf("Generate %s code from a .beetree.yaml spec", engineDesc),
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			gen := newGen()
+
+			if generateAll {
+				return generateAllSpecs(cmd, gen, engineName)
+			}
+
+			if len(args) < 1 {
+				return fmt.Errorf("specify a .beetree.yaml file or use --all")
+			}
+
+			return generateSingleSpec(cmd, gen, args[0], engineName)
+		},
 	}
+	addGenerateFlags(cmd)
+	return cmd
 }
 
 func init() {
-	generateCmd.Flags().StringVar(&generateOutput, "output", "", "Output directory for generated code")
-	generateCmd.Flags().BoolVar(&generateDryRun, "dry-run", false, "Preview what would be generated")
-	generateCmd.Flags().BoolVar(&generateOverwrite, "overwrite", false, "Overwrite existing stub files")
-	generateCmd.Flags().BoolVar(&generateAll, "all", false, "Generate for all .beetree.yaml files in trees/")
+	generateCmd.AddCommand(makeEngineCmd("unity", "Unity C#", func() codegen.Generator { return codegen.NewUnityGenerator() }))
+	generateCmd.AddCommand(makeEngineCmd("unreal", "Unreal C++", func() codegen.Generator { return codegen.NewUnrealGenerator() }))
+	generateCmd.AddCommand(makeEngineCmd("godot", "Godot GDScript", func() codegen.Generator { return codegen.NewGodotGenerator() }))
 	rootCmd.AddCommand(generateCmd)
 }
 
