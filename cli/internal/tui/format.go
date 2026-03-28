@@ -4,9 +4,10 @@ import (
 	"strings"
 
 	"github.com/aallbrig/beetree-cli/internal/model"
+	"github.com/aallbrig/beetree-cli/internal/renderer"
 )
 
-// nodeTypeTags maps node type strings to short display tags.
+// nodeTypeTags maps node type strings to short display tags (legacy format).
 var nodeTypeTags = map[string]string{
 	"selector":         "[SEL]",
 	"sequence":         "[SEQ]",
@@ -29,11 +30,18 @@ func NodeTypeTag(nodeType string) string {
 	return "[???]"
 }
 
-// NodeLabel returns a display label for a tree node, including type tag, name,
-// and optional suffixes for class references, decorators, or subtree refs.
-func NodeLabel(node *model.NodeSpec) string {
+// NodeLabel returns a display label for a tree node using Unicode sigils.
+// Falls back to bracketed tags when notation is empty.
+func NodeLabel(node *model.NodeSpec, notation ...model.NotationConfig) string {
 	var b strings.Builder
-	b.WriteString(NodeTypeTag(node.Type))
+
+	// Use sigil-based label
+	var nc model.NotationConfig
+	if len(notation) > 0 {
+		nc = notation[0]
+	}
+	sigil := renderer.ResolveSigil(node, nc)
+	b.WriteString(sigil)
 	b.WriteString(" ")
 	b.WriteString(node.Name)
 
@@ -41,10 +49,6 @@ func NodeLabel(node *model.NodeSpec) string {
 		b.WriteString(" (")
 		b.WriteString(node.Node)
 		b.WriteString(")")
-	}
-	if node.Decorator != "" {
-		b.WriteString(" ♦")
-		b.WriteString(node.Decorator)
 	}
 	if node.Ref != "" {
 		b.WriteString(" →")

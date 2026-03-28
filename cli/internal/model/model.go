@@ -26,12 +26,19 @@ func (s Status) String() string {
 
 // TreeSpec is the top-level structure for a .beetree.yaml specification.
 type TreeSpec struct {
-	Version     string         `yaml:"version" json:"version"`
-	Metadata    Metadata       `yaml:"metadata" json:"metadata"`
+	Version     string          `yaml:"version" json:"version"`
+	Metadata    Metadata        `yaml:"metadata" json:"metadata"`
 	Blackboard  []BlackboardVar `yaml:"blackboard,omitempty" json:"blackboard,omitempty"`
 	CustomNodes []CustomNodeDef `yaml:"custom_nodes,omitempty" json:"custom_nodes,omitempty"`
-	Tree        NodeSpec       `yaml:"tree" json:"tree"`
-	Subtrees    []SubtreeRef   `yaml:"subtrees,omitempty" json:"subtrees,omitempty"`
+	Notation    NotationConfig  `yaml:"notation,omitempty" json:"notation,omitempty"`
+	Tree        NodeSpec        `yaml:"tree" json:"tree"`
+	Subtrees    []SubtreeRef    `yaml:"subtrees,omitempty" json:"subtrees,omitempty"`
+}
+
+// NotationConfig allows users to override sigils for node types and specific node classes.
+type NotationConfig struct {
+	TypeSigils map[string]string `yaml:"type_sigils,omitempty" json:"type_sigils,omitempty"`
+	NodeSigils map[string]string `yaml:"node_sigils,omitempty" json:"node_sigils,omitempty"`
 }
 
 // Metadata holds descriptive information about a behavior tree spec.
@@ -69,6 +76,7 @@ type NodeSpec struct {
 type CustomNodeDef struct {
 	Name             string         `yaml:"name" json:"name"`
 	Type             string         `yaml:"type" json:"type"`
+	Sigil            string         `yaml:"sigil,omitempty" json:"sigil,omitempty"`
 	Description      string         `yaml:"description,omitempty" json:"description,omitempty"`
 	Category         string         `yaml:"category,omitempty" json:"category,omitempty"`
 	Parameters       []ParameterDef `yaml:"parameters,omitempty" json:"parameters,omitempty"`

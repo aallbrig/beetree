@@ -10,11 +10,14 @@ var renderFormat string
 
 var renderCmd = &cobra.Command{
 	Use:   "render <file>",
-	Short: "Render a .beetree.yaml spec as ASCII, Mermaid, or DOT diagram",
+	Short: "Render a .beetree.yaml spec as a tree diagram",
 	Long: `Render a .beetree.yaml specification file as a visual tree diagram.
 
 Supported formats:
-  ascii   - Indented ASCII tree (default)
+  ascii   - Indented ASCII tree with [TAG] labels (default)
+  sigil   - Unicode sigil tree (→ ? ! ¿ ◇ ⇒)
+  compact - Sigil tree with indentation only (ideal for diffing)
+  oneline - Single-line S-expression (for commit messages, search)
   mermaid - Mermaid flowchart syntax
   dot     - Graphviz DOT digraph`,
 	Args: cobra.ExactArgs(1),
@@ -26,6 +29,12 @@ Supported formats:
 
 		var output string
 		switch renderFormat {
+		case "sigil":
+			output = renderer.RenderSigil(&tree.Tree, tree.Notation)
+		case "compact":
+			output = renderer.RenderCompact(&tree.Tree, tree.Notation)
+		case "oneline":
+			output = renderer.RenderOneline(&tree.Tree, tree.Notation)
 		case "mermaid":
 			output = renderer.RenderMermaid(&tree.Tree)
 		case "dot":
@@ -40,6 +49,6 @@ Supported formats:
 }
 
 func init() {
-	renderCmd.Flags().StringVar(&renderFormat, "format", "ascii", "Output format: ascii, mermaid, dot")
+	renderCmd.Flags().StringVar(&renderFormat, "format", "ascii", "Output format: ascii, sigil, compact, oneline, mermaid, dot")
 	rootCmd.AddCommand(renderCmd)
 }

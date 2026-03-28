@@ -552,7 +552,7 @@ func (ev *EditorView) nodeColor(name string) tcell.Color {
 
 // nodeDisplayText returns the label for a node, appending status during simulation.
 func (ev *EditorView) nodeDisplayText(node *model.NodeSpec) string {
-	label := NodeLabel(node)
+	label := NodeLabel(node, ev.Model.Spec.Notation)
 	if ev.Model.Mode == ModeSimulate {
 		if status, found := ev.Model.SimNodeStatus(node.Name); found {
 			switch status {

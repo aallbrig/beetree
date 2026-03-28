@@ -43,32 +43,42 @@ func TestNodeLabel(t *testing.T) {
 		{
 			name:     "selector node",
 			node:     model.NodeSpec{Type: "selector", Name: "root"},
-			expected: "[SEL] root",
+			expected: "? root",
 		},
 		{
 			name:     "action with class ref",
 			node:     model.NodeSpec{Type: "action", Name: "attack", Node: "PlayerAttack"},
-			expected: "[ACT] attack (PlayerAttack)",
+			expected: "! attack (PlayerAttack)",
 		},
 		{
 			name:     "condition with class ref",
 			node:     model.NodeSpec{Type: "condition", Name: "has_target", Node: "HasTarget"},
-			expected: "[CND] has_target (HasTarget)",
+			expected: "¿ has_target (HasTarget)",
 		},
 		{
-			name:     "decorated node",
-			node:     model.NodeSpec{Type: "action", Name: "retry_attack", Decorator: "retry"},
-			expected: "[ACT] retry_attack ♦retry",
+			name:     "decorated node shows decorator sigil",
+			node:     model.NodeSpec{Type: "decorator", Name: "retry_attack", Decorator: "retry"},
+			expected: "◇↻ retry_attack",
 		},
 		{
 			name:     "subtree ref",
 			node:     model.NodeSpec{Type: "subtree", Name: "patrol_sub", Ref: "patrol-tree"},
-			expected: "[SUB] patrol_sub →patrol-tree",
+			expected: "↗ patrol_sub →patrol-tree",
 		},
 		{
 			name:     "action no extras",
 			node:     model.NodeSpec{Type: "action", Name: "idle"},
-			expected: "[ACT] idle",
+			expected: "! idle",
+		},
+		{
+			name:     "sequence node",
+			node:     model.NodeSpec{Type: "sequence", Name: "patrol_cycle"},
+			expected: "→ patrol_cycle",
+		},
+		{
+			name:     "parallel node",
+			node:     model.NodeSpec{Type: "parallel", Name: "engage"},
+			expected: "⇒ engage",
 		},
 	}
 
