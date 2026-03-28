@@ -4,7 +4,7 @@ An introspect checkpoint is a deep usability analysis of the current state of th
 
 ## Steps
 
-1. **Read current state**: Read all key source files, the existing `docs/AUDIENCES.md`, `docs/FEATURES.md`, and the most recent checkpoint in `docs/introspect/`.
+1. **Read current state**: Read all key source files, the existing `docs/AUDIENCES.md`, `docs/FEATURES.md`, and the most recent checkpoint in `docs/introspect/`. Run `make install && treemand beetree` to capture the current CLI command tree and include the output in the checkpoint.
 
 2. **Evaluate from each audience perspective** (beginner / intermediate / expert game dev):
    - First-run experience: what happens when someone installs and runs `beetree`?
@@ -21,6 +21,7 @@ An introspect checkpoint is a deep usability analysis of the current state of th
    - Update `docs/FEATURES.md` with current feature status and gaps
    - Create `docs/introspect/$(date -u +%Y%m%d_%H%M%S)_UTC_CHECKPOINT.md` with:
      - Current state summary (version, components, test coverage)
+     - CLI command tree (output of `treemand beetree` in a code block)
      - Alignment score per audience (1-10)
      - Killer feature health assessment
      - Gap analysis (critical / major / minor)
