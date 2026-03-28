@@ -105,6 +105,42 @@ func MoveNode(root *model.NodeSpec, nodeName, newParentName string) error {
 	return nil
 }
 
+// UpdateNode applies field changes to a node identified by name.
+// If newName is non-empty and different, the node is renamed (checking for duplicates).
+func UpdateNode(root *model.NodeSpec, name string, updates NodeUpdates) error {
+	node := FindNode(root, name)
+	if node == nil {
+		return fmt.Errorf("node %q not found", name)
+	}
+
+	if updates.Name != "" && updates.Name != node.Name {
+		names := CollectNames(root)
+		if names[updates.Name] {
+			return fmt.Errorf("node %q already exists in tree", updates.Name)
+		}
+		node.Name = updates.Name
+	}
+	if updates.Type != nil {
+		node.Type = *updates.Type
+	}
+	if updates.NodeClass != nil {
+		node.Node = *updates.NodeClass
+	}
+	if updates.Decorator != nil {
+		node.Decorator = *updates.Decorator
+	}
+	return nil
+}
+
+// NodeUpdates holds optional field changes for UpdateNode.
+// Pointer fields are only applied when non-nil.
+type NodeUpdates struct {
+	Name      string  // new name (empty = keep current)
+	Type      *string // new type
+	NodeClass *string // new node class
+	Decorator *string // new decorator
+}
+
 // SaveSpec writes a TreeSpec back to a YAML file.
 func SaveSpec(s *model.TreeSpec, path string) error {
 	data, err := yaml.Marshal(s)

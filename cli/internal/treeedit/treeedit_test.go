@@ -211,3 +211,78 @@ func TestCollectNames(t *testing.T) {
 	assert.Contains(t, names, "patrol")
 	assert.Len(t, names, 5)
 }
+
+// --- UpdateNode ---
+
+func TestUpdateNode_Rename(t *testing.T) {
+	s := sampleSpec()
+	err := UpdateNode(&s.Tree, "patrol", NodeUpdates{Name: "guard"})
+	require.NoError(t, err)
+
+	assert.Nil(t, FindNode(&s.Tree, "patrol"))
+	node := FindNode(&s.Tree, "guard")
+	require.NotNil(t, node)
+	assert.Equal(t, "action", node.Type)
+	assert.Equal(t, "Patrol", node.Node)
+}
+
+func TestUpdateNode_RenameDuplicate(t *testing.T) {
+	s := sampleSpec()
+	err := UpdateNode(&s.Tree, "patrol", NodeUpdates{Name: "combat"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
+}
+
+func TestUpdateNode_ChangeType(t *testing.T) {
+	s := sampleSpec()
+	newType := "condition"
+	err := UpdateNode(&s.Tree, "patrol", NodeUpdates{Type: &newType})
+	require.NoError(t, err)
+
+	node := FindNode(&s.Tree, "patrol")
+	assert.Equal(t, "condition", node.Type)
+}
+
+func TestUpdateNode_ChangeNodeClass(t *testing.T) {
+	s := sampleSpec()
+	newClass := "GuardPatrol"
+	err := UpdateNode(&s.Tree, "patrol", NodeUpdates{NodeClass: &newClass})
+	require.NoError(t, err)
+
+	node := FindNode(&s.Tree, "patrol")
+	assert.Equal(t, "GuardPatrol", node.Node)
+}
+
+func TestUpdateNode_ChangeDecorator(t *testing.T) {
+	s := sampleSpec()
+	dec := "negate"
+	err := UpdateNode(&s.Tree, "patrol", NodeUpdates{Decorator: &dec})
+	require.NoError(t, err)
+
+	node := FindNode(&s.Tree, "patrol")
+	assert.Equal(t, "negate", node.Decorator)
+}
+
+func TestUpdateNode_NotFound(t *testing.T) {
+	s := sampleSpec()
+	err := UpdateNode(&s.Tree, "nonexistent", NodeUpdates{Name: "x"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not found")
+}
+
+func TestUpdateNode_MultipleFields(t *testing.T) {
+	s := sampleSpec()
+	newType := "condition"
+	newClass := "CheckPatrol"
+	err := UpdateNode(&s.Tree, "patrol", NodeUpdates{
+		Name:      "check_patrol",
+		Type:      &newType,
+		NodeClass: &newClass,
+	})
+	require.NoError(t, err)
+
+	node := FindNode(&s.Tree, "check_patrol")
+	require.NotNil(t, node)
+	assert.Equal(t, "condition", node.Type)
+	assert.Equal(t, "CheckPatrol", node.Node)
+}

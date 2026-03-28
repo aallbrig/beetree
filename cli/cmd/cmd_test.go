@@ -800,3 +800,17 @@ _, err := executeCommand("node", "remove", specFile, "root")
 assert.Error(t, err)
 assert.Contains(t, err.Error(), "cannot remove root")
 }
+
+func TestBuilderCommand_Help(t *testing.T) {
+	output, err := executeCommand("builder", "--help")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Launch the interactive behavior tree editor")
+	assert.Contains(t, output, "Add child node")
+	assert.Contains(t, output, "Edit selected node")
+	assert.Contains(t, output, "Delete selected node")
+	assert.Contains(t, output, "Move node")
+	assert.Contains(t, output, "Undo last change")
+	assert.Contains(t, output, "Save to file")
+	assert.Contains(t, output, "confirms if unsaved")
+	assert.Contains(t, output, "[file]")
+}
