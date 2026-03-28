@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aallbrig/beetree-cli/internal/model"
+	"github.com/aallbrig/beetree-cli/internal/renderer"
 )
 
 // ChangeType describes the kind of difference.
@@ -87,7 +88,7 @@ func diffBlackboard(a, b []model.BlackboardVar) []Change {
 func diffNode(a, b *model.NodeSpec, path string) []Change {
 	var changes []Change
 	if a.Type != b.Type {
-		changes = append(changes, Change{ChangeModified, path + ".type", a.Type, b.Type})
+		changes = append(changes, Change{ChangeModified, path + ".type", fmt.Sprintf("%s %s", renderer.TypeSigil(a.Type), a.Type), fmt.Sprintf("%s %s", renderer.TypeSigil(b.Type), b.Type)})
 	}
 	if a.Name != b.Name {
 		changes = append(changes, Change{ChangeModified, path + ".name", a.Name, b.Name})
@@ -112,7 +113,7 @@ func diffNode(a, b *model.NodeSpec, path string) []Change {
 	for name, ac := range aChildren {
 		bc, exists := bChildren[name]
 		if !exists {
-			changes = append(changes, Change{ChangeRemoved, path + ".children." + name, fmt.Sprintf("%s (%s)", name, ac.Type), ""})
+			changes = append(changes, Change{ChangeRemoved, path + ".children." + name, fmt.Sprintf("%s %s (%s)", renderer.TypeSigil(ac.Type), name, ac.Type), ""})
 			continue
 		}
 		childPath := path + ".children." + name
@@ -121,7 +122,7 @@ func diffNode(a, b *model.NodeSpec, path string) []Change {
 
 	for name, bc := range bChildren {
 		if _, exists := aChildren[name]; !exists {
-			changes = append(changes, Change{ChangeAdded, path + ".children." + name, "", fmt.Sprintf("%s (%s)", name, bc.Type)})
+			changes = append(changes, Change{ChangeAdded, path + ".children." + name, "", fmt.Sprintf("%s %s (%s)", renderer.TypeSigil(bc.Type), name, bc.Type)})
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aallbrig/beetree-cli/internal/model"
+	"github.com/aallbrig/beetree-cli/internal/renderer"
 	"github.com/aallbrig/beetree-cli/internal/treeedit"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -293,7 +294,8 @@ func (ev *EditorView) openAddNodeModal() {
 
 	for _, nt := range types {
 		entry := nt
-		ev.addModal.AddItem(fmt.Sprintf("[%s] %s", entry.Category, entry.Name), "", 0, func() {
+		sigil := renderer.TypeSigil(entry.Name)
+		ev.addModal.AddItem(fmt.Sprintf("%s  %s", sigil, entry.Name), "", 0, func() {
 			ev.pendingAddType = entry.Name
 			ev.pages.HidePage("add-type")
 			ev.openNameInput()
@@ -345,10 +347,14 @@ func (ev *EditorView) openEditForm() {
 	ev.editForm.AddFormItem(nameField)
 
 	// Type dropdown
-	typeOptions := []string{"selector", "sequence", "parallel", "action", "condition", "decorator",
+	typeNames := []string{"selector", "sequence", "parallel", "action", "condition", "decorator",
 		"utility_selector", "active_selector", "random_selector", "random_sequence", "subtree"}
+	typeOptions := make([]string, len(typeNames))
+	for i, t := range typeNames {
+		typeOptions[i] = fmt.Sprintf("%s  %s", renderer.TypeSigil(t), t)
+	}
 	typeIdx := 0
-	for i, t := range typeOptions {
+	for i, t := range typeNames {
 		if t == node.Type {
 			typeIdx = i
 			break
@@ -361,7 +367,8 @@ func (ev *EditorView) openEditForm() {
 
 	ev.editForm.AddButton("Save", func() {
 		newName := ev.editForm.GetFormItemByLabel("Name: ").(*tview.InputField).GetText()
-		_, newType := ev.editForm.GetFormItemByLabel("Type: ").(*tview.DropDown).GetCurrentOption()
+		typeSelIdx, _ := ev.editForm.GetFormItemByLabel("Type: ").(*tview.DropDown).GetCurrentOption()
+		newType := typeNames[typeSelIdx]
 		newClass := ev.editForm.GetFormItemByLabel("Node Class: ").(*tview.InputField).GetText()
 		newDecorator := ev.editForm.GetFormItemByLabel("Decorator: ").(*tview.InputField).GetText()
 
@@ -594,7 +601,7 @@ func (ev *EditorView) syncPropsView() {
 	var b strings.Builder
 
 	b.WriteString(fmt.Sprintf("[yellow]Name:[-] %s\n", props.Name))
-	b.WriteString(fmt.Sprintf("[yellow]Type:[-] %s %s\n", NodeTypeTag(props.Type), props.Type))
+	b.WriteString(fmt.Sprintf("[yellow]Type:[-] %s %s\n", renderer.TypeSigil(props.Type), props.Type))
 	b.WriteString(fmt.Sprintf("[yellow]Children:[-] %d\n", props.ChildCount))
 
 	if props.NodeClass != "" {
@@ -640,7 +647,7 @@ func (ev *EditorView) syncSimTraceView() {
 		indent := strings.Repeat("  ", step.Depth)
 		switch step.Event {
 		case "enter":
-			b.WriteString(fmt.Sprintf("%s[blue]▶[-] %s %s\n", indent, NodeTypeTag(step.NodeType), step.NodeName))
+			b.WriteString(fmt.Sprintf("%s[blue]▶[-] %s %s\n", indent, renderer.TypeSigil(step.NodeType), step.NodeName))
 		case "resolve":
 			var color, symbol string
 			switch step.Status {

@@ -76,6 +76,25 @@ func ResolveSigil(node *model.NodeSpec, notation model.NotationConfig) string {
 	return strings.ToUpper(node.Type)
 }
 
+// TypeSigil returns the default sigil for a node type string (no notation overrides).
+// Handles decorator variants like "decorator:repeat" by looking up the sub-sigil.
+func TypeSigil(nodeType string) string {
+	if strings.HasPrefix(nodeType, "decorator:") {
+		dec := strings.TrimPrefix(nodeType, "decorator:")
+		if sigil, ok := decoratorSigils[dec]; ok {
+			return sigil
+		}
+		return "◇" + dec
+	}
+	if sigil, ok := defaultTypeSigils[nodeType]; ok {
+		return sigil
+	}
+	if len(nodeType) >= 3 {
+		return strings.ToUpper(nodeType[:3])
+	}
+	return strings.ToUpper(nodeType)
+}
+
 // RenderSigil renders a NodeSpec as a tree with Unicode sigils and box-drawing characters.
 func RenderSigil(node *model.NodeSpec, notation model.NotationConfig) string {
 	var sb strings.Builder

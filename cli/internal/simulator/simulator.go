@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/aallbrig/beetree-cli/internal/model"
+	"github.com/aallbrig/beetree-cli/internal/renderer"
 )
 
 // Status represents the result of a node execution.
@@ -200,7 +201,7 @@ func FormatTrace(result *Result) string {
 			statusStr = fmt.Sprintf(" → %s", step.Status)
 		}
 		symbol := eventSymbol(step.Event)
-		b.WriteString(fmt.Sprintf("%s%s [%s] %s%s\n", indent, symbol, step.NodeType, step.NodeName, statusStr))
+		b.WriteString(fmt.Sprintf("%s%s %s %s%s\n", indent, symbol, renderer.TypeSigil(step.NodeType), step.NodeName, statusStr))
 	}
 	return b.String()
 }
