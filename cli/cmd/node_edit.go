@@ -124,6 +124,65 @@ Example:
 	},
 }
 
+var (
+	nodeEditName      string
+	nodeEditType      string
+	nodeEditNode      string
+	nodeEditDecorator string
+)
+
+var nodeEditCmd = &cobra.Command{
+	Use:   "edit <file> <node-name>",
+	Short: "Edit a node's properties",
+	Long: `Edit a node's name, type, node class, or decorator in place.
+
+Example:
+  beetree node edit trees/enemy.beetree.yaml patrol --name guard
+  beetree node edit trees/enemy.beetree.yaml attack --type condition --node HasAmmo
+  beetree node edit trees/enemy.beetree.yaml flee --decorator negate`,
+	Args: cobra.ExactArgs(2),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		filePath := args[0]
+		nodeName := args[1]
+
+		tree, err := spec.ParseFile(filePath)
+		if err != nil {
+			return fmt.Errorf("parse: %w", err)
+		}
+
+		updates := treeedit.NodeUpdates{Name: nodeEditName}
+		if nodeEditType != "" {
+			updates.Type = &nodeEditType
+		}
+		if nodeEditNode != "" {
+			updates.NodeClass = &nodeEditNode
+		}
+		if nodeEditDecorator != "" {
+			updates.Decorator = &nodeEditDecorator
+		}
+
+		if updates.Name == "" && updates.Type == nil && updates.NodeClass == nil && updates.Decorator == nil {
+			return fmt.Errorf("specify at least one field to edit: --name, --type, --node, --decorator")
+		}
+
+		if err := treeedit.UpdateNode(&tree.Tree, nodeName, updates); err != nil {
+			return err
+		}
+
+		if err := treeedit.SaveSpec(tree, filePath); err != nil {
+			return err
+		}
+
+		displayName := nodeName
+		if updates.Name != "" {
+			displayName = updates.Name
+		}
+		cmd.Printf("✓ Updated %s\n\n", displayName)
+		cmd.Print(renderer.RenderSpecASCII(&tree.Tree))
+		return nil
+	},
+}
+
 func init() {
 	nodeAddCmd.Flags().StringVar(&nodeAddType, "type", "action", "Node type (action, condition, sequence, selector, parallel, decorator)")
 	nodeAddCmd.Flags().StringVar(&nodeAddNode, "node", "", "Node class name (e.g., Patrol, HasTarget)")
@@ -134,4 +193,10 @@ func init() {
 
 	nodeMoveCmd.Flags().StringVar(&nodeMoveDest, "to", "", "Destination parent node name")
 	nodeCmd.AddCommand(nodeMoveCmd)
+
+	nodeEditCmd.Flags().StringVar(&nodeEditName, "name", "", "New node name")
+	nodeEditCmd.Flags().StringVar(&nodeEditType, "type", "", "New node type")
+	nodeEditCmd.Flags().StringVar(&nodeEditNode, "node", "", "New node class name")
+	nodeEditCmd.Flags().StringVar(&nodeEditDecorator, "decorator", "", "New decorator type")
+	nodeCmd.AddCommand(nodeEditCmd)
 }

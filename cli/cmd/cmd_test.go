@@ -35,6 +35,10 @@ func executeCommand(args ...string) (string, error) {
 	nodeAddNode = ""
 	nodeAddDecorator = ""
 	nodeMoveDest = ""
+	nodeEditName = ""
+	nodeEditType = ""
+	nodeEditNode = ""
+	nodeEditDecorator = ""
 	nodeFilter = ""
 
 	err := rootCmd.Execute()
@@ -799,6 +803,44 @@ specFile := writeTestSpec(t)
 _, err := executeCommand("node", "remove", specFile, "root")
 assert.Error(t, err)
 assert.Contains(t, err.Error(), "cannot remove root")
+}
+
+func TestNodeEdit_Rename(t *testing.T) {
+	specFile := writeTestSpec(t)
+	output, err := executeCommand("node", "edit", specFile, "patrol", "--name", "guard")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Updated")
+	assert.Contains(t, output, "guard")
+
+	data, err := os.ReadFile(specFile)
+	require.NoError(t, err)
+	assert.Contains(t, string(data), "guard")
+	assert.NotContains(t, string(data), "patrol")
+}
+
+func TestNodeEdit_ChangeType(t *testing.T) {
+	specFile := writeTestSpec(t)
+	output, err := executeCommand("node", "edit", specFile, "patrol", "--type", "condition")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Updated")
+
+	data, err := os.ReadFile(specFile)
+	require.NoError(t, err)
+	assert.Contains(t, string(data), "condition")
+}
+
+func TestNodeEdit_NoFlags(t *testing.T) {
+	specFile := writeTestSpec(t)
+	_, err := executeCommand("node", "edit", specFile, "patrol")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "specify at least one field")
+}
+
+func TestNodeEdit_DuplicateNameFails(t *testing.T) {
+	specFile := writeTestSpec(t)
+	_, err := executeCommand("node", "edit", specFile, "patrol", "--name", "combat")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
 }
 
 func TestBuilderCommand_Help(t *testing.T) {
