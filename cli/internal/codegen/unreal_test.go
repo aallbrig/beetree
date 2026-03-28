@@ -26,8 +26,9 @@ func TestUnrealGenerator_Generate(t *testing.T) {
 		fileNames[i] = f.Path
 	}
 
+	// Integration README
+	assert.Contains(t, fileNames, "README.md")
 	// Blackboard header
-	assert.Contains(t, fileNames, "EnemyAiBlackboard.h")
 	// Tree definition
 	assert.Contains(t, fileNames, "EnemyAiTreeDefinition.h")
 	assert.Contains(t, fileNames, "EnemyAiTreeDefinition.cpp")

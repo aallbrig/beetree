@@ -1,0 +1,72 @@
+{{ genHeader .SourceFile "#" }}
+
+# {{ .TreeName }} — Godot Integration Guide
+
+Generated from `{{ .SourceFile }}` by [BeeTree](https://github.com/aallbrig/beetree).
+
+## Generated Files
+
+| File | Purpose | Editable? |
+|------|---------|-----------|
+| `bt_runtime.gd` | Base classes (BTNode, composites, decorators) | No — regenerated |
+| `{{ snake .TreeClassName }}_blackboard.gd` | Blackboard resource with typed properties | No — regenerated |
+| `{{ snake .TreeClassName }}_tree.gd` | Tree structure builder | No — regenerated |
+{{- range .Actions }}
+| `{{ snake .ClassName }}_action.gd` | Action stub — implement your logic here | ✅ Yes |
+{{- end }}
+{{- range .Conditions }}
+| `{{ snake .ClassName }}_condition.gd` | Condition stub — implement your logic here | ✅ Yes |
+{{- end }}
+{{- range .CustomNodes }}
+| `{{ snake .ClassName }}_{{ .Type }}.gd` | Custom node stub | ✅ Yes |
+{{- end }}
+
+## Quick Start
+
+### 1. Copy files into your Godot project
+
+Copy this directory into your Godot 4.x project (e.g., `res://scripts/ai/`).
+
+### 2. Implement your stubs
+
+Each stub file (marked **Editable**) has `# TODO:` comments showing where to add logic.
+
+**Action stubs** implement:
+- `_on_initialize(blackboard)` — setup when the node starts
+- `_on_tick(blackboard, delta)` — called each frame, return `BTStatus.SUCCESS`, `FAILURE`, or `RUNNING`
+- `_on_terminate(blackboard, status)` — cleanup when the node finishes
+
+**Condition stubs** implement:
+- `evaluate(blackboard)` — return `true` or `false`
+
+### 3. Build and run the tree
+
+```gdscript
+# In a Node script:
+var blackboard: {{ pascal .TreeClassName }}Blackboard
+var tree: BTNode
+
+func _ready():
+    blackboard = {{ pascal .TreeClassName }}Blackboard.new()
+    tree = {{ pascal .TreeClassName }}Tree.build(blackboard)
+
+func _process(delta):
+    tree.tick(blackboard, delta)
+```
+
+## Re-generating
+
+Run `beetree generate godot {{ .SourceFile }}` again after editing your `.beetree.yaml`.
+- Tree definition and blackboard files are **always regenerated**.
+- Stub files are **never overwritten** unless you pass `--overwrite`.
+- Your custom code in stubs is safe.
+{{- if .Blackboard }}
+
+## Blackboard Variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+{{- range .Blackboard }}
+| `{{ .Name }}` | `{{ .Type }}` | {{ .Description }} |
+{{- end }}
+{{- end }}

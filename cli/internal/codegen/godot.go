@@ -42,6 +42,17 @@ func (g *GodotGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 	snakeName := ToSnakeCase(data.TreeClassName)
 	var files []GeneratedFile
 
+	// Integration guide README
+	readme, err := g.render("readme.md.tmpl", data)
+	if err != nil {
+		return nil, fmt.Errorf("readme: %w", err)
+	}
+	files = append(files, GeneratedFile{
+		Path:    "README.md",
+		Content: readme,
+		IsStub:  false,
+	})
+
 	// Runtime base classes
 	rt, err := g.render("runtime.gd.tmpl", data)
 	if err != nil {

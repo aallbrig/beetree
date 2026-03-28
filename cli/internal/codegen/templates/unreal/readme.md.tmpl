@@ -1,0 +1,74 @@
+{{ genHeader .SourceFile "#" }}
+
+# {{ .TreeName }} — Unreal Engine Integration Guide
+
+Generated from `{{ .SourceFile }}` by [BeeTree](https://github.com/aallbrig/beetree).
+
+## Generated Files
+
+| File | Purpose | Editable? |
+|------|---------|-----------|
+| `BTRuntime.h` | Base classes and type definitions | No — regenerated |
+| `{{ .TreeClassName }}Blackboard.h` | Blackboard struct with typed fields | No — regenerated |
+| `{{ .TreeClassName }}TreeDefinition.h` | Tree factory header | No — regenerated |
+| `{{ .TreeClassName }}TreeDefinition.cpp` | Tree structure builder | No — regenerated |
+{{- range .Actions }}
+| `BTTask_{{ .ClassName }}.h/.cpp` | Task stub — implement your logic here | ✅ Yes |
+{{- end }}
+{{- range .Conditions }}
+| `BTDecorator_{{ .ClassName }}.h/.cpp` | Decorator stub — implement your logic here | ✅ Yes |
+{{- end }}
+{{- range .CustomNodes }}
+| `{{ if eq .Type "action" }}BTTask{{ else }}BTDecorator{{ end }}_{{ .Name }}.h/.cpp` | Custom node stub | ✅ Yes |
+{{- end }}
+
+## Quick Start
+
+### 1. Copy files into your Unreal project
+
+Copy these files into your project's `Source/<Module>/AI/` directory. Add them
+to your module's build target.
+
+### 2. Implement your stubs
+
+Each stub file (marked **Editable**) has `// TODO:` comments showing where to add logic.
+
+**Task stubs** (`BTTask_*.cpp`) implement:
+- `ExecuteTask()` — main logic, return `EBTNodeResult::Succeeded`, `Failed`, or `InProgress`
+- `TickTask()` — called each frame while `InProgress`
+- `AbortTask()` — cleanup on interruption
+
+**Decorator stubs** (`BTDecorator_*.cpp`) implement:
+- `CalculateRawConditionValue()` — return `true` to allow child execution
+
+### 3. Build and run the tree
+
+```cpp
+// In your AI Controller:
+#include "{{ .TreeClassName }}TreeDefinition.h"
+
+void AMyAIController::BeginPlay()
+{
+    Super::BeginPlay();
+    F{{ .TreeClassName }}Blackboard Blackboard;
+    UBehaviorTree* Tree = U{{ .TreeClassName }}TreeDefinition::Build(Blackboard);
+    RunBehaviorTree(Tree);
+}
+```
+
+## Re-generating
+
+Run `beetree generate unreal {{ .SourceFile }}` again after editing your `.beetree.yaml`.
+- Tree definition and blackboard files are **always regenerated**.
+- Stub files are **never overwritten** unless you pass `--overwrite`.
+- Your custom code in stubs is safe.
+{{- if .Blackboard }}
+
+## Blackboard Variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+{{- range .Blackboard }}
+| `{{ .Name }}` | `{{ .Type }}` | {{ .Description }} |
+{{- end }}
+{{- end }}

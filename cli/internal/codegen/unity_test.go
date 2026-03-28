@@ -29,6 +29,8 @@ func TestUnityGenerator_Generate(t *testing.T) {
 
 	// Runtime base classes
 	assert.Contains(t, fileNames, "BTRuntime.cs")
+	// Integration README
+	assert.Contains(t, fileNames, "README.md")
 	// Blackboard
 	assert.Contains(t, fileNames, "EnemyAiBlackboard.cs")
 	// Tree definition (auto-regenerated)
@@ -182,4 +184,28 @@ func TestUnityGenerator_CustomNodeStubs(t *testing.T) {
 		}
 	}
 	assert.True(t, found, "should generate stub for custom node DetectNearbyEnemy")
+}
+
+func TestUnityGenerator_ReadmeContent(t *testing.T) {
+	spec := sampleSpec()
+	gen := NewUnityGenerator()
+	files, err := gen.Generate(spec)
+	require.NoError(t, err)
+
+	var readme GeneratedFile
+	for _, f := range files {
+		if f.Path == "README.md" {
+			readme = f
+			break
+		}
+	}
+	require.NotEmpty(t, readme.Content, "README.md should be generated")
+	assert.False(t, readme.IsStub, "README should be regenerated each run")
+	assert.Contains(t, readme.Content, "Unity Integration Guide")
+	assert.Contains(t, readme.Content, "EnemyAi")
+	assert.Contains(t, readme.Content, "BTRuntime.cs")
+	assert.Contains(t, readme.Content, "AttackAction.cs")
+	assert.Contains(t, readme.Content, "HasTargetCondition.cs")
+	assert.Contains(t, readme.Content, "Quick Start")
+	assert.Contains(t, readme.Content, "Blackboard Variables")
 }

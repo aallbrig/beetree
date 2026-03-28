@@ -40,6 +40,17 @@ func (g *UnrealGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error
 
 	var files []GeneratedFile
 
+	// Integration guide README
+	readme, err := g.render("readme.md.tmpl", data)
+	if err != nil {
+		return nil, fmt.Errorf("readme: %w", err)
+	}
+	files = append(files, GeneratedFile{
+		Path:    "README.md",
+		Content: readme,
+		IsStub:  false,
+	})
+
 	// Runtime base classes
 	rt, err := g.render("runtime.h.tmpl", data)
 	if err != nil {

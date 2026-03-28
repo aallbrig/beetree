@@ -1,0 +1,74 @@
+{{ genHeader .SourceFile "#" }}
+
+# {{ .TreeName }} — Unity Integration Guide
+
+Generated from `{{ .SourceFile }}` by [BeeTree](https://github.com/aallbrig/beetree).
+
+## Generated Files
+
+| File | Purpose | Editable? |
+|------|---------|-----------|
+| `BTRuntime.cs` | Base classes (BTNode, BTAction, BTCondition, composites) | No — regenerated |
+| `{{ .TreeClassName }}Blackboard.cs` | Blackboard with typed fields | No — regenerated |
+| `{{ .TreeClassName }}TreeDefinition.cs` | Tree structure builder | No — regenerated |
+{{- range .Actions }}
+| `{{ .ClassName }}Action.cs` | Action stub — implement your logic here | ✅ Yes |
+{{- end }}
+{{- range .Conditions }}
+| `{{ .ClassName }}Condition.cs` | Condition stub — implement your logic here | ✅ Yes |
+{{- end }}
+{{- range .CustomNodes }}
+| `{{ .ClassName }}{{ if eq .Type "action" }}Action{{ else }}Condition{{ end }}.cs` | Custom node stub | ✅ Yes |
+{{- end }}
+
+## Quick Start
+
+### 1. Copy files into your Unity project
+
+Copy this entire directory into your Unity project's `Assets/Scripts/AI/` folder.
+
+### 2. Implement your stubs
+
+Each stub file (marked **Editable**) has `// TODO:` comments showing where to add logic.
+
+**Action stubs** implement three methods:
+- `OnInitialize` — setup when the node starts
+- `OnTick` — called each frame, return `BTStatus.Success`, `BTStatus.Failure`, or `BTStatus.Running`
+- `OnTerminate` — cleanup when the node finishes
+
+**Condition stubs** implement:
+- `Evaluate` — return `true` or `false`
+
+### 3. Build and run the tree
+
+```csharp
+// In a MonoBehaviour:
+void Start()
+{
+    var blackboard = new {{ .TreeClassName }}Blackboard();
+    var tree = {{ .TreeClassName }}TreeDefinition.Build(blackboard);
+    // tree.Tick(blackboard, Time.deltaTime) each frame
+}
+
+void Update()
+{
+    tree.Tick(blackboard, Time.deltaTime);
+}
+```
+
+## Re-generating
+
+Run `beetree generate unity {{ .SourceFile }}` again after editing your `.beetree.yaml`.
+- Tree definition and blackboard files are **always regenerated**.
+- Stub files are **never overwritten** unless you pass `--overwrite`.
+- Your custom code in stubs is safe.
+{{- if .Blackboard }}
+
+## Blackboard Variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+{{- range .Blackboard }}
+| `{{ .Name }}` | `{{ .Type }}` | {{ .Description }} |
+{{- end }}
+{{- end }}

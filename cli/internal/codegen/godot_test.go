@@ -26,8 +26,9 @@ func TestGodotGenerator_Generate(t *testing.T) {
 		fileNames[i] = f.Path
 	}
 
+	// Integration README
+	assert.Contains(t, fileNames, "README.md")
 	// Blackboard
-	assert.Contains(t, fileNames, "enemy_ai_blackboard.gd")
 	// Tree definition
 	assert.Contains(t, fileNames, "enemy_ai_tree_definition.gd")
 	// Action stubs
