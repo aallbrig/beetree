@@ -11,14 +11,14 @@ The user steps through their behavior tree node by node, choosing the return sta
 ### 2. Engine-Agnostic Spec → Native Code Generation
 Define behavior trees once in `.beetree.yaml`, generate native code for Unity (C#), Unreal Engine (C++), and Godot (GDScript). First run generates stubs for user implementation; subsequent runs regenerate only the tree definition, preserving user code.
 
-**Status:** Implemented for all three engines. Templates are embedded in the binary.
-**Gaps:** No integration guide per engine, generated stubs lack implementation hints, no custom generator plugin system, no type mapping customization.
+**Status:** Implemented for all three engines. Templates are embedded in the binary. Each generate run produces a README.md with integration instructions.
+**Gaps:** No custom generator plugin system, no type mapping customization.
 
 ### 3. TUI Behavior Tree Editor
 A full terminal-based tree editor: navigate, add/edit/delete/move nodes, undo (50 levels), save/save-as, and launch simulation — all without leaving the terminal.
 
-**Status:** Implemented with tview. Keybindings: `a`dd, `e`dit, `d`elete, `m`ove, `u`ndo, `r`un sim, `s`ave, `q`uit.
-**Gaps:** Can't edit parameters/blackboard/metadata/custom_nodes in TUI. No search, no copy/paste, no redo, no in-TUI validation, no help overlay.
+**Status:** Implemented with tview. Keybindings: `a`dd, `e`dit, `d`elete, `m`ove, `u`ndo, `r`un sim, `s`ave, `q`uit, `?` help.
+**Gaps:** Can't edit parameters/blackboard/metadata/custom_nodes in TUI. No search, no copy/paste, no redo, no in-TUI validation.
 
 ### 4. Accessible to All Skill Levels
 Progressive examples (patrol → combat → full enemy AI) with inline comments that teach BT concepts. Templates and guided commands lower the barrier to entry.
@@ -84,7 +84,7 @@ Progressive examples (patrol → combat → full enemy AI) with inline comments 
 ## Planned / Missing Features
 
 ### High Priority
-- [ ] In-TUI help overlay (`?` key)
+- [x] In-TUI help overlay (`?` key)
 - [ ] In-TUI validation before save
 - [ ] Parameter editing in TUI
 - [ ] Blackboard editing in TUI
@@ -99,7 +99,7 @@ Progressive examples (patrol → combat → full enemy AI) with inline comments 
 - [ ] Simulation scenario save/replay
 - [ ] Simulation step-back
 - [ ] Trace export
-- [ ] Code generation integration guides per engine
+- [x] Code generation integration guides per engine
 - [ ] Node name validation (identifier rules)
 
 ### Low Priority / Future
