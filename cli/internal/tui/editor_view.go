@@ -24,6 +24,7 @@ type EditorView struct {
 	editForm   *tview.Form
 	saveAsInput *tview.InputField
 	quitModal  *tview.List
+	helpView   *tview.TextView
 	pages      *tview.Pages
 
 	pendingAddType string
@@ -87,6 +88,20 @@ func (ev *EditorView) buildLayout() {
 	ev.quitModal = tview.NewList().ShowSecondaryText(false)
 	ev.quitModal.SetBorder(true).SetTitle(" Unsaved Changes ")
 
+	// Help overlay
+	ev.helpView = tview.NewTextView()
+	ev.helpView.SetDynamicColors(true).SetScrollable(true)
+	ev.helpView.SetBorder(true).SetTitle(" Help — press Esc or ? to close ")
+	ev.helpView.SetText(helpText)
+	ev.helpView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEscape || (event.Key() == tcell.KeyRune && event.Rune() == '?') {
+			ev.pages.HidePage("help")
+			ev.App.SetFocus(ev.treeView)
+			return nil
+		}
+		return event
+	})
+
 	// Main layout
 	topPane := tview.NewFlex().
 		AddItem(ev.treeView, 0, 2, true).
@@ -103,7 +118,8 @@ func (ev *EditorView) buildLayout() {
 		AddPage("add-name", makeModal(ev.nameInput, 50, 3), true, false).
 		AddPage("edit-node", makeModal(ev.editForm, 55, 14), true, false).
 		AddPage("save-as", makeModal(ev.saveAsInput, 60, 3), true, false).
-		AddPage("quit-confirm", makeModal(ev.quitModal, 40, 5), true, false)
+		AddPage("quit-confirm", makeModal(ev.quitModal, 40, 5), true, false).
+		AddPage("help", makeModal(ev.helpView, 72, 30), true, false)
 
 	ev.setupKeyBindings()
 }
@@ -160,6 +176,9 @@ func (ev *EditorView) handleNavigateKey(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		case 'q':
 			ev.doQuit()
+			return nil
+		case '?':
+			ev.showHelp()
 			return nil
 		}
 	case tcell.KeyLeft:
@@ -652,7 +671,7 @@ func (ev *EditorView) syncStatusBar() {
 	var status string
 	switch ev.Model.Mode {
 	case ModeNavigate:
-		status = "[a]dd  [e]dit  [d]elete  [m]ove  [u]ndo  [r]un sim  [s]ave  [q]uit"
+		status = "[a]dd  [e]dit  [d]elete  [m]ove  [u]ndo  [r]un sim  [s]ave  [q]uit  [?]help"
 	case ModeMove:
 		status = fmt.Sprintf("[yellow]MOVE MODE[-] — navigate to target, [m] to place, [Esc] cancel  (moving: %s)", ev.Model.CutNodeName)
 	case ModeAddNode:
@@ -686,3 +705,66 @@ func (ev *EditorView) syncStatusBar() {
 func (ev *EditorView) Widget() tview.Primitive {
 	return ev.pages
 }
+
+func (ev *EditorView) showHelp() {
+	ev.pages.ShowPage("help")
+	ev.App.SetFocus(ev.helpView)
+}
+
+const helpText = `[yellow::b]═══ Key Bindings ═══[-::-]
+
+[green::b]Navigate Mode[-::-]
+  [aqua]a[-]         Add a child node
+  [aqua]e[-]         Edit selected node
+  [aqua]d[-]         Delete selected node
+  [aqua]m[-]         Start move (cut), then navigate + [aqua]m[-] to paste
+  [aqua]u[-]         Undo last change
+  [aqua]r[-]         Run interactive simulation
+  [aqua]s[-]         Save file
+  [aqua]S[-]         Save as (new path)
+  [aqua]q[-]         Quit (prompts if unsaved)
+  [aqua]?[-]         Show this help
+  [aqua]↑ ↓[-]       Navigate tree
+  [aqua]← →[-]       Collapse / expand node
+
+[green::b]Move Mode[-::-]
+  [aqua]↑ ↓[-]       Navigate to target parent
+  [aqua]m[-]         Place node under target
+  [aqua]Esc[-]       Cancel move
+
+[green::b]Simulation Mode[-::-]
+  [aqua]S[-]         Resolve leaf as [green]Success[-]
+  [aqua]F[-]         Resolve leaf as [red]Failure[-]
+  [aqua]R[-]         Resolve leaf as [yellow]Running[-]
+  [aqua]Esc[-]       Stop simulation
+
+[yellow::b]═══ Behavior Tree Concepts ═══[-::-]
+
+[green::b]Composite Nodes[-::-] — have one or more children
+  [white::b]Sequence[-::-]    Runs children left-to-right. Succeeds if ALL
+               succeed. Fails on first failure. (AND logic)
+  [white::b]Selector[-::-]    Runs children left-to-right. Succeeds on first
+               success. Fails if ALL fail. (OR logic)
+  [white::b]Parallel[-::-]    Runs all children simultaneously. Outcome
+               depends on success/failure policy.
+
+[green::b]Leaf Nodes[-::-] — perform actual work
+  [white::b]Action[-::-]      Does something (move, attack, play animation).
+               Returns Success, Failure, or Running.
+  [white::b]Condition[-::-]   Checks something (has target? health > 50?).
+               Returns Success or Failure.
+
+[green::b]Decorators[-::-] — wrap a single child, modify its behavior
+  [white::b]Negate[-::-]      Inverts child result (Success↔Failure)
+  [white::b]Repeat[-::-]      Re-runs child N times or until failure
+  [white::b]AlwaysSucceed[-::-] / [white::b]AlwaysFail[-::-]  Forces a result
+  [white::b]UntilFail[-::-]   Repeats child until it fails
+  [white::b]Timeout[-::-]     Fails child after duration
+  [white::b]Cooldown[-::-]    Blocks re-entry for a duration
+  [white::b]Retry[-::-]       Re-runs child on failure, up to N times
+
+[green::b]Blackboard[-::-] — shared key-value store for tree state
+  Nodes read/write variables (e.g., "target", "health").
+  Defined in the spec with types and optional defaults.
+
+[dim]Scroll with ↑↓. Press Esc or ? to close.[-]`
