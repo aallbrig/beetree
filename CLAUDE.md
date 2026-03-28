@@ -45,6 +45,6 @@ See `docs/AUDIENCES.md` — beginners, intermediates, and experts in game AI/BT 
 An **introspect checkpoint** is a periodic deep analysis of the tool's usability alignment with its target audiences. Run via `/introspect checkpoint`. Checkpoints produce:
 - `docs/AUDIENCES.md` — Updated audience profiles
 - `docs/FEATURES.md` — Current feature list with status and gaps
-- `docs/introspect/<timestamp>_CHECKPOINT.md` — Full analysis with gap identification and improvement plan
+- `docs/introspect/<YYYYMMDD_HHMMSS>_UTC_CHECKPOINT.md` — Full analysis with gap identification and improvement plan (timestamps are always UTC)
 
 The technique: read the entire codebase from the perspective of each audience tier, evaluate first-run experience, command discoverability, TUI completeness, simulation UX, code generation workflow, error messages, example quality, and documentation coverage. Be brutally honest. Identify what sucks and why.

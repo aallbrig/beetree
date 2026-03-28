@@ -19,7 +19,7 @@ An introspect checkpoint is a deep usability analysis of the current state of th
 3. **Update docs**:
    - Update `docs/AUDIENCES.md` if audience understanding has evolved
    - Update `docs/FEATURES.md` with current feature status and gaps
-   - Create `docs/introspect/$(date +%Y%m%d_%H%M%S)_CHECKPOINT.md` with:
+   - Create `docs/introspect/$(date -u +%Y%m%d_%H%M%S)_UTC_CHECKPOINT.md` with:
      - Current state summary (version, components, test coverage)
      - Alignment score per audience (1-10)
      - Killer feature health assessment
