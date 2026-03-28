@@ -9,9 +9,10 @@ import (
 )
 
 var registryCmd = &cobra.Command{
-	Use:   "registry",
-	Short: "Interact with the BeeTree registry",
-	Long:  "Browse, search, pull, and push behavior tree specs to the BeeTree registry.",
+	Use:    "registry",
+	Short:  "Interact with the BeeTree registry",
+	Long:   "Browse, search, pull, and push behavior tree specs to the BeeTree registry.",
+	Hidden: true, // Registry backend is not yet implemented; hide from help until ready
 }
 
 // registryClientOverride allows tests to inject a custom client.
