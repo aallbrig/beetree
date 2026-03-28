@@ -1,0 +1,197 @@
+# =============================================================================
+# BeeTree Example: Full Enemy AI (Patrol + Combat + Flee)
+# =============================================================================
+# A complete enemy AI combining patrol, combat, and flee into one tree.
+# This shows how real game AI is structured — multiple behaviors composed
+# together with clear priorities.
+#
+# WHAT YOU'LL LEARN:
+#   - How to compose multiple behavior patterns into one tree
+#   - The "reactive" pattern: high-priority checks happen every tick
+#   - Parallel nodes for doing two things at once
+#   - Subtree references for modular, reusable trees
+#   - Custom nodes with typed parameters
+#
+# PRIORITY ORDER:
+#   1. FLEE     — health critical? Get out!
+#   2. COMBAT   — see an enemy? Fight!
+#   3. ALERT    — heard something? Investigate!
+#   4. PATROL   — nothing happening? Walk the route.
+# =============================================================================
+
+version: "1.0"
+metadata:
+  name: full-enemy-ai
+  description: "Complete enemy AI: patrol, alert, combat, and flee behaviors"
+  author: beetree-examples
+  tags:
+    - advanced
+    - enemy
+    - complete
+
+blackboard:
+  - name: health
+    type: float
+    default: 100.0
+  - name: max_health
+    type: float
+    default: 100.0
+  - name: target
+    type: Entity
+  - name: last_known_position
+    type: Vector3
+    description: "Where we last saw/heard the enemy"
+  - name: alert_level
+    type: float
+    default: 0.0
+    description: "0.0 = calm, 1.0 = fully alerted"
+  - name: patrol_waypoints
+    type: "Vector3[]"
+  - name: waypoint_index
+    type: int
+    default: 0
+  - name: attack_range
+    type: float
+    default: 3.0
+  - name: detection_range
+    type: float
+    default: 15.0
+
+# Custom nodes let you define reusable node types with typed parameters.
+# These generate richer code stubs with proper parameter handling.
+custom_nodes:
+  - name: PlayAnimation
+    type: action
+    description: "Play a named animation clip"
+    parameters:
+      - name: animation_name
+        type: string
+      - name: speed
+        type: float
+        default: 1.0
+    blackboard_reads:
+      - target
+
+  - name: SetAlertLevel
+    type: action
+    description: "Set the NPC's alert level"
+    parameters:
+      - name: level
+        type: float
+    blackboard_writes:
+      - alert_level
+
+tree:
+  # Top-level selector: highest priority wins
+  type: selector
+  name: enemy_ai
+  children:
+
+    # --- FLEE: health below 20%? Run! ---
+    - type: sequence
+      name: flee
+      children:
+        - type: condition
+          name: is_dying
+          node: IsHealthBelow
+          description: "Health < 20%?"
+        - type: action
+          name: play_hurt
+          node: PlayAnimation
+          description: "Hurt/panicking animation"
+        - type: action
+          name: find_cover
+          node: FindCoverPosition
+          description: "Locate nearest safe spot"
+        - type: action
+          name: run_to_cover
+          node: MoveTo
+          description: "Sprint to cover"
+
+    # --- COMBAT: have a visible target? Engage! ---
+    - type: sequence
+      name: combat
+      children:
+        - type: condition
+          name: has_target
+          node: HasTarget
+        - type: condition
+          name: can_see_target
+          node: CanSeeTarget
+          description: "Line of sight check"
+        # Set alert to max when in combat
+        - type: action
+          name: go_full_alert
+          node: SetAlertLevel
+          description: "Alert level → 1.0"
+        # PARALLEL: face the target AND attack at the same time
+        - type: parallel
+          name: engage
+          children:
+            - type: action
+              name: face_target
+              node: FaceTarget
+              description: "Rotate toward the enemy"
+            - type: selector
+              name: attack_or_close
+              children:
+                - type: sequence
+                  name: ranged_attack
+                  children:
+                    - type: condition
+                      name: in_range
+                      node: InRange
+                    - type: action
+                      name: shoot
+                      node: RangedAttack
+                - type: action
+                  name: chase
+                  node: MoveToTarget
+
+    # --- ALERT: heard something? Investigate! ---
+    - type: sequence
+      name: investigate
+      children:
+        - type: condition
+          name: is_alerted
+          node: IsAlertLevelAbove
+          description: "Alert level > 0.3?"
+        - type: action
+          name: look_around
+          node: PlayAnimation
+          description: "Cautious look animation"
+        - type: action
+          name: go_to_noise
+          node: MoveToLastKnownPosition
+          description: "Walk to where we heard the noise"
+        - type: action
+          name: search_area
+          node: SearchArea
+          description: "Look around the area for a few seconds"
+        # Calm down if nothing found
+        - type: action
+          name: calm_down
+          node: SetAlertLevel
+          description: "Alert level → 0.0"
+
+    # --- PATROL: nothing happening, walk the route ---
+    - type: decorator
+      name: patrol_forever
+      decorator: repeat
+      children:
+        - type: sequence
+          name: patrol_cycle
+          children:
+            - type: condition
+              name: has_waypoints
+              node: HasWaypoints
+            - type: action
+              name: walk_to_waypoint
+              node: MoveToWaypoint
+            - type: action
+              name: wait_briefly
+              node: Wait
+              description: "Pause 2-3 seconds at each waypoint"
+            - type: action
+              name: advance_waypoint
+              node: NextWaypoint

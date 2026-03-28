@@ -27,6 +27,8 @@ func TestUnityGenerator_Generate(t *testing.T) {
 		fileNames[i] = f.Path
 	}
 
+	// Runtime base classes
+	assert.Contains(t, fileNames, "BTRuntime.cs")
 	// Blackboard
 	assert.Contains(t, fileNames, "EnemyAiBlackboard.cs")
 	// Tree definition (auto-regenerated)

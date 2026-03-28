@@ -30,9 +30,11 @@ func TestRenderSpecASCII_SelectorWithChildren(t *testing.T) {
 	}
 
 	output := RenderSpecASCII(node)
-	assert.Contains(t, output, "[SEL] root")
-	assert.Contains(t, output, "[ACT] attack")
-	assert.Contains(t, output, "[ACT] patrol")
+	expected := `[SEL] root
+├── [ACT] attack
+└── [ACT] patrol
+`
+	assert.Equal(t, expected, output)
 }
 
 func TestRenderSpecASCII_NestedTree(t *testing.T) {
@@ -53,10 +55,69 @@ func TestRenderSpecASCII_NestedTree(t *testing.T) {
 	}
 
 	output := RenderSpecASCII(node)
-	assert.Contains(t, output, "SEL")
-	assert.Contains(t, output, "SEQ")
-	assert.Contains(t, output, "CND")
-	assert.Contains(t, output, "ACT")
+	expected := `[SEL] root
+├── [SEQ] engage
+│   ├── [CND] has_target
+│   └── [ACT] attack
+└── [ACT] patrol
+`
+	assert.Equal(t, expected, output)
+}
+
+func TestRenderSpecASCII_DeeplyNested(t *testing.T) {
+	node := &model.NodeSpec{
+		Type: "selector",
+		Name: "ai_root",
+		Children: []model.NodeSpec{
+			{
+				Type: "sequence",
+				Name: "flee",
+				Children: []model.NodeSpec{
+					{Type: "condition", Name: "low_health"},
+					{Type: "action", Name: "run_away"},
+				},
+			},
+			{
+				Type: "sequence",
+				Name: "combat",
+				Children: []model.NodeSpec{
+					{Type: "condition", Name: "has_target"},
+					{
+						Type: "selector",
+						Name: "attack_options",
+						Children: []model.NodeSpec{
+							{
+								Type: "sequence",
+								Name: "ranged",
+								Children: []model.NodeSpec{
+									{Type: "condition", Name: "in_range"},
+									{Type: "action", Name: "shoot"},
+								},
+							},
+							{Type: "action", Name: "melee"},
+						},
+					},
+				},
+			},
+			{Type: "action", Name: "patrol"},
+		},
+	}
+
+	output := RenderSpecASCII(node)
+	expected := `[SEL] ai_root
+├── [SEQ] flee
+│   ├── [CND] low_health
+│   └── [ACT] run_away
+├── [SEQ] combat
+│   ├── [CND] has_target
+│   └── [SEL] attack_options
+│       ├── [SEQ] ranged
+│       │   ├── [CND] in_range
+│       │   └── [ACT] shoot
+│       └── [ACT] melee
+└── [ACT] patrol
+`
+	assert.Equal(t, expected, output)
 }
 
 func TestRenderSpecASCII_Decorator(t *testing.T) {

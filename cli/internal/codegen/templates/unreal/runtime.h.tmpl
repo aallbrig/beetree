@@ -1,0 +1,70 @@
+{{ genHeader .SourceFile "//" }}
+// BeeTree Runtime — Base classes for behavior tree execution.
+// This file is auto-generated. Do NOT edit.
+
+#pragma once
+
+#include "CoreMinimal.h"
+
+/// Execution status for behavior tree nodes.
+UENUM(BlueprintType)
+enum class EBTStatus : uint8
+{
+    Success,
+    Failure,
+    Running
+};
+
+/// Shared memory for behavior tree nodes.
+UCLASS(BlueprintType)
+class UBTBlackboard : public UObject
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY()
+    TMap<FString, FString> StringData;
+
+    UPROPERTY()
+    TMap<FString, float> FloatData;
+
+    UPROPERTY()
+    TMap<FString, int32> IntData;
+
+    UPROPERTY()
+    TMap<FString, UObject*> ObjectData;
+
+    void SetFloat(const FString& Key, float Value) { FloatData.Add(Key, Value); }
+    float GetFloat(const FString& Key) const
+    {
+        const float* Val = FloatData.Find(Key);
+        return Val ? *Val : 0.0f;
+    }
+
+    void SetInt(const FString& Key, int32 Value) { IntData.Add(Key, Value); }
+    int32 GetInt(const FString& Key) const
+    {
+        const int32* Val = IntData.Find(Key);
+        return Val ? *Val : 0;
+    }
+
+    void SetString(const FString& Key, const FString& Value) { StringData.Add(Key, Value); }
+    FString GetString(const FString& Key) const
+    {
+        const FString* Val = StringData.Find(Key);
+        return Val ? *Val : TEXT("");
+    }
+
+    void SetObject(const FString& Key, UObject* Value) { ObjectData.Add(Key, Value); }
+    UObject* GetObject(const FString& Key) const
+    {
+        UObject* const* Val = ObjectData.Find(Key);
+        return Val ? *Val : nullptr;
+    }
+
+    bool HasKey(const FString& Key) const
+    {
+        return FloatData.Contains(Key) || IntData.Contains(Key) ||
+               StringData.Contains(Key) || ObjectData.Contains(Key);
+    }
+};

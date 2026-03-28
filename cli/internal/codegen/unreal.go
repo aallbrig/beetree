@@ -40,6 +40,17 @@ func (g *UnrealGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error
 
 	var files []GeneratedFile
 
+	// Runtime base classes
+	rt, err := g.render("runtime.h.tmpl", data)
+	if err != nil {
+		return nil, fmt.Errorf("runtime: %w", err)
+	}
+	files = append(files, GeneratedFile{
+		Path:    "BTRuntime.h",
+		Content: rt,
+		IsStub:  false,
+	})
+
 	// Blackboard header
 	bb, err := g.render("blackboard.h.tmpl", data)
 	if err != nil {

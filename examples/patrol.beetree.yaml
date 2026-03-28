@@ -1,0 +1,91 @@
+# =============================================================================
+# BeeTree Example: Patrol AI
+# =============================================================================
+# This is the simplest useful behavior tree — an NPC that patrols between
+# waypoints, pausing briefly at each one.
+#
+# WHAT YOU'LL LEARN:
+#   - Sequences execute children left-to-right, stopping on failure
+#   - Decorators modify child behavior (here: repeat forever)
+#   - Actions are leaf nodes that DO things (move, wait)
+#   - Conditions are leaf nodes that CHECK things (has waypoint?)
+#   - The blackboard is shared memory all nodes can read/write
+#
+# HOW THIS TREE WORKS:
+#   The decorator repeats the sequence forever. Each cycle:
+#   1. Check if we have a waypoint to go to
+#   2. Move to that waypoint
+#   3. Wait briefly (idle animation)
+#   4. Pick the next waypoint
+#   If any step fails (e.g., no waypoint), the sequence fails and restarts.
+# =============================================================================
+
+version: "1.0"
+metadata:
+  name: patrol
+  description: "NPC patrols between waypoints in a loop"
+  author: beetree-examples
+  tags:
+    - beginner
+    - patrol
+    - navigation
+
+# The blackboard is shared memory that nodes read from and write to.
+# Think of it as the NPC's "brain" — what it currently knows.
+blackboard:
+  - name: current_waypoint
+    type: Vector3
+    description: "Where the NPC is heading right now"
+  - name: waypoints
+    type: "Vector3[]"
+    description: "List of patrol points to visit"
+  - name: waypoint_index
+    type: int
+    default: 0
+    description: "Which waypoint we're currently heading to"
+  - name: wait_time
+    type: float
+    default: 2.0
+    description: "How long to pause at each waypoint (seconds)"
+
+# The behavior tree itself.
+# Read this top-down: the root is evaluated first, then its children.
+tree:
+  # DECORATOR: "repeat" makes the child run over and over forever.
+  # Without this, the patrol would run once and stop.
+  type: decorator
+  name: patrol_loop
+  decorator: repeat
+  children:
+    # SEQUENCE: runs children in order. ALL must succeed.
+    # If "has_waypoint" fails, the whole sequence fails immediately —
+    # "move_to_waypoint" and "wait_at_waypoint" never run.
+    - type: sequence
+      name: patrol_cycle
+      children:
+        # CONDITION: checks something without changing state.
+        # Returns SUCCESS if waypoints exist, FAILURE if empty.
+        - type: condition
+          name: has_waypoint
+          node: HasWaypoint
+          description: "Check if there are waypoints to patrol"
+
+        # ACTION: does something that changes the world.
+        # Moves the NPC toward current_waypoint. Returns RUNNING while
+        # moving, SUCCESS when arrived, FAILURE if path is blocked.
+        - type: action
+          name: move_to_waypoint
+          node: MoveToWaypoint
+          description: "Walk to the current waypoint"
+
+        # ACTION: wait/idle at the waypoint for wait_time seconds.
+        - type: action
+          name: wait_at_waypoint
+          node: WaitAtWaypoint
+          description: "Pause briefly at the waypoint"
+
+        # ACTION: advance waypoint_index to the next point (wraps around).
+        - type: action
+          name: next_waypoint
+          node: NextWaypoint
+          description: "Pick the next waypoint in the patrol route"

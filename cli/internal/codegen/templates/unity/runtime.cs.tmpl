@@ -1,0 +1,177 @@
+{{ genHeader .SourceFile "//" }}
+// BeeTree Runtime — Base classes for behavior tree execution.
+// This file is auto-generated. Do NOT edit.
+
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BeeTree
+{
+    /// <summary>Execution status returned by behavior tree nodes.</summary>
+    public enum BTStatus
+    {
+        Success,
+        Failure,
+        Running
+    }
+
+    /// <summary>Shared memory for behavior tree nodes.</summary>
+    public class BTBlackboard
+    {
+        private readonly Dictionary<string, object> _data = new Dictionary<string, object>();
+
+        public T Get<T>(string key)
+        {
+            if (_data.TryGetValue(key, out var value))
+                return (T)value;
+            return default(T);
+        }
+
+        public void Set<T>(string key, T value)
+        {
+            _data[key] = value;
+        }
+
+        public bool Has(string key)
+        {
+            return _data.ContainsKey(key);
+        }
+    }
+
+    /// <summary>Base class for all behavior tree nodes.</summary>
+    public abstract class BTNode
+    {
+        public string Name { get; protected set; }
+
+        protected BTNode(string name)
+        {
+            Name = name;
+        }
+
+        public abstract BTStatus Tick(BTBlackboard blackboard, float deltaTime);
+
+        public virtual void Initialize(BTBlackboard blackboard) { }
+        public virtual void Terminate(BTBlackboard blackboard, BTStatus status) { }
+    }
+
+    /// <summary>Base class for action nodes (leaf nodes that DO things).</summary>
+    public abstract class BTAction : BTNode
+    {
+        protected BTAction(string name) : base(name) { }
+
+        public override BTStatus Tick(BTBlackboard blackboard, float deltaTime)
+        {
+            OnInitialize(blackboard);
+            var status = OnTick(blackboard, deltaTime);
+            if (status != BTStatus.Running)
+                OnTerminate(blackboard, status);
+            return status;
+        }
+
+        public virtual void OnInitialize(BTBlackboard blackboard) { }
+        public abstract BTStatus OnTick(BTBlackboard blackboard, float deltaTime);
+        public virtual void OnTerminate(BTBlackboard blackboard, BTStatus status) { }
+    }
+
+    /// <summary>Base class for condition nodes (leaf nodes that CHECK things).</summary>
+    public abstract class BTCondition : BTNode
+    {
+        protected BTCondition(string name) : base(name) { }
+
+        public override BTStatus Tick(BTBlackboard blackboard, float deltaTime)
+        {
+            OnInitialize(blackboard);
+            return Evaluate(blackboard) ? BTStatus.Success : BTStatus.Failure;
+        }
+
+        public virtual void OnInitialize(BTBlackboard blackboard) { }
+        public abstract bool Evaluate(BTBlackboard blackboard);
+    }
+
+    /// <summary>Runs children in order. Fails on first failure (AND logic).</summary>
+    public class BTSequence : BTNode
+    {
+        private readonly BTNode[] _children;
+
+        public BTSequence(string name, params BTNode[] children) : base(name)
+        {
+            _children = children;
+        }
+
+        public override BTStatus Tick(BTBlackboard blackboard, float deltaTime)
+        {
+            foreach (var child in _children)
+            {
+                var status = child.Tick(blackboard, deltaTime);
+                if (status != BTStatus.Success)
+                    return status;
+            }
+            return BTStatus.Success;
+        }
+    }
+
+    /// <summary>Tries children in order. Succeeds on first success (OR logic).</summary>
+    public class BTSelector : BTNode
+    {
+        private readonly BTNode[] _children;
+
+        public BTSelector(string name, params BTNode[] children) : base(name)
+        {
+            _children = children;
+        }
+
+        public override BTStatus Tick(BTBlackboard blackboard, float deltaTime)
+        {
+            foreach (var child in _children)
+            {
+                var status = child.Tick(blackboard, deltaTime);
+                if (status != BTStatus.Failure)
+                    return status;
+            }
+            return BTStatus.Failure;
+        }
+    }
+
+    /// <summary>Runs all children every tick. Fails if any child fails.</summary>
+    public class BTParallel : BTNode
+    {
+        private readonly BTNode[] _children;
+
+        public BTParallel(string name, params BTNode[] children) : base(name)
+        {
+            _children = children;
+        }
+
+        public override BTStatus Tick(BTBlackboard blackboard, float deltaTime)
+        {
+            bool anyRunning = false;
+            foreach (var child in _children)
+            {
+                var status = child.Tick(blackboard, deltaTime);
+                if (status == BTStatus.Failure) return BTStatus.Failure;
+                if (status == BTStatus.Running) anyRunning = true;
+            }
+            return anyRunning ? BTStatus.Running : BTStatus.Success;
+        }
+    }
+
+    /// <summary>Wraps a child node and modifies its behavior.</summary>
+    public class BTDecorator : BTNode
+    {
+        private readonly BTNode _child;
+        private readonly Func<BTStatus, BTStatus> _modify;
+
+        public BTDecorator(string name, BTNode child, Func<BTStatus, BTStatus> modify) : base(name)
+        {
+            _child = child;
+            _modify = modify;
+        }
+
+        public override BTStatus Tick(BTBlackboard blackboard, float deltaTime)
+        {
+            var status = _child.Tick(blackboard, deltaTime);
+            return _modify(status);
+        }
+    }
+}

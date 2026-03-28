@@ -32,6 +32,11 @@ func executeCommand(args ...string) (string, error) {
 	pushTags = nil
 	pushDesc = ""
 	simulateOverrides = nil
+	nodeAddType = "action"
+	nodeAddNode = ""
+	nodeAddDecorator = ""
+	nodeMoveDest = ""
+	nodeFilter = ""
 
 	err := rootCmd.Execute()
 	return buf.String(), err
@@ -712,4 +717,86 @@ tree:
 	require.NoError(t, err)
 	assert.Contains(t, output, "All checks passed")
 	assert.Contains(t, output, "test.beetree.yaml: valid")
+}
+
+// --- Node edit command tests ---
+
+func writeTestSpec(t *testing.T) string {
+t.Helper()
+tmpDir := t.TempDir()
+specFile := filepath.Join(tmpDir, "test.beetree.yaml")
+require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
+metadata:
+  name: test
+tree:
+  type: selector
+  name: root
+  children:
+    - type: sequence
+      name: combat
+      children:
+        - type: condition
+          name: has_target
+          node: HasTarget
+        - type: action
+          name: attack
+          node: Attack
+    - type: action
+      name: patrol
+      node: Patrol
+`), 0644))
+return specFile
+}
+
+func TestNodeAdd(t *testing.T) {
+specFile := writeTestSpec(t)
+output, err := executeCommand("node", "add", specFile, "combat", "reload", "--type", "action", "--node", "Reload")
+require.NoError(t, err)
+assert.Contains(t, output, "Added")
+assert.Contains(t, output, "reload")
+
+// Verify the file was updated
+data, err := os.ReadFile(specFile)
+require.NoError(t, err)
+assert.Contains(t, string(data), "reload")
+assert.Contains(t, string(data), "Reload")
+}
+
+func TestNodeRemove(t *testing.T) {
+specFile := writeTestSpec(t)
+output, err := executeCommand("node", "remove", specFile, "patrol")
+require.NoError(t, err)
+assert.Contains(t, output, "Removed")
+
+data, err := os.ReadFile(specFile)
+require.NoError(t, err)
+assert.NotContains(t, string(data), "patrol")
+}
+
+func TestNodeMove(t *testing.T) {
+specFile := writeTestSpec(t)
+output, err := executeCommand("node", "move", specFile, "patrol", "--to", "combat")
+require.NoError(t, err)
+assert.Contains(t, output, "Moved")
+assert.Contains(t, output, "patrol")
+assert.Contains(t, output, "combat")
+
+data, err := os.ReadFile(specFile)
+require.NoError(t, err)
+// patrol should now be nested under combat in the YAML
+assert.Contains(t, string(data), "patrol")
+}
+
+func TestNodeAdd_DuplicateFails(t *testing.T) {
+specFile := writeTestSpec(t)
+_, err := executeCommand("node", "add", specFile, "root", "patrol", "--type", "action")
+assert.Error(t, err)
+assert.Contains(t, err.Error(), "already exists")
+}
+
+func TestNodeRemove_RootFails(t *testing.T) {
+specFile := writeTestSpec(t)
+_, err := executeCommand("node", "remove", specFile, "root")
+assert.Error(t, err)
+assert.Contains(t, err.Error(), "cannot remove root")
 }

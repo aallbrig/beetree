@@ -24,34 +24,34 @@ var typeAbbreviations = map[string]string{
 // RenderSpecASCII renders a NodeSpec as an ASCII tree.
 func RenderSpecASCII(node *model.NodeSpec) string {
 	var sb strings.Builder
-	renderSpecNode(&sb, node, "", true)
+	renderSpecNode(&sb, node, "", true, true)
 	return sb.String()
 }
 
-func renderSpecNode(sb *strings.Builder, node *model.NodeSpec, prefix string, isLast bool) {
-	connector := "├── "
-	if isLast {
-		connector = "└── "
-	}
-	if prefix == "" {
-		connector = ""
-	}
-
+func renderSpecNode(sb *strings.Builder, node *model.NodeSpec, prefix string, isLast bool, isRoot bool) {
 	label := nodeLabel(node)
-	sb.WriteString(prefix + connector + label + "\n")
-
-	childPrefix := prefix
-	if prefix != "" {
+	if isRoot {
+		sb.WriteString(label + "\n")
+	} else {
+		connector := "├── "
 		if isLast {
-			childPrefix += "    "
-		} else {
-			childPrefix += "│   "
+			connector = "└── "
 		}
+		sb.WriteString(prefix + connector + label + "\n")
+	}
+
+	var childPrefix string
+	if isRoot {
+		childPrefix = ""
+	} else if isLast {
+		childPrefix = prefix + "    "
+	} else {
+		childPrefix = prefix + "│   "
 	}
 
 	for i := range node.Children {
 		isLastChild := i == len(node.Children)-1
-		renderSpecNode(sb, &node.Children[i], childPrefix, isLastChild)
+		renderSpecNode(sb, &node.Children[i], childPrefix, isLastChild, false)
 	}
 }
 

@@ -1,0 +1,133 @@
+# =============================================================================
+# BeeTree Example: Combat AI
+# =============================================================================
+# A more complex tree showing how an NPC decides WHAT to do in combat.
+# This demonstrates the most important BT pattern: priority-based selection.
+#
+# WHAT YOU'LL LEARN:
+#   - Selectors try children until one SUCCEEDS (like an if/else chain)
+#   - Combining selectors + sequences creates priority-based decisions
+#   - Higher-priority behaviors go FIRST in a selector's children
+#   - Each sequence is a "can I do this?" + "do it" pair
+#
+# HOW THIS TREE WORKS (read the selector like an if/else):
+#   IF (health is critical AND have escape route) → FLEE
+#   ELSE IF (have target AND in attack range) → ATTACK
+#   ELSE IF (have target AND NOT in range) → CHASE
+#   ELSE → IDLE
+#
+# This is the "Selector-Sequence" pattern — the bread and butter of game AI.
+# =============================================================================
+
+version: "1.0"
+metadata:
+  name: combat
+  description: "Priority-based combat AI with flee, attack, chase, and idle"
+  author: beetree-examples
+  tags:
+    - intermediate
+    - combat
+    - priority
+
+blackboard:
+  - name: health
+    type: float
+    default: 100.0
+    description: "Current health points"
+  - name: health_threshold
+    type: float
+    default: 20.0
+    description: "Below this, NPC tries to flee"
+  - name: target
+    type: Entity
+    description: "Current enemy target (null if none)"
+  - name: attack_range
+    type: float
+    default: 5.0
+    description: "Maximum distance for attacks"
+  - name: escape_position
+    type: Vector3
+    description: "Safe location to flee toward"
+
+tree:
+  # SELECTOR: tries each child in order. First SUCCESS wins.
+  # This creates a priority system — flee is checked BEFORE attack.
+  type: selector
+  name: combat_root
+  children:
+
+    # --- PRIORITY 1: FLEE (highest priority) ---
+    # This whole sequence must succeed for the NPC to flee.
+    # If health is fine, "is_health_critical" fails → selector moves on.
+    - type: sequence
+      name: flee_behavior
+      children:
+        - type: condition
+          name: is_health_critical
+          node: IsHealthCritical
+          description: "Is health below health_threshold?"
+        - type: condition
+          name: has_escape_route
+          node: HasEscapeRoute
+          description: "Is there a safe place to run to?"
+        - type: action
+          name: flee
+          node: FleeToSafety
+          description: "Run to escape_position"
+
+    # --- PRIORITY 2: ATTACK ---
+    # Only reached if flee_behavior failed (health is fine).
+    - type: sequence
+      name: attack_behavior
+      children:
+        - type: condition
+          name: has_target
+          node: HasTarget
+          description: "Do we have an enemy to fight?"
+        - type: condition
+          name: in_attack_range
+          node: InAttackRange
+          description: "Is the target within attack_range?"
+        # SELECTOR inside a sequence: choose between attack types
+        - type: selector
+          name: choose_attack
+          children:
+            # Try special attack first (higher damage, may fail if on cooldown)
+            - type: sequence
+              name: special_attack
+              children:
+                - type: condition
+                  name: special_ready
+                  node: IsSpecialAttackReady
+                  description: "Is the special attack off cooldown?"
+                - type: action
+                  name: use_special
+                  node: UseSpecialAttack
+                  description: "Execute the special attack"
+            # Fallback: basic attack (always available)
+            - type: action
+              name: basic_attack
+              node: BasicAttack
+              description: "Simple melee or ranged attack"
+
+    # --- PRIORITY 3: CHASE ---
+    # Has a target but not in range — close the distance.
+    - type: sequence
+      name: chase_behavior
+      children:
+        - type: condition
+          name: has_chase_target
+          node: HasTarget
+          description: "Do we have someone to chase?"
+        - type: action
+          name: move_to_target
+          node: MoveToTarget
+          description: "Move toward the target"
+
+    # --- PRIORITY 4: IDLE (lowest priority, fallback) ---
+    # If nothing else applies, just idle. This always succeeds,
+    # so the selector never returns FAILURE.
+    - type: action
+      name: idle
+      node: Idle
+      description: "Stand around, play idle animation"

@@ -42,6 +42,17 @@ func (g *UnityGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 
 	var files []GeneratedFile
 
+	// Runtime base classes
+	rt, err := g.render("runtime.cs.tmpl", data)
+	if err != nil {
+		return nil, fmt.Errorf("runtime: %w", err)
+	}
+	files = append(files, GeneratedFile{
+		Path:    "BTRuntime.cs",
+		Content: rt,
+		IsStub:  false,
+	})
+
 	// Blackboard
 	bb, err := g.render("blackboard.cs.tmpl", data)
 	if err != nil {

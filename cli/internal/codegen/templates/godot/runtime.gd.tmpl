@@ -1,0 +1,138 @@
+{{ genHeader .SourceFile "#" }}
+# BeeTree Runtime — Base classes for behavior tree execution.
+# This file is auto-generated. Do NOT edit.
+
+class_name BTRuntime
+
+
+## Execution status returned by behavior tree nodes.
+enum BTStatus { SUCCESS, FAILURE, RUNNING }
+
+
+## Shared memory for behavior tree nodes.
+class BTBlackboard:
+	var _data: Dictionary = {}
+
+	func get_value(key: String, default_value = null):
+		return _data.get(key, default_value)
+
+	func set_value(key: String, value) -> void:
+		_data[key] = value
+
+	func has_key(key: String) -> bool:
+		return _data.has(key)
+
+
+## Base class for all behavior tree nodes.
+class BTNode:
+	var node_name: String
+
+	func _init(p_name: String) -> void:
+		node_name = p_name
+
+	func tick(blackboard: BTBlackboard, delta: float) -> int:
+		return BTStatus.FAILURE
+
+	func initialize(blackboard: BTBlackboard) -> void:
+		pass
+
+	func terminate(blackboard: BTBlackboard, status: int) -> void:
+		pass
+
+
+## Base class for action nodes (leaf nodes that DO things).
+class BTAction extends BTNode:
+	func tick(blackboard: BTBlackboard, delta: float) -> int:
+		on_initialize(blackboard)
+		var status = on_tick(blackboard, delta)
+		if status != BTStatus.RUNNING:
+			on_terminate(blackboard, status)
+		return status
+
+	func on_initialize(blackboard: BTBlackboard) -> void:
+		pass
+
+	func on_tick(blackboard: BTBlackboard, delta: float) -> int:
+		return BTStatus.SUCCESS
+
+	func on_terminate(blackboard: BTBlackboard, status: int) -> void:
+		pass
+
+
+## Base class for condition nodes (leaf nodes that CHECK things).
+class BTCondition extends BTNode:
+	func tick(blackboard: BTBlackboard, delta: float) -> int:
+		on_initialize(blackboard)
+		return BTStatus.SUCCESS if evaluate(blackboard) else BTStatus.FAILURE
+
+	func on_initialize(blackboard: BTBlackboard) -> void:
+		pass
+
+	func evaluate(blackboard: BTBlackboard) -> bool:
+		return false
+
+
+## Runs children in order. Fails on first failure (AND logic).
+class BTSequence extends BTNode:
+	var children: Array[BTNode] = []
+
+	func _init(p_name: String, p_children: Array[BTNode] = []) -> void:
+		super._init(p_name)
+		children = p_children
+
+	func tick(blackboard: BTBlackboard, delta: float) -> int:
+		for child in children:
+			var status = child.tick(blackboard, delta)
+			if status != BTStatus.SUCCESS:
+				return status
+		return BTStatus.SUCCESS
+
+
+## Tries children in order. Succeeds on first success (OR logic).
+class BTSelector extends BTNode:
+	var children: Array[BTNode] = []
+
+	func _init(p_name: String, p_children: Array[BTNode] = []) -> void:
+		super._init(p_name)
+		children = p_children
+
+	func tick(blackboard: BTBlackboard, delta: float) -> int:
+		for child in children:
+			var status = child.tick(blackboard, delta)
+			if status != BTStatus.FAILURE:
+				return status
+		return BTStatus.FAILURE
+
+
+## Runs all children every tick. Fails if any child fails.
+class BTParallel extends BTNode:
+	var children: Array[BTNode] = []
+
+	func _init(p_name: String, p_children: Array[BTNode] = []) -> void:
+		super._init(p_name)
+		children = p_children
+
+	func tick(blackboard: BTBlackboard, delta: float) -> int:
+		var any_running = false
+		for child in children:
+			var status = child.tick(blackboard, delta)
+			if status == BTStatus.FAILURE:
+				return BTStatus.FAILURE
+			if status == BTStatus.RUNNING:
+				any_running = true
+		return BTStatus.RUNNING if any_running else BTStatus.SUCCESS
+
+
+## Wraps a child node and modifies its behavior.
+class BTDecorator extends BTNode:
+	var child: BTNode
+	var modify: Callable
+
+	func _init(p_name: String, p_child: BTNode, p_modify: Callable) -> void:
+		super._init(p_name)
+		child = p_child
+		modify = p_modify
+
+	func tick(blackboard: BTBlackboard, delta: float) -> int:
+		var status = child.tick(blackboard, delta)
+		return modify.call(status)

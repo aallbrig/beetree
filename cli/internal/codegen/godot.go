@@ -42,6 +42,17 @@ func (g *GodotGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 	snakeName := ToSnakeCase(data.TreeClassName)
 	var files []GeneratedFile
 
+	// Runtime base classes
+	rt, err := g.render("runtime.gd.tmpl", data)
+	if err != nil {
+		return nil, fmt.Errorf("runtime: %w", err)
+	}
+	files = append(files, GeneratedFile{
+		Path:    "bt_runtime.gd",
+		Content: rt,
+		IsStub:  false,
+	})
+
 	// Blackboard
 	bb, err := g.render("blackboard.gd.tmpl", data)
 	if err != nil {
