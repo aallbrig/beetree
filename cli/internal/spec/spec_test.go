@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/aallbrig/beetree-cli/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -233,12 +232,4 @@ func TestNodeCount(t *testing.T) {
 
 	count := NodeCount(&spec.Tree)
 	assert.Equal(t, 5, count) // root(selector) + engage(sequence) + has_target + attack + patrol
-}
-
-func helperVerifyTreeSpec(t *testing.T, spec *model.TreeSpec) {
-	t.Helper()
-	require.NotNil(t, spec)
-	assert.NotEmpty(t, spec.Version)
-	assert.NotEmpty(t, spec.Metadata.Name)
-	assert.NotEmpty(t, spec.Tree.Type)
 }

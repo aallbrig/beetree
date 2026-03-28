@@ -8,6 +8,8 @@ import (
 	"unicode"
 
 	"github.com/aallbrig/beetree-cli/internal/model"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // GeneratedFile represents a single file output by code generation.
@@ -286,7 +288,7 @@ func TemplateFuncs() template.FuncMap {
 		"snake":     ToSnakeCase,
 		"lower":     strings.ToLower,
 		"upper":     strings.ToUpper,
-		"title":     strings.Title,
+		"title":     cases.Title(language.English).String,
 		"genHeader": GeneratedFileHeader,
 		"stubHeader": StubFileHeader,
 	}

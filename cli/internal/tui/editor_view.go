@@ -24,7 +24,6 @@ type EditorView struct {
 	editForm   *tview.Form
 	saveAsInput *tview.InputField
 	quitModal  *tview.List
-	modalFlex  *tview.Flex
 	pages      *tview.Pages
 
 	pendingAddType string
