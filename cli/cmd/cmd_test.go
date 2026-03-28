@@ -410,6 +410,12 @@ func TestGenerateCommand_NoArgs(t *testing.T) {
 	assert.Contains(t, err.Error(), "specify a .beetree.yaml file or use --all")
 }
 
+func TestGenerateCommand_AllWithFileConflict(t *testing.T) {
+	_, err := executeCommand("generate", "unity", "test.yaml", "--all")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot use --all with a specific file argument")
+}
+
 func TestGenerateCommand_InvalidEngine(t *testing.T) {
 	output, _ := executeCommand("generate", "invalid", "test.yaml")
 	// Cobra treats unknown subcommands as an error and shows usage

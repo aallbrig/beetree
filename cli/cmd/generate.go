@@ -22,11 +22,6 @@ var generateCmd = &cobra.Command{
 	Short: "Generate engine-specific code from a .beetree.yaml spec",
 	Long: `Generate native game engine code from a .beetree.yaml specification.
 
-Supported engines:
-  unity   - Unity C# (MonoBehaviour, ScriptableObject)
-  unreal  - Unreal Engine C++ (BTTaskNode, BTDecorator)
-  godot   - Godot GDScript (Node-based, Godot 4.x)
-
 First run generates everything including stubs. Subsequent runs regenerate
 tree definitions but skip existing stubs unless --overwrite is passed.
 
@@ -42,11 +37,15 @@ func addGenerateFlags(cmd *cobra.Command) {
 
 func makeEngineCmd(engineName, engineDesc string, newGen func() codegen.Generator) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   fmt.Sprintf("%s <file>", engineName),
+		Use:   fmt.Sprintf("%s [file]", engineName),
 		Short: fmt.Sprintf("Generate %s code from a .beetree.yaml spec", engineDesc),
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gen := newGen()
+
+			if generateAll && len(args) > 0 {
+				return fmt.Errorf("cannot use --all with a specific file argument")
+			}
 
 			if generateAll {
 				return generateAllSpecs(cmd, gen, engineName)
