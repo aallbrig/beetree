@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/aallbrig/beetree-cli/internal/parser"
-	"github.com/aallbrig/beetree-cli/internal/renderer"
 	"github.com/spf13/cobra"
 )
 
@@ -16,27 +14,14 @@ var rootCmd = &cobra.Command{
 and deploy behavior trees to any game engine.
 
 Define behavior trees in an engine-agnostic .beetree.yaml specification,
-then generate native code for Unity (C#), Unreal (C++), and Godot (GDScript).`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			cmd.Help()
-			return
-		}
+then generate native code for Unity (C#), Unreal (C++), and Godot (GDScript).
 
-		tree, err := parser.Parse(args[0])
-		if err != nil {
-			cmd.PrintErrf("Error parsing tree: %v\n", err)
-			return
-		}
-
-		output, err := renderer.RenderASCII(tree)
-		if err != nil {
-			cmd.PrintErrf("Error rendering tree: %v\n", err)
-			return
-		}
-
-		cmd.Println(output)
-	},
+Quick start:
+  beetree init              Initialize a new project
+  beetree new <name>        Create a behavior tree
+  beetree builder [file]    Launch the interactive TUI editor
+  beetree validate <file>   Validate a tree spec
+  beetree generate <engine> <file>  Generate engine code`,
 }
 
 func Execute() {
