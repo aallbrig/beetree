@@ -24,7 +24,6 @@ func executeCommand(args ...string) (string, error) {
 	generateOverwrite = false
 	generateOutput = ""
 	generateAll = false
-	renderFormat = "ascii"
 	browseTag = ""
 	browseSort = "recent"
 	pushPublic = true
@@ -233,7 +232,7 @@ tree:
 `
 	os.WriteFile(specFile, []byte(yamlContent), 0644)
 
-	output, err := executeCommand("render", specFile)
+	output, err := executeCommand("render", "ascii", specFile)
 	require.NoError(t, err)
 	assert.Contains(t, output, "SEL")
 	assert.Contains(t, output, "root")
@@ -258,7 +257,7 @@ tree:
 `
 	os.WriteFile(specFile, []byte(yamlContent), 0644)
 
-	output, err := executeCommand("render", specFile, "--format", "mermaid")
+	output, err := executeCommand("render", "mermaid", specFile)
 	require.NoError(t, err)
 	assert.Contains(t, output, "graph TD")
 	assert.Contains(t, output, "-->")
