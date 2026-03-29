@@ -153,3 +153,42 @@ func SaveSpec(s *model.TreeSpec, path string) error {
 	}
 	return os.WriteFile(path, data, 0644)
 }
+
+// CloneNode creates a deep copy of a node and its entire subtree,
+// generating unique names using the existing names in the tree.
+func CloneNode(node *model.NodeSpec, existingNames map[string]bool) model.NodeSpec {
+	clone := *node
+	clone.Name = uniqueName(node.Name, existingNames)
+	existingNames[clone.Name] = true
+
+	// Deep copy parameters
+	if node.Parameters != nil {
+		clone.Parameters = make(map[string]interface{}, len(node.Parameters))
+		for k, v := range node.Parameters {
+			clone.Parameters[k] = v
+		}
+	}
+
+	// Deep copy children
+	if len(node.Children) > 0 {
+		clone.Children = make([]model.NodeSpec, len(node.Children))
+		for i := range node.Children {
+			clone.Children[i] = CloneNode(&node.Children[i], existingNames)
+		}
+	}
+	return clone
+}
+
+// uniqueName generates a unique name by appending _copy, _copy2, etc.
+func uniqueName(base string, existing map[string]bool) string {
+	candidate := base + "_copy"
+	if !existing[candidate] {
+		return candidate
+	}
+	for i := 2; ; i++ {
+		candidate = fmt.Sprintf("%s_copy%d", base, i)
+		if !existing[candidate] {
+			return candidate
+		}
+	}
+}

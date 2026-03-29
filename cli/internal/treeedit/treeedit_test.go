@@ -286,3 +286,48 @@ func TestUpdateNode_MultipleFields(t *testing.T) {
 	assert.Equal(t, "condition", node.Type)
 	assert.Equal(t, "CheckPatrol", node.Node)
 }
+
+func TestCloneNode_Leaf(t *testing.T) {
+	node := &model.NodeSpec{
+		Type: "action", Name: "attack", Node: "Attack",
+		Parameters: map[string]interface{}{"damage": 10, "range": 5.5},
+	}
+	existing := map[string]bool{"attack": true}
+
+	clone := CloneNode(node, existing)
+	assert.Equal(t, "attack_copy", clone.Name)
+	assert.Equal(t, "action", clone.Type)
+	assert.Equal(t, "Attack", clone.Node)
+	assert.Equal(t, 10, clone.Parameters["damage"])
+
+	// Mutating clone params shouldn't affect original
+	clone.Parameters["damage"] = 99
+	assert.Equal(t, 10, node.Parameters["damage"])
+}
+
+func TestCloneNode_Subtree(t *testing.T) {
+	s := sampleSpec()
+	combat := FindNode(&s.Tree, "combat")
+	require.NotNil(t, combat)
+
+	existing := CollectNames(&s.Tree)
+	clone := CloneNode(combat, existing)
+
+	assert.Equal(t, "combat_copy", clone.Name)
+	require.Len(t, clone.Children, 2)
+	assert.Equal(t, "has_target_copy", clone.Children[0].Name)
+	assert.Equal(t, "attack_copy", clone.Children[1].Name)
+
+	// All cloned names should be registered in existing
+	assert.True(t, existing["combat_copy"])
+	assert.True(t, existing["has_target_copy"])
+	assert.True(t, existing["attack_copy"])
+}
+
+func TestCloneNode_UniqueNameCollision(t *testing.T) {
+	node := &model.NodeSpec{Type: "action", Name: "attack"}
+	existing := map[string]bool{"attack": true, "attack_copy": true}
+
+	clone := CloneNode(node, existing)
+	assert.Equal(t, "attack_copy2", clone.Name)
+}
