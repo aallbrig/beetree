@@ -26,9 +26,13 @@ type EditorView struct {
 	saveAsInput *tview.InputField
 	quitModal  *tview.List
 	helpView   *tview.TextView
+	searchInput *tview.InputField
+	bbForm     *tview.Form
 	pages      *tview.Pages
 
 	pendingAddType string
+	searchResults  []string
+	searchIdx      int
 }
 
 // NewEditorView creates the full TUI layout from an EditorModel.
@@ -103,6 +107,26 @@ func (ev *EditorView) buildLayout() {
 		return event
 	})
 
+	// Search input
+	ev.searchInput = tview.NewInputField()
+	ev.searchInput.SetLabel("Search: ").SetFieldWidth(30)
+	ev.searchInput.SetBorder(true).SetTitle(" Find Node (Enter=next, Esc=close) ")
+	ev.searchInput.SetChangedFunc(func(text string) {
+		ev.doSearchLive(text)
+	})
+	ev.searchInput.SetDoneFunc(func(key tcell.Key) {
+		switch key {
+		case tcell.KeyEnter:
+			ev.doSearchNext()
+		case tcell.KeyEscape:
+			ev.closeSearch()
+		}
+	})
+
+	// Blackboard editor form (populated dynamically)
+	ev.bbForm = tview.NewForm()
+	ev.bbForm.SetBorder(true).SetTitle(" Edit Blackboard Variable ")
+
 	// Main layout
 	topPane := tview.NewFlex().
 		AddItem(ev.treeView, 0, 2, true).
@@ -117,10 +141,12 @@ func (ev *EditorView) buildLayout() {
 		AddPage("main", ev.Root, true, true).
 		AddPage("add-type", makeModal(ev.addModal, 40, 15), true, false).
 		AddPage("add-name", makeModal(ev.nameInput, 50, 3), true, false).
-		AddPage("edit-node", makeModal(ev.editForm, 55, 14), true, false).
+		AddPage("edit-node", makeModal(ev.editForm, 55, 16), true, false).
 		AddPage("save-as", makeModal(ev.saveAsInput, 60, 3), true, false).
 		AddPage("quit-confirm", makeModal(ev.quitModal, 40, 5), true, false).
-		AddPage("help", makeModal(ev.helpView, 72, 30), true, false)
+		AddPage("help", makeModal(ev.helpView, 72, 30), true, false).
+		AddPage("search", makeModal(ev.searchInput, 55, 3), true, false).
+		AddPage("bb-edit", makeModal(ev.bbForm, 55, 12), true, false)
 
 	ev.setupKeyBindings()
 }
@@ -180,6 +206,18 @@ func (ev *EditorView) handleNavigateKey(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		case '?':
 			ev.showHelp()
+			return nil
+		case '/':
+			ev.openSearch()
+			return nil
+		case 'v':
+			ev.doValidate()
+			return nil
+		case 'p':
+			ev.openParamEditor()
+			return nil
+		case 'b':
+			ev.openBlackboardEditor()
 			return nil
 		}
 	case tcell.KeyLeft:
@@ -478,6 +516,16 @@ func (ev *EditorView) doSave() {
 		ev.openSaveAsModal()
 		return
 	}
+	// Validate before saving
+	if errs := ev.Model.Validate(); len(errs) > 0 {
+		msgs := make([]string, len(errs))
+		for i, e := range errs {
+			msgs[i] = e.Error()
+		}
+		ev.Model.StatusMsg = fmt.Sprintf("⚠ %d error(s): %s", len(errs), strings.Join(msgs, "; "))
+		ev.syncStatusBar()
+		// Save anyway but warn — don't block saves for WIP trees
+	}
 	if err := ev.Model.Save(); err != nil {
 		ev.Model.StatusMsg = fmt.Sprintf("Error: %v", err)
 	}
@@ -678,7 +726,7 @@ func (ev *EditorView) syncStatusBar() {
 	var status string
 	switch ev.Model.Mode {
 	case ModeNavigate:
-		status = "[a]dd  [e]dit  [d]elete  [m]ove  [u]ndo  [r]un sim  [s]ave  [q]uit  [?]help"
+		status = "[a]dd  [e]dit  [d]elete  [m]ove  [p]arams  [b]board  [u]ndo  [r]un  [v]alidate  [/]find  [s]ave  [q]uit  [?]help"
 	case ModeMove:
 		status = fmt.Sprintf("[yellow]MOVE MODE[-] — navigate to target, [m] to place, [Esc] cancel  (moving: %s)", ev.Model.CutNodeName)
 	case ModeAddNode:
@@ -718,6 +766,312 @@ func (ev *EditorView) showHelp() {
 	ev.App.SetFocus(ev.helpView)
 }
 
+// --- Validation ---
+
+func (ev *EditorView) doValidate() {
+	errs := ev.Model.Validate()
+	if len(errs) == 0 {
+		ev.Model.StatusMsg = "✓ Tree is valid"
+	} else {
+		msgs := make([]string, len(errs))
+		for i, e := range errs {
+			msgs[i] = e.Error()
+		}
+		ev.Model.StatusMsg = fmt.Sprintf("⚠ %d error(s): %s", len(errs), strings.Join(msgs, "; "))
+	}
+	ev.syncStatusBar()
+}
+
+// --- Search ---
+
+func (ev *EditorView) openSearch() {
+	ev.searchInput.SetText("")
+	ev.searchResults = nil
+	ev.searchIdx = 0
+	ev.pages.ShowPage("search")
+	ev.App.SetFocus(ev.searchInput)
+}
+
+func (ev *EditorView) closeSearch() {
+	ev.pages.HidePage("search")
+	ev.App.SetFocus(ev.treeView)
+	ev.syncAll()
+}
+
+func (ev *EditorView) doSearchLive(query string) {
+	ev.searchResults = ev.Model.SearchNodes(query)
+	ev.searchIdx = 0
+	if len(ev.searchResults) > 0 {
+		ev.Model.SelectNode(ev.searchResults[0])
+		// Expand path to the matched node
+		ev.expandPathTo(ev.searchResults[0])
+		ev.Model.StatusMsg = fmt.Sprintf("Match %d/%d: %s", 1, len(ev.searchResults), ev.searchResults[0])
+	} else if query != "" {
+		ev.Model.StatusMsg = "No matches"
+	}
+	ev.syncTreeView()
+	ev.syncPropsView()
+	ev.syncStatusBar()
+}
+
+func (ev *EditorView) doSearchNext() {
+	if len(ev.searchResults) == 0 {
+		return
+	}
+	ev.searchIdx = (ev.searchIdx + 1) % len(ev.searchResults)
+	name := ev.searchResults[ev.searchIdx]
+	ev.Model.SelectNode(name)
+	ev.expandPathTo(name)
+	ev.Model.StatusMsg = fmt.Sprintf("Match %d/%d: %s", ev.searchIdx+1, len(ev.searchResults), name)
+	ev.syncTreeView()
+	ev.syncPropsView()
+	ev.syncStatusBar()
+}
+
+// expandPathTo ensures all ancestors of a node are expanded so it's visible.
+func (ev *EditorView) expandPathTo(name string) {
+	path := ev.findPathTo(&ev.Model.Spec.Tree, name)
+	for _, ancestor := range path {
+		ev.Model.ExpandNode(ancestor)
+	}
+}
+
+// findPathTo returns the names of all ancestors from root to the named node.
+func (ev *EditorView) findPathTo(node *model.NodeSpec, target string) []string {
+	if node.Name == target {
+		return []string{node.Name}
+	}
+	for i := range node.Children {
+		if path := ev.findPathTo(&node.Children[i], target); path != nil {
+			return append([]string{node.Name}, path...)
+		}
+	}
+	return nil
+}
+
+// --- Parameter Editor ---
+
+func (ev *EditorView) openParamEditor() {
+	node := ev.Model.SelectedNode()
+	if node == nil {
+		return
+	}
+	if !model.IsLeafType(node.Type) && node.Type != "decorator" {
+		ev.Model.StatusMsg = "Parameters are for leaf and decorator nodes"
+		ev.syncStatusBar()
+		return
+	}
+
+	ev.editForm.Clear(true)
+	ev.editForm.SetTitle(fmt.Sprintf(" Parameters: %s ", node.Name))
+
+	// Existing parameters as editable fields
+	paramKeys := make([]string, 0, len(node.Parameters))
+	for k := range node.Parameters {
+		paramKeys = append(paramKeys, k)
+	}
+	sort.Strings(paramKeys)
+
+	for _, k := range paramKeys {
+		v := fmt.Sprintf("%v", node.Parameters[k])
+		ev.editForm.AddInputField(k+": ", v, 30, nil, nil)
+	}
+
+	// "New parameter" fields
+	ev.editForm.AddInputField("New Key: ", "", 20, nil, nil)
+	ev.editForm.AddInputField("New Value: ", "", 20, nil, nil)
+
+	ev.editForm.AddButton("Save", func() {
+		params := make(map[string]interface{})
+
+		// Read back existing parameter values
+		for _, k := range paramKeys {
+			field := ev.editForm.GetFormItemByLabel(k + ": ")
+			if field != nil {
+				val := field.(*tview.InputField).GetText()
+				if val != "" {
+					params[k] = parseParamValue(val)
+				}
+			}
+		}
+
+		// Read new parameter
+		newKeyField := ev.editForm.GetFormItemByLabel("New Key: ")
+		newValField := ev.editForm.GetFormItemByLabel("New Value: ")
+		if newKeyField != nil && newValField != nil {
+			newKey := newKeyField.(*tview.InputField).GetText()
+			newVal := newValField.(*tview.InputField).GetText()
+			if newKey != "" && newVal != "" {
+				params[newKey] = parseParamValue(newVal)
+			}
+		}
+
+		updates := treeedit.NodeUpdates{Parameters: params}
+		if err := ev.Model.EditNode(updates); err != nil {
+			ev.Model.StatusMsg = fmt.Sprintf("Edit failed: %v", err)
+		}
+		ev.closeParamEditor()
+	})
+	ev.editForm.AddButton("Cancel", func() {
+		ev.closeParamEditor()
+	})
+
+	ev.pages.ShowPage("edit-node")
+	ev.App.SetFocus(ev.editForm)
+}
+
+func (ev *EditorView) closeParamEditor() {
+	ev.editForm.SetTitle(" Edit Node ")
+	ev.Model.Mode = ModeNavigate
+	ev.pages.HidePage("edit-node")
+	ev.App.SetFocus(ev.treeView)
+	ev.syncAll()
+}
+
+// parseParamValue attempts to parse a string as a number or bool, falling back to string.
+func parseParamValue(s string) interface{} {
+	s = strings.TrimSpace(s)
+	if s == "true" {
+		return true
+	}
+	if s == "false" {
+		return false
+	}
+	// Try int
+	var i int
+	if _, err := fmt.Sscanf(s, "%d", &i); err == nil && fmt.Sprintf("%d", i) == s {
+		return i
+	}
+	// Try float
+	var f float64
+	if _, err := fmt.Sscanf(s, "%f", &f); err == nil {
+		return f
+	}
+	return s
+}
+
+// --- Blackboard Editor ---
+
+func (ev *EditorView) openBlackboardEditor() {
+	bb := ev.Model.BlackboardVars()
+	ev.bbForm.Clear(true)
+
+	if len(bb) == 0 {
+		ev.bbForm.SetTitle(" Blackboard (empty — add first variable) ")
+	} else {
+		ev.bbForm.SetTitle(fmt.Sprintf(" Blackboard (%d vars) ", len(bb)))
+	}
+
+	// List existing vars as a dropdown for edit/remove, or go straight to add
+	if len(bb) > 0 {
+		names := make([]string, len(bb))
+		for i, v := range bb {
+			names[i] = fmt.Sprintf("%s (%s)", v.Name, v.Type)
+		}
+		ev.bbForm.AddDropDown("Variable: ", names, 0, nil)
+
+		ev.bbForm.AddButton("Edit", func() {
+			idx, _ := ev.bbForm.GetFormItemByLabel("Variable: ").(*tview.DropDown).GetCurrentOption()
+			if idx >= 0 && idx < len(bb) {
+				ev.closeBBEditor()
+				ev.openBBVarForm(bb[idx].Name, &bb[idx])
+			}
+		})
+		ev.bbForm.AddButton("Remove", func() {
+			idx, _ := ev.bbForm.GetFormItemByLabel("Variable: ").(*tview.DropDown).GetCurrentOption()
+			if idx >= 0 && idx < len(bb) {
+				if err := ev.Model.RemoveBlackboardVar(bb[idx].Name); err != nil {
+					ev.Model.StatusMsg = fmt.Sprintf("Error: %v", err)
+				}
+				ev.closeBBEditor()
+			}
+		})
+	}
+
+	ev.bbForm.AddButton("Add New", func() {
+		ev.closeBBEditor()
+		ev.openBBVarForm("", nil)
+	})
+	ev.bbForm.AddButton("Close", func() {
+		ev.closeBBEditor()
+	})
+
+	ev.pages.ShowPage("bb-edit")
+	ev.App.SetFocus(ev.bbForm)
+}
+
+func (ev *EditorView) closeBBEditor() {
+	ev.pages.HidePage("bb-edit")
+	ev.App.SetFocus(ev.treeView)
+	ev.syncAll()
+}
+
+// openBBVarForm opens a form for adding or editing a single blackboard variable.
+func (ev *EditorView) openBBVarForm(oldName string, existing *model.BlackboardVar) {
+	ev.bbForm.Clear(true)
+
+	isEdit := existing != nil
+	if isEdit {
+		ev.bbForm.SetTitle(fmt.Sprintf(" Edit: %s ", oldName))
+	} else {
+		ev.bbForm.SetTitle(" Add Blackboard Variable ")
+	}
+
+	name := ""
+	bbType := ""
+	defVal := ""
+	desc := ""
+	if existing != nil {
+		name = existing.Name
+		bbType = existing.Type
+		if existing.Default != nil {
+			defVal = fmt.Sprintf("%v", existing.Default)
+		}
+		desc = existing.Description
+	}
+
+	ev.bbForm.AddInputField("Name: ", name, 25, nil, nil)
+	ev.bbForm.AddInputField("Type: ", bbType, 25, nil, nil)
+	ev.bbForm.AddInputField("Default: ", defVal, 25, nil, nil)
+	ev.bbForm.AddInputField("Description: ", desc, 40, nil, nil)
+
+	ev.bbForm.AddButton("Save", func() {
+		v := model.BlackboardVar{
+			Name:        ev.bbForm.GetFormItemByLabel("Name: ").(*tview.InputField).GetText(),
+			Type:        ev.bbForm.GetFormItemByLabel("Type: ").(*tview.InputField).GetText(),
+			Description: ev.bbForm.GetFormItemByLabel("Description: ").(*tview.InputField).GetText(),
+		}
+		if d := ev.bbForm.GetFormItemByLabel("Default: ").(*tview.InputField).GetText(); d != "" {
+			v.Default = parseParamValue(d)
+		}
+
+		if v.Name == "" || v.Type == "" {
+			ev.Model.StatusMsg = "Name and Type are required"
+			ev.syncStatusBar()
+			return
+		}
+
+		var err error
+		if isEdit {
+			err = ev.Model.EditBlackboardVar(oldName, v)
+		} else {
+			err = ev.Model.AddBlackboardVar(v)
+		}
+		if err != nil {
+			ev.Model.StatusMsg = fmt.Sprintf("Error: %v", err)
+			ev.syncStatusBar()
+			return
+		}
+		ev.closeBBEditor()
+	})
+	ev.bbForm.AddButton("Cancel", func() {
+		ev.closeBBEditor()
+	})
+
+	ev.pages.ShowPage("bb-edit")
+	ev.App.SetFocus(ev.bbForm)
+}
+
 const helpText = `[yellow::b]═══ Key Bindings ═══[-::-]
 
 [green::b]Navigate Mode[-::-]
@@ -725,8 +1079,12 @@ const helpText = `[yellow::b]═══ Key Bindings ═══[-::-]
   [aqua]e[-]         Edit selected node
   [aqua]d[-]         Delete selected node
   [aqua]m[-]         Start move (cut), then navigate + [aqua]m[-] to paste
+  [aqua]p[-]         Edit node parameters
+  [aqua]b[-]         Edit blackboard variables
   [aqua]u[-]         Undo last change
   [aqua]r[-]         Run interactive simulation
+  [aqua]v[-]         Validate tree
+  [aqua]/[-]         Search nodes by name
   [aqua]s[-]         Save file
   [aqua]S[-]         Save as (new path)
   [aqua]q[-]         Quit (prompts if unsaved)

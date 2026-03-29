@@ -129,16 +129,20 @@ func UpdateNode(root *model.NodeSpec, name string, updates NodeUpdates) error {
 	if updates.Decorator != nil {
 		node.Decorator = *updates.Decorator
 	}
+	if updates.Parameters != nil {
+		node.Parameters = updates.Parameters
+	}
 	return nil
 }
 
 // NodeUpdates holds optional field changes for UpdateNode.
 // Pointer fields are only applied when non-nil.
 type NodeUpdates struct {
-	Name      string  // new name (empty = keep current)
-	Type      *string // new type
-	NodeClass *string // new node class
-	Decorator *string // new decorator
+	Name       string                  // new name (empty = keep current)
+	Type       *string                 // new type
+	NodeClass  *string                 // new node class
+	Decorator  *string                 // new decorator
+	Parameters map[string]interface{}  // new parameters (nil = keep current, empty map = clear)
 }
 
 // SaveSpec writes a TreeSpec back to a YAML file.

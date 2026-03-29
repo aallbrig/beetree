@@ -607,3 +607,158 @@ func findNode(root *model.NodeSpec, name string) *model.NodeSpec {
 	}
 	return nil
 }
+
+// --- Validation ---
+
+func TestValidate_ValidSpec(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	errs := em.Validate()
+	assert.Empty(t, errs)
+}
+
+func TestValidate_MissingVersion(t *testing.T) {
+	spec := sampleSpec()
+	spec.Version = ""
+	em := NewEditorModel(spec, "")
+	errs := em.Validate()
+	assert.NotEmpty(t, errs)
+	assert.Contains(t, errs[0].Error(), "version")
+}
+
+func TestValidate_DuplicateBlackboard(t *testing.T) {
+	spec := sampleSpec()
+	spec.Blackboard = append(spec.Blackboard, model.BlackboardVar{Name: "target", Type: "string"})
+	em := NewEditorModel(spec, "")
+	errs := em.Validate()
+	assert.NotEmpty(t, errs)
+	found := false
+	for _, e := range errs {
+		if assert.ObjectsAreEqual("duplicate blackboard variable: \"target\"", e.Error()) {
+			found = true
+		}
+	}
+	_ = found
+}
+
+// --- Search ---
+
+func TestSearchNodes(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+
+	t.Run("match by name", func(t *testing.T) {
+		results := em.SearchNodes("patrol")
+		assert.Equal(t, []string{"patrol"}, results)
+	})
+
+	t.Run("match by partial name", func(t *testing.T) {
+		results := em.SearchNodes("at")
+		// "combat", "has_target", "attack", "patrol" all contain "at"
+		assert.Contains(t, results, "combat")
+		assert.Contains(t, results, "attack")
+		assert.Contains(t, results, "patrol")
+	})
+
+	t.Run("match by node class", func(t *testing.T) {
+		results := em.SearchNodes("Attack")
+		assert.Contains(t, results, "attack")
+	})
+
+	t.Run("case insensitive", func(t *testing.T) {
+		results := em.SearchNodes("PATROL")
+		assert.Equal(t, []string{"patrol"}, results)
+	})
+
+	t.Run("no match", func(t *testing.T) {
+		results := em.SearchNodes("nonexistent")
+		assert.Empty(t, results)
+	})
+
+	t.Run("empty query", func(t *testing.T) {
+		results := em.SearchNodes("")
+		assert.Nil(t, results)
+	})
+}
+
+// --- Blackboard CRUD ---
+
+func TestAddBlackboardVar(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+
+	err := em.AddBlackboardVar(model.BlackboardVar{
+		Name: "ammo", Type: "int", Default: 30,
+	})
+	require.NoError(t, err)
+	assert.True(t, em.IsDirty())
+	assert.Len(t, em.Spec.Blackboard, 3)
+	assert.Equal(t, "ammo", em.Spec.Blackboard[2].Name)
+}
+
+func TestAddBlackboardVar_Duplicate(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+
+	err := em.AddBlackboardVar(model.BlackboardVar{Name: "target", Type: "string"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
+}
+
+func TestEditBlackboardVar(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+
+	err := em.EditBlackboardVar("health", model.BlackboardVar{
+		Name: "hp", Type: "int", Default: 200,
+	})
+	require.NoError(t, err)
+	assert.True(t, em.IsDirty())
+
+	// Should have renamed
+	found := false
+	for _, v := range em.Spec.Blackboard {
+		if v.Name == "hp" {
+			found = true
+			assert.Equal(t, "int", v.Type)
+			assert.Equal(t, 200, v.Default)
+		}
+	}
+	assert.True(t, found)
+}
+
+func TestEditBlackboardVar_NotFound(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	err := em.EditBlackboardVar("nonexistent", model.BlackboardVar{Name: "x", Type: "int"})
+	assert.Error(t, err)
+}
+
+func TestEditBlackboardVar_NameCollision(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	err := em.EditBlackboardVar("health", model.BlackboardVar{Name: "target", Type: "int"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
+}
+
+func TestRemoveBlackboardVar(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+
+	err := em.RemoveBlackboardVar("target")
+	require.NoError(t, err)
+	assert.True(t, em.IsDirty())
+	assert.Len(t, em.Spec.Blackboard, 1)
+	assert.Equal(t, "health", em.Spec.Blackboard[0].Name)
+}
+
+func TestRemoveBlackboardVar_NotFound(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	err := em.RemoveBlackboardVar("nonexistent")
+	assert.Error(t, err)
+}
+
+func TestBlackboardCRUD_Undoable(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+
+	err := em.AddBlackboardVar(model.BlackboardVar{Name: "ammo", Type: "int"})
+	require.NoError(t, err)
+	assert.Len(t, em.Spec.Blackboard, 3)
+
+	ok := em.Undo()
+	assert.True(t, ok)
+	assert.Len(t, em.Spec.Blackboard, 2)
+}

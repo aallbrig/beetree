@@ -2,9 +2,11 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aallbrig/beetree-cli/internal/model"
 	"github.com/aallbrig/beetree-cli/internal/treeedit"
+	"github.com/aallbrig/beetree-cli/internal/validator"
 	"gopkg.in/yaml.v3"
 )
 
@@ -422,5 +424,90 @@ func (em *EditorModel) SimNodeStatus(name string) (model.Status, bool) {
 		}
 	}
 	return 0, false
+}
+
+// --- Validation ---
+
+// Validate runs the validator on the current spec, returning any errors.
+func (em *EditorModel) Validate() []error {
+	return validator.Validate(em.Spec)
+}
+
+// --- Search ---
+
+// SearchNodes returns names of all nodes matching the query (case-insensitive substring).
+func (em *EditorModel) SearchNodes(query string) []string {
+	if query == "" {
+		return nil
+	}
+	var results []string
+	q := strings.ToLower(query)
+	em.searchRecursive(&em.Spec.Tree, q, &results)
+	return results
+}
+
+func (em *EditorModel) searchRecursive(node *model.NodeSpec, query string, results *[]string) {
+	if strings.Contains(strings.ToLower(node.Name), query) || strings.Contains(strings.ToLower(node.Node), query) {
+		*results = append(*results, node.Name)
+	}
+	for i := range node.Children {
+		em.searchRecursive(&node.Children[i], query, results)
+	}
+}
+
+// --- Blackboard CRUD ---
+
+// AddBlackboardVar adds a new blackboard variable.
+func (em *EditorModel) AddBlackboardVar(v model.BlackboardVar) error {
+	em.pushUndo()
+	for _, existing := range em.Spec.Blackboard {
+		if existing.Name == v.Name {
+			em.undoStack = em.undoStack[:len(em.undoStack)-1]
+			return fmt.Errorf("blackboard variable %q already exists", v.Name)
+		}
+	}
+	em.Spec.Blackboard = append(em.Spec.Blackboard, v)
+	em.dirty = true
+	em.StatusMsg = fmt.Sprintf("Added blackboard var %q", v.Name)
+	return nil
+}
+
+// EditBlackboardVar updates an existing blackboard variable by name.
+func (em *EditorModel) EditBlackboardVar(oldName string, v model.BlackboardVar) error {
+	em.pushUndo()
+	for i := range em.Spec.Blackboard {
+		if em.Spec.Blackboard[i].Name == oldName {
+			if v.Name != oldName {
+				// Check for name collision
+				for j, existing := range em.Spec.Blackboard {
+					if j != i && existing.Name == v.Name {
+						em.undoStack = em.undoStack[:len(em.undoStack)-1]
+						return fmt.Errorf("blackboard variable %q already exists", v.Name)
+					}
+				}
+			}
+			em.Spec.Blackboard[i] = v
+			em.dirty = true
+			em.StatusMsg = fmt.Sprintf("Updated blackboard var %q", v.Name)
+			return nil
+		}
+	}
+	em.undoStack = em.undoStack[:len(em.undoStack)-1]
+	return fmt.Errorf("blackboard variable %q not found", oldName)
+}
+
+// RemoveBlackboardVar removes a blackboard variable by name.
+func (em *EditorModel) RemoveBlackboardVar(name string) error {
+	em.pushUndo()
+	for i := range em.Spec.Blackboard {
+		if em.Spec.Blackboard[i].Name == name {
+			em.Spec.Blackboard = append(em.Spec.Blackboard[:i], em.Spec.Blackboard[i+1:]...)
+			em.dirty = true
+			em.StatusMsg = fmt.Sprintf("Removed blackboard var %q", name)
+			return nil
+		}
+	}
+	em.undoStack = em.undoStack[:len(em.undoStack)-1]
+	return fmt.Errorf("blackboard variable %q not found", name)
 }
 
