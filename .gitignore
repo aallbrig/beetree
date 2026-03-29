@@ -23,3 +23,7 @@
 go.work
 
 bin/
+
+# Demo artifacts (recorded by VHS)
+dist/
+demos/segments/*.mp4

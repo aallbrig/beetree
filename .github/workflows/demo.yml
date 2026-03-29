@@ -1,0 +1,71 @@
+name: Demo
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1' # Weekly on Monday at 06:00 UTC
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for demo-relevant changes
+        id: changes
+        run: |
+          LAST_TAG=$(git tag -l 'demo-recorded-*' --sort=-creatordate | head -1)
+          if [ -z "$LAST_TAG" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "No previous demo tag found — recording"
+          else
+            CHANGED=$(git diff --name-only "$LAST_TAG"..HEAD -- \
+              'cli/' 'demos/' 'examples/' 'scripts/record-demo.sh' | wc -l)
+            if [ "$CHANGED" -gt 0 ]; then
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+              echo "$CHANGED file(s) changed since $LAST_TAG"
+            else
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              echo "No demo-relevant changes since $LAST_TAG"
+            fi
+          fi
+
+      - uses: actions/setup-go@v5
+        if: steps.changes.outputs.changed == 'true'
+        with:
+          go-version: '1.23'
+          cache-dependency-path: cli/go.sum
+
+      - name: Install VHS
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          go install github.com/charmbracelet/vhs@latest
+
+      - name: Install ffmpeg
+        if: steps.changes.outputs.changed == 'true'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Build and install beetree
+        if: steps.changes.outputs.changed == 'true'
+        run: make install
+
+      - name: Record demo
+        if: steps.changes.outputs.changed == 'true'
+        run: make demo
+
+      - name: Tag successful recording
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          git tag "demo-recorded-$SHA"
+          git push origin "demo-recorded-$SHA"
+
+      - name: Upload demo artifact
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-video
+          path: dist/demo.mp4
+          retention-days: 30
