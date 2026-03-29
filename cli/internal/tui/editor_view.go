@@ -198,6 +198,9 @@ func (ev *EditorView) handleNavigateKey(event *tcell.EventKey) *tcell.EventKey {
 		case 'u':
 			ev.doUndo()
 			return nil
+		case 'U':
+			ev.doRedo()
+			return nil
 		case 'r':
 			ev.doStartSimulation()
 			return nil
@@ -218,6 +221,9 @@ func (ev *EditorView) handleNavigateKey(event *tcell.EventKey) *tcell.EventKey {
 			return nil
 		case 'b':
 			ev.openBlackboardEditor()
+			return nil
+		case 'c':
+			ev.doDuplicate()
 			return nil
 		}
 	case tcell.KeyLeft:
@@ -443,6 +449,22 @@ func (ev *EditorView) doUndo() {
 		ev.Model.StatusMsg = "Nothing to undo"
 		ev.syncStatusBar()
 	}
+}
+
+func (ev *EditorView) doRedo() {
+	if ev.Model.Redo() {
+		ev.syncAll()
+	} else {
+		ev.Model.StatusMsg = "Nothing to redo"
+		ev.syncStatusBar()
+	}
+}
+
+func (ev *EditorView) doDuplicate() {
+	if err := ev.Model.DuplicateSelected(); err != nil {
+		ev.Model.StatusMsg = fmt.Sprintf("Error: %v", err)
+	}
+	ev.syncAll()
 }
 
 func (ev *EditorView) doQuit() {
@@ -726,7 +748,7 @@ func (ev *EditorView) syncStatusBar() {
 	var status string
 	switch ev.Model.Mode {
 	case ModeNavigate:
-		status = "[a]dd  [e]dit  [d]elete  [m]ove  [p]arams  [b]board  [u]ndo  [r]un  [v]alidate  [/]find  [s]ave  [q]uit  [?]help"
+		status = "[a]dd  [e]dit  [d]elete  [c]opy  [m]ove  [p]arams  [b]board  [u]ndo  [U]redo  [r]un  [v]alidate  [/]find  [s]ave  [q]uit  [?]help"
 	case ModeMove:
 		status = fmt.Sprintf("[yellow]MOVE MODE[-] — navigate to target, [m] to place, [Esc] cancel  (moving: %s)", ev.Model.CutNodeName)
 	case ModeAddNode:
@@ -1078,10 +1100,12 @@ const helpText = `[yellow::b]═══ Key Bindings ═══[-::-]
   [aqua]a[-]         Add a child node
   [aqua]e[-]         Edit selected node
   [aqua]d[-]         Delete selected node
+  [aqua]c[-]         Copy/duplicate selected node
   [aqua]m[-]         Start move (cut), then navigate + [aqua]m[-] to paste
   [aqua]p[-]         Edit node parameters
   [aqua]b[-]         Edit blackboard variables
   [aqua]u[-]         Undo last change
+  [aqua]U[-]         Redo (Shift+U)
   [aqua]r[-]         Run interactive simulation
   [aqua]v[-]         Validate tree
   [aqua]/[-]         Search nodes by name

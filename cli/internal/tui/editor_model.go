@@ -45,6 +45,7 @@ type EditorModel struct {
 	dirty        bool
 	expanded     map[string]bool
 	undoStack    []undoSnapshot
+	redoStack    []undoSnapshot
 }
 
 // undoSnapshot stores tree state for undo.
@@ -267,6 +268,48 @@ func (em *EditorModel) CancelMove() {
 	em.StatusMsg = "Move cancelled"
 }
 
+// DuplicateSelected clones the selected node and adds it as a sibling.
+func (em *EditorModel) DuplicateSelected() error {
+	if em.selectedName == em.Spec.Tree.Name {
+		return fmt.Errorf("cannot duplicate root node")
+	}
+
+	node := treeedit.FindNode(&em.Spec.Tree, em.selectedName)
+	if node == nil {
+		return fmt.Errorf("node %q not found", em.selectedName)
+	}
+
+	// Find parent of selected node
+	parent := findParent(&em.Spec.Tree, em.selectedName)
+	if parent == nil {
+		return fmt.Errorf("cannot find parent of %q", em.selectedName)
+	}
+
+	em.pushUndo()
+	existing := treeedit.CollectNames(&em.Spec.Tree)
+	clone := treeedit.CloneNode(node, existing)
+
+	parent.Children = append(parent.Children, clone)
+	em.expanded[clone.Name] = true
+	em.selectedName = clone.Name
+	em.dirty = true
+	em.StatusMsg = fmt.Sprintf("Duplicated %q as %q", node.Name, clone.Name)
+	return nil
+}
+
+// findParent returns the parent of a named node, or nil if it's the root.
+func findParent(root *model.NodeSpec, childName string) *model.NodeSpec {
+	for i := range root.Children {
+		if root.Children[i].Name == childName {
+			return root
+		}
+		if p := findParent(&root.Children[i], childName); p != nil {
+			return p
+		}
+	}
+	return nil
+}
+
 // --- Save ---
 
 // Save writes the spec to disk at FilePath.
@@ -284,7 +327,7 @@ func (em *EditorModel) Save() error {
 
 // --- Undo ---
 
-// pushUndo saves the current tree state to the undo stack.
+// pushUndo saves the current tree state to the undo stack and clears redo.
 func (em *EditorModel) pushUndo() {
 	data, err := yaml.Marshal(em.Spec)
 	if err != nil {
@@ -297,6 +340,7 @@ func (em *EditorModel) pushUndo() {
 	if len(em.undoStack) > maxUndoDepth {
 		em.undoStack = em.undoStack[len(em.undoStack)-maxUndoDepth:]
 	}
+	em.redoStack = nil // new edit invalidates redo history
 }
 
 // Undo restores the previous tree state. Returns false if nothing to undo.
@@ -304,6 +348,15 @@ func (em *EditorModel) Undo() bool {
 	if len(em.undoStack) == 0 {
 		return false
 	}
+
+	// Save current state to redo stack before undoing
+	if data, err := yaml.Marshal(em.Spec); err == nil {
+		em.redoStack = append(em.redoStack, undoSnapshot{
+			specYAML:     data,
+			selectedName: em.selectedName,
+		})
+	}
+
 	snap := em.undoStack[len(em.undoStack)-1]
 	em.undoStack = em.undoStack[:len(em.undoStack)-1]
 
@@ -325,9 +378,49 @@ func (em *EditorModel) Undo() bool {
 	return true
 }
 
+// Redo re-applies the last undone change. Returns false if nothing to redo.
+func (em *EditorModel) Redo() bool {
+	if len(em.redoStack) == 0 {
+		return false
+	}
+
+	// Save current state to undo stack before redoing
+	if data, err := yaml.Marshal(em.Spec); err == nil {
+		em.undoStack = append(em.undoStack, undoSnapshot{
+			specYAML:     data,
+			selectedName: em.selectedName,
+		})
+	}
+
+	snap := em.redoStack[len(em.redoStack)-1]
+	em.redoStack = em.redoStack[:len(em.redoStack)-1]
+
+	var spec model.TreeSpec
+	if err := yaml.Unmarshal(snap.specYAML, &spec); err != nil {
+		em.StatusMsg = fmt.Sprintf("Redo failed: %v", err)
+		return false
+	}
+	em.Spec = &spec
+	em.expanded = make(map[string]bool)
+	em.expandAll(&em.Spec.Tree)
+	if treeedit.FindNode(&em.Spec.Tree, snap.selectedName) != nil {
+		em.selectedName = snap.selectedName
+	} else {
+		em.selectedName = em.Spec.Tree.Name
+	}
+	em.dirty = true
+	em.StatusMsg = "Redone"
+	return true
+}
+
 // CanUndo returns whether there are undo snapshots available.
 func (em *EditorModel) CanUndo() bool {
 	return len(em.undoStack) > 0
+}
+
+// CanRedo returns whether there are redo snapshots available.
+func (em *EditorModel) CanRedo() bool {
+	return len(em.redoStack) > 0
 }
 
 // --- Edit Node ---

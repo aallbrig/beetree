@@ -325,6 +325,57 @@ func TestCancelMove(t *testing.T) {
 	assert.Empty(t, em.CutNodeName)
 }
 
+// --- Duplicate ---
+
+func TestDuplicateNode(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	em.SelectNode("patrol")
+
+	err := em.DuplicateSelected()
+	require.NoError(t, err)
+	assert.True(t, em.IsDirty())
+
+	flat := em.FlattenTree()
+	names := flatNames(flat)
+	assert.Contains(t, names, "patrol")
+	assert.Contains(t, names, "patrol_copy")
+	assert.Equal(t, "patrol_copy", em.SelectedNodeName())
+}
+
+func TestDuplicateNode_Subtree(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	em.SelectNode("combat")
+
+	err := em.DuplicateSelected()
+	require.NoError(t, err)
+
+	flat := em.FlattenTree()
+	names := flatNames(flat)
+	assert.Contains(t, names, "combat_copy")
+	assert.Contains(t, names, "has_target_copy")
+	assert.Contains(t, names, "attack_copy")
+}
+
+func TestDuplicateNode_Root(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	em.SelectNode("root")
+
+	err := em.DuplicateSelected()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "root")
+}
+
+func TestDuplicateNode_Undoable(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	em.SelectNode("patrol")
+
+	em.DuplicateSelected()
+	assert.Contains(t, flatNames(em.FlattenTree()), "patrol_copy")
+
+	em.Undo()
+	assert.NotContains(t, flatNames(em.FlattenTree()), "patrol_copy")
+}
+
 // --- Save ---
 
 func TestSave(t *testing.T) {
@@ -514,6 +565,70 @@ func TestUndo_Multiple(t *testing.T) {
 	names := flatNames(flat)
 	assert.NotContains(t, names, "n1")
 	assert.NotContains(t, names, "n2")
+}
+
+// --- Redo ---
+
+func TestRedo_Basic(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	em.SelectNode("root")
+
+	em.AddChild("new_node", "action", "")
+	assert.True(t, em.CanUndo())
+	assert.False(t, em.CanRedo())
+
+	em.Undo()
+	assert.True(t, em.CanRedo())
+
+	flat := em.FlattenTree()
+	assert.NotContains(t, flatNames(flat), "new_node")
+
+	ok := em.Redo()
+	assert.True(t, ok)
+
+	flat = em.FlattenTree()
+	assert.Contains(t, flatNames(flat), "new_node")
+}
+
+func TestRedo_ClearedOnNewEdit(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	em.SelectNode("root")
+
+	em.AddChild("n1", "action", "")
+	em.Undo()
+	assert.True(t, em.CanRedo())
+
+	// New edit should clear redo
+	em.AddChild("n2", "action", "")
+	assert.False(t, em.CanRedo())
+}
+
+func TestRedo_Empty(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	assert.False(t, em.CanRedo())
+	assert.False(t, em.Redo())
+}
+
+func TestRedo_MultipleUndoRedo(t *testing.T) {
+	em := NewEditorModel(sampleSpec(), "")
+	em.SelectNode("root")
+
+	em.AddChild("n1", "action", "")
+	em.SelectNode("root")
+	em.AddChild("n2", "action", "")
+
+	em.Undo() // undo n2
+	em.Undo() // undo n1
+
+	em.Redo() // redo n1
+	flat := em.FlattenTree()
+	assert.Contains(t, flatNames(flat), "n1")
+	assert.NotContains(t, flatNames(flat), "n2")
+
+	em.Redo() // redo n2
+	flat = em.FlattenTree()
+	assert.Contains(t, flatNames(flat), "n1")
+	assert.Contains(t, flatNames(flat), "n2")
 }
 
 // --- Edit Node ---
