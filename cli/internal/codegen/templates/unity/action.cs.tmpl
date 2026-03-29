@@ -5,12 +5,27 @@ namespace BeeTree
 {
     /// <summary>
     /// Action node: {{ .ClassName }}
+{{- if .Description }}
+    /// {{ .Description }}
+{{- end }}
     /// </summary>
     public class {{ .ClassName }}Action : BTAction
     {
+{{- if .Parameters }}
+        // --- Parameters from spec ---
+{{- range $key, $val := .Parameters }}
+        // {{ $key }} = {{ $val }}
+{{- end }}
+{{ end }}
         public override void OnInitialize(BTBlackboard blackboard)
         {
             // TODO: Initialize action state
+{{- if .Blackboard }}
+            // Available blackboard variables:
+{{- range .Blackboard }}
+            //   blackboard.Get<{{ .Type }}>("{{ .Name }}"){{ if .Description }} — {{ .Description }}{{ end }}
+{{- end }}
+{{- end }}
         }
 
         public override BTStatus OnTick(BTBlackboard blackboard, float deltaTime)

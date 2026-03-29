@@ -3,6 +3,16 @@ extends Node
 class_name {{ .ClassName }}Condition
 
 ## Condition node: {{ .ClassName }}
+{{- if .Description }}
+## {{ .Description }}
+{{- end }}
+{{- if .Parameters }}
+
+# --- Parameters from spec ---
+{{- range $key, $val := .Parameters }}
+# {{ $key }} = {{ $val }}
+{{- end }}
+{{- end }}
 
 func initialize(blackboard: Node) -> void:
 	# TODO: Initialize condition state
@@ -11,4 +21,10 @@ func initialize(blackboard: Node) -> void:
 func evaluate(blackboard: Node) -> bool:
 	# TODO: Implement condition check
 	# Return true for Success, false for Failure
+{{- if .Blackboard }}
+	# Available blackboard variables:
+{{- range .Blackboard }}
+	#   blackboard.get("{{ .Name }}")  # {{ .Type }}{{ if .Description }} — {{ .Description }}{{ end }}
+{{- end }}
+{{- end }}
 	return false

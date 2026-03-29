@@ -153,10 +153,13 @@ func (g *UnrealGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error
 		}
 		seen[className] = true
 
-		stubData := struct {
-			SourceFile string
-			ClassName  string
-		}{data.SourceFile, className}
+		stubData := StubData{
+			SourceFile:  data.SourceFile,
+			ClassName:   className,
+			Description: a.Description,
+			Parameters:  a.Parameters,
+			Blackboard:  data.Blackboard,
+		}
 
 		h, err := g.render("task.h.tmpl", stubData)
 		if err != nil {
@@ -183,10 +186,13 @@ func (g *UnrealGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error
 		}
 		seen[className] = true
 
-		stubData := struct {
-			SourceFile string
-			ClassName  string
-		}{data.SourceFile, className}
+		stubData := StubData{
+			SourceFile:  data.SourceFile,
+			ClassName:   className,
+			Description: c.Description,
+			Parameters:  c.Parameters,
+			Blackboard:  data.Blackboard,
+		}
 
 		h, err := g.render("decorator.h.tmpl", stubData)
 		if err != nil {

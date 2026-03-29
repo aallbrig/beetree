@@ -63,6 +63,7 @@ type NodeSpec struct {
 	Type          string                 `yaml:"type" json:"type"`
 	Name          string                 `yaml:"name" json:"name"`
 	Node          string                 `yaml:"node,omitempty" json:"node,omitempty"`
+	Description   string                 `yaml:"description,omitempty" json:"description,omitempty"`
 	Children      []NodeSpec             `yaml:"children,omitempty" json:"children,omitempty"`
 	Parameters    map[string]interface{} `yaml:"parameters,omitempty" json:"parameters,omitempty"`
 	Decorator     string                 `yaml:"decorator,omitempty" json:"decorator,omitempty"`

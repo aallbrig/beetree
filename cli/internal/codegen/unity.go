@@ -145,12 +145,12 @@ func (g *UnityGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 		}
 		seen[className] = true
 
-		stubData := struct {
-			SourceFile string
-			ClassName  string
-		}{
-			SourceFile: data.SourceFile,
-			ClassName:  className,
+		stubData := StubData{
+			SourceFile:  data.SourceFile,
+			ClassName:   className,
+			Description: a.Description,
+			Parameters:  a.Parameters,
+			Blackboard:  data.Blackboard,
 		}
 
 		content, err := g.render("action.cs.tmpl", stubData)
@@ -176,12 +176,12 @@ func (g *UnityGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 		}
 		seen[className] = true
 
-		stubData := struct {
-			SourceFile string
-			ClassName  string
-		}{
-			SourceFile: data.SourceFile,
-			ClassName:  className,
+		stubData := StubData{
+			SourceFile:  data.SourceFile,
+			ClassName:   className,
+			Description: c.Description,
+			Parameters:  c.Parameters,
+			Blackboard:  data.Blackboard,
 		}
 
 		content, err := g.render("condition.cs.tmpl", stubData)

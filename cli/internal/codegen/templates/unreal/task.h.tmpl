@@ -7,6 +7,23 @@
 
 /**
  * Action task: {{ .ClassName }}
+{{- if .Description }}
+ * {{ .Description }}
+{{- end }}
+{{- if .Parameters }}
+ *
+ * Parameters from spec:
+{{- range $key, $val := .Parameters }}
+ *   {{ $key }} = {{ $val }}
+{{- end }}
+{{- end }}
+{{- if .Blackboard }}
+ *
+ * Blackboard variables:
+{{- range .Blackboard }}
+ *   {{ .Name }} ({{ .Type }}){{ if .Description }} — {{ .Description }}{{ end }}
+{{- end }}
+{{- end }}
  */
 UCLASS()
 class UBTTask_{{ .ClassName }} : public UBTTaskNode

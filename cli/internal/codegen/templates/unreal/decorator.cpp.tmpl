@@ -10,5 +10,11 @@ bool UBTDecorator_{{ .ClassName }}::CalculateRawConditionValue(UBehaviorTreeComp
 {
     // TODO: Implement condition check
     // Return true for condition met, false otherwise
+{{- if .Blackboard }}
+    // Available blackboard keys:
+{{- range .Blackboard }}
+    //   "{{ .Name }}" ({{ .Type }}){{ if .Description }} — {{ .Description }}{{ end }}
+{{- end }}
+{{- end }}
     return false;
 }

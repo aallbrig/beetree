@@ -3,9 +3,25 @@ extends Node
 class_name {{ .ClassName }}Action
 
 ## Action node: {{ .ClassName }}
+{{- if .Description }}
+## {{ .Description }}
+{{- end }}
+{{- if .Parameters }}
+
+# --- Parameters from spec ---
+{{- range $key, $val := .Parameters }}
+# {{ $key }} = {{ $val }}
+{{- end }}
+{{- end }}
 
 func initialize(blackboard: Node) -> void:
 	# TODO: Initialize action state
+{{- if .Blackboard }}
+	# Available blackboard variables:
+{{- range .Blackboard }}
+	#   blackboard.get("{{ .Name }}")  # {{ .Type }}{{ if .Description }} — {{ .Description }}{{ end }}
+{{- end }}
+{{- end }}
 	pass
 
 func tick(blackboard: Node, delta: float) -> int:

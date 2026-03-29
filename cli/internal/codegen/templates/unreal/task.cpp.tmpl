@@ -10,6 +10,12 @@ EBTNodeResult::Type UBTTask_{{ .ClassName }}::ExecuteTask(UBehaviorTreeComponent
 {
     // TODO: Implement action logic
     // Return EBTNodeResult::Succeeded, Failed, or InProgress
+{{- if .Blackboard }}
+    // Available blackboard keys:
+{{- range .Blackboard }}
+    //   "{{ .Name }}" ({{ .Type }}){{ if .Description }} — {{ .Description }}{{ end }}
+{{- end }}
+{{- end }}
     return EBTNodeResult::Succeeded;
 }
 

@@ -138,10 +138,13 @@ func (g *GodotGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 		}
 		seen[className] = true
 
-		stubData := struct {
-			SourceFile string
-			ClassName  string
-		}{data.SourceFile, className}
+		stubData := StubData{
+			SourceFile:  data.SourceFile,
+			ClassName:   className,
+			Description: a.Description,
+			Parameters:  a.Parameters,
+			Blackboard:  data.Blackboard,
+		}
 
 		content, err := g.render("action.gd.tmpl", stubData)
 		if err != nil {
@@ -166,10 +169,13 @@ func (g *GodotGenerator) Generate(spec *model.TreeSpec) ([]GeneratedFile, error)
 		}
 		seen[className] = true
 
-		stubData := struct {
-			SourceFile string
-			ClassName  string
-		}{data.SourceFile, className}
+		stubData := StubData{
+			SourceFile:  data.SourceFile,
+			ClassName:   className,
+			Description: c.Description,
+			Parameters:  c.Parameters,
+			Blackboard:  data.Blackboard,
+		}
 
 		content, err := g.render("condition.gd.tmpl", stubData)
 		if err != nil {

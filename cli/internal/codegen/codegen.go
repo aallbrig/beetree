@@ -75,6 +75,15 @@ type ParameterData struct {
 	Default interface{}
 }
 
+// StubData is the enriched data passed to regular action/condition stub templates.
+type StubData struct {
+	SourceFile  string
+	ClassName   string
+	Description string
+	Parameters  map[string]interface{}
+	Blackboard  []BlackboardVarData
+}
+
 // BuildTemplateData converts a TreeSpec into TemplateData for templates.
 func BuildTemplateData(spec *model.TreeSpec) *TemplateData {
 	rootData := nodeToData(&spec.Tree)

@@ -5,9 +5,18 @@ namespace BeeTree
 {
     /// <summary>
     /// Condition node: {{ .ClassName }}
+{{- if .Description }}
+    /// {{ .Description }}
+{{- end }}
     /// </summary>
     public class {{ .ClassName }}Condition : BTCondition
     {
+{{- if .Parameters }}
+        // --- Parameters from spec ---
+{{- range $key, $val := .Parameters }}
+        // {{ $key }} = {{ $val }}
+{{- end }}
+{{ end }}
         public override void OnInitialize(BTBlackboard blackboard)
         {
             // TODO: Initialize condition state
@@ -17,6 +26,12 @@ namespace BeeTree
         {
             // TODO: Implement condition check
             // Return true for Success, false for Failure
+{{- if .Blackboard }}
+            // Available blackboard variables:
+{{- range .Blackboard }}
+            //   blackboard.Get<{{ .Type }}>("{{ .Name }}"){{ if .Description }} — {{ .Description }}{{ end }}
+{{- end }}
+{{- end }}
             return false;
         }
     }
