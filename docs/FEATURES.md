@@ -17,8 +17,8 @@ Define behavior trees once in `.beetree.yaml`, generate native code for Unity (C
 ### 3. TUI Behavior Tree Editor
 A full terminal-based tree editor: navigate, add/edit/delete/move nodes, undo (50 levels), save/save-as, and launch simulation — all without leaving the terminal.
 
-**Status:** Implemented with tview. Keybindings: `a`dd, `e`dit, `d`elete, `m`ove, `p`arams, `b`board, `u`ndo, `r`un sim, `v`alidate, `/`search, `s`ave, `q`uit, `?` help.
-**Gaps:** Can't edit metadata/custom_nodes in TUI. No copy/paste, no redo.
+**Status:** Implemented with tview. Keybindings: `a`dd, `e`dit, `d`elete, `m`ove, `p`arams, `b`board, `u`ndo, `U` redo, `c`opy, `r`un sim, `v`alidate, `/`search, `s`ave, `q`uit, `?` help.
+**Gaps:** Can't edit metadata/custom_nodes in TUI.
 
 ### 4. Accessible to All Skill Levels
 Progressive examples (patrol → combat → full enemy AI) with inline comments that teach BT concepts. Templates and guided commands lower the barrier to entry.
@@ -32,7 +32,7 @@ Progressive examples (patrol → combat → full enemy AI) with inline comments 
 
 ### CLI Commands
 - `beetree init` — Scaffold a new project (beetree.yaml, trees/, subtrees/)
-- `beetree new <name>` — Create a new tree from template
+- `beetree new <name>` — Create a new tree from template (`--template`: default, patrol, combat, utility, blank)
 - `beetree validate <file>` — Validate spec against schema (9 checks)
 - `beetree render <file>` — Visualize as ASCII, Mermaid, or DOT/Graphviz
 - `beetree simulate <file>` — Batch simulation with optional `--override` flags
@@ -60,6 +60,7 @@ Progressive examples (patrol → combat → full enemy AI) with inline comments 
 - Godot: GDScript node-based runtime, tree builder, action/condition stubs
 - 27 embedded templates total
 - Stub preservation: existing user code not overwritten on regeneration (unless `--overwrite`)
+- Enriched stubs: generated stubs include node descriptions, parameters, and blackboard variable hints
 - Dry-run mode for previewing output
 
 ### TUI Editor
@@ -69,7 +70,8 @@ Progressive examples (patrol → combat → full enemy AI) with inline comments 
 - Edit node properties (name, type, node class, decorator)
 - Parameter editor: add/edit/remove key-value parameters
 - Blackboard editor: add/edit/remove blackboard variables with types and defaults
-- Delete, move (cut/paste), undo (50-level stack)
+- Delete, move (cut/paste), undo (50-level stack), redo (Shift+U)
+- Copy/duplicate node (`c` key, deep-clones subtree with unique names)
 - Search/find node by name or class (`/` key, live filtering, cycle matches)
 - In-TUI validation (`v` key, also warns on save)
 - Save, save-as (prompt for path), quit confirmation on unsaved changes
@@ -94,16 +96,17 @@ Progressive examples (patrol → combat → full enemy AI) with inline comments 
 - [x] Blackboard editing in TUI (`b` key)
 - [ ] Website documentation (getting started, CLI reference, engine guides)
 - [ ] Quickstart wizard command
-- [ ] Template selection for `beetree new`
+- [x] Template selection for `beetree new` (`--template` flag)
 
 ### Medium Priority
-- [ ] Redo stack
+- [x] Redo stack (Shift+U)
 - [x] Search/find node in TUI (`/` key)
-- [ ] Copy/duplicate node
+- [x] Copy/duplicate node (`c` key)
 - [ ] Simulation scenario save/replay
 - [ ] Simulation step-back
 - [ ] Trace export
 - [x] Code generation integration guides per engine
+- [x] Enriched generated stubs with descriptions and blackboard hints
 - [ ] Node name validation (identifier rules)
 
 ### Low Priority / Future
