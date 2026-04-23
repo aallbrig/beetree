@@ -2,97 +2,84 @@
 
 ## Audience 1: Beginner Game Developer / Designer
 
-**Who they are:** Students, hobbyists, or designers touching game AI for the first time. May be comfortable in Unity/Godot/Unreal but have never built a behavior tree. Might have read a blog post or GDC talk slide deck about BTs but haven't implemented one.
-
-**What they know:**
-- Basic game dev concepts (game loop, entities, physics)
-- One game engine (probably Unity or Godot)
-- What "AI" means in a game context (enemies that react)
-- Possibly: state machines, if/else trees in code
-
-**What they don't know:**
-- Selector vs. sequence semantics
-- Why BTs are better than FSMs for complex AI
-- What a blackboard is and why it exists
-- How to decompose behavior into actions and conditions
-- What "tick" means in BT context
+**Who they are:** Students, hobbyists, and designers new to behavior trees.
 
 **What they need from BeeTree:**
-- Conceptual onboarding: "What is a behavior tree and why should I use one?"
-- Guided creation: templates, wizards, progressive examples
-- Immediate visual feedback: see the tree, simulate it, understand the flow
-- Clear integration path: "I made a tree, now how does my game use it?"
-- Forgiving UX: undo, validation before save, helpful error messages
+- A short, obvious first-run path from install → first tree → simulation → engine integration
+- Plain-language BT concepts in-tool and in docs
+- Progressive examples that map directly to real game AI scenarios
+- Safety rails in editor workflows (validation, warnings, clear recovery guidance)
 
-**Success metric:** Can go from `beetree init` to running generated code in their game engine within 30 minutes.
+**Current friction:**
+- Discovery and onboarding are still doc-light outside the README/examples
+- Error language still assumes BT vocabulary in several paths
+
+**Success metric:** A beginner can reach generated, integrated AI behavior in under 30 minutes without leaving official BeeTree docs.
 
 ---
 
 ## Audience 2: Intermediate Game Developer
 
-**Who they are:** Working game devs who have shipped at least one game or prototype with AI. May have hand-rolled a BT system before or used a visual BT editor (Unreal's built-in, NodeCanvas, Behavior Designer). Comfortable reading YAML and working in a terminal.
-
-**What they know:**
-- BT fundamentals (selector, sequence, action, condition)
-- At least one game engine's BT system
-- When to use BTs vs. other AI approaches
-- How to structure AI for different agent types
-
-**What they don't know:**
-- Advanced BT patterns (utility selectors, parallel policies, subtree composition)
-- How to make trees portable across engines
-- Best practices for large-scale BT management (dozens of trees, shared subtrees)
-- How to test/validate BT behavior systematically
+**Who they are:** Working developers comfortable with YAML/CLI and BT basics.
 
 **What they need from BeeTree:**
-- Productivity: fast editing, batch operations, project-wide management
-- Power features: diff, simulate with scenarios, validate across files
-- Engine-specific guidance: how generated code maps to their engine's idioms
-- Composability: subtrees, custom nodes, parameterized behaviors
-- Export quality: generated code that follows engine conventions
+- Fast authoring/editing loop (CLI + TUI)
+- Reliable validation, simulation, rendering, and diffing for day-to-day workflow
+- Predictable regeneration behavior for generated code and stubs
+- Strong docs for structure, conventions, and migration practices
 
-**Success metric:** Can convert an existing game's AI from hand-written code to beetree-managed specs, with generated stubs that integrate cleanly.
+**Current friction:**
+- TUI edits many core fields, but advanced spec areas still require manual YAML edits
+- Registry remains hidden/stubbed, limiting multi-user workflows
+
+**Success metric:** An intermediate team member can refactor and ship multiple tree specs per sprint with low manual rework.
 
 ---
 
 ## Audience 3: Expert / AI Architect
 
-**Who they are:** Senior game programmers, AI leads, or researchers who design BT architectures for teams. May be evaluating BeeTree against existing tools (Unreal BT editor, BehaviorTree.CPP, py_trees). Want to standardize their team's workflow.
-
-**What they know:**
-- Deep BT theory (reactive vs. non-reactive, memory policies, concurrency models)
-- Multiple game engines and their BT implementations
-- Performance implications of BT design choices
-- How to extend and customize BT frameworks
-
-**What they don't know (and want to evaluate):**
-- Whether BeeTree's spec format is expressive enough for their needs
-- Whether code generation is customizable for their engine setup
-- Whether the tool can scale to their team's workflow (CI/CD, version control, reviews)
-- Whether the registry/sharing model works for internal team use
+**Who they are:** Senior engineers or AI leads evaluating BeeTree as a team standard.
 
 **What they need from BeeTree:**
-- Specification completeness: all standard BT semantics covered
-- Extensibility: custom generators, node types, validation rules
-- CI/CD integration: validate in pipelines, generate in build scripts, diff in PRs
-- Team workflow: registry for internal sharing, tree versioning, review tooling
-- Performance: handle large trees without slowdown
+- Spec expressiveness and stability guarantees
+- Team workflows (reviewability, CI usage, registry/distribution story)
+- Extensibility points for validation/generation/runtime conventions
+- Operational docs that reduce ambiguity across contributors
 
-**Success metric:** Can adopt BeeTree as the team's standard BT authoring tool, replacing engine-specific editors with a portable workflow.
+**Current friction:**
+- No real registry backend or explicit extensibility model
+- No formal SDD document set that defines architecture boundaries, evolution rules, and compatibility policies
+
+**Success metric:** An expert can standardize BeeTree-based AI authoring across a team with clear governance and low integration risk.
 
 ---
 
-## Cross-Cutting Needs (All Audiences)
+## Audience 4: Agent Session Contributor (AI-assisted development)
 
-| Need | Beginner Priority | Intermediate Priority | Expert Priority |
-|------|:-:|:-:|:-:|
-| Clear documentation | Critical | High | Medium |
-| Working examples | Critical | Medium | Low |
-| Interactive TUI | High | Critical | Medium |
-| CLI scriptability | Low | High | Critical |
-| Code generation | High | Critical | Critical |
-| Error messages | Critical | High | Medium |
-| Simulation | High | Critical | High |
-| Registry/sharing | Low | Medium | High |
-| Extensibility | Low | Low | Critical |
-| CI/CD integration | Low | Medium | Critical |
+**Who they are:** Future Copilot/Claude agent sessions implementing incremental features.
+
+**What they need from BeeTree docs:**
+- Explicit specs of intended behavior, invariants, and acceptance criteria per subsystem
+- Stable document index describing where architecture decisions and contracts live
+- Guidance for safe, minimal changes without rediscovering domain context
+
+**Current friction:**
+- Core behavior exists in code/tests, but intent and boundaries are not consolidated in spec-driven documents
+
+**Success metric:** A new agent session can deliver a correct feature with minimal exploratory churn and no semantic regressions.
+
+---
+
+## Cross-Cutting Priority Matrix
+
+| Need | Beginner | Intermediate | Expert | Agent Contributor |
+|------|:--------:|:------------:|:------:|:-----------------:|
+| Clear onboarding docs | Critical | High | Medium | Medium |
+| Example quality | Critical | High | Medium | Medium |
+| TUI completeness | High | Critical | Medium | Medium |
+| CLI scriptability | Medium | High | Critical | High |
+| Spec/contract documentation (SDD) | Medium | High | Critical | Critical |
+| Code generation guidance | High | Critical | Critical | High |
+| Error message quality | Critical | High | Medium | High |
+| CI-friendly validation | Medium | High | Critical | Critical |
+| Registry/team sharing | Low | Medium | Critical | Medium |
