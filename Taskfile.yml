@@ -1,0 +1,14 @@
+version: '3'
+
+tasks:
+  lint:
+    desc: Run linters
+    cmds:
+      - task: lint-go
+
+  lint-go:
+    desc: Run Go linters
+    dir: cli
+    cmds:
+      - go vet ./...
+      - golangci-lint run ./...

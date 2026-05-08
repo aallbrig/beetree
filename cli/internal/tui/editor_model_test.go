@@ -307,7 +307,7 @@ func TestMoveNode(t *testing.T) {
 func TestMoveNode_ToLeafFails(t *testing.T) {
 	em := NewEditorModel(sampleSpec(), "")
 	em.SelectNode("patrol")
-	em.StartMove()
+	require.NoError(t, em.StartMove())
 
 	em.SelectNode("has_target")
 	err := em.CompleteMove()
@@ -318,7 +318,7 @@ func TestMoveNode_ToLeafFails(t *testing.T) {
 func TestCancelMove(t *testing.T) {
 	em := NewEditorModel(sampleSpec(), "")
 	em.SelectNode("patrol")
-	em.StartMove()
+	require.NoError(t, em.StartMove())
 
 	em.CancelMove()
 	assert.Equal(t, ModeNavigate, em.Mode)
@@ -369,7 +369,7 @@ func TestDuplicateNode_Undoable(t *testing.T) {
 	em := NewEditorModel(sampleSpec(), "")
 	em.SelectNode("patrol")
 
-	em.DuplicateSelected()
+	require.NoError(t, em.DuplicateSelected())
 	assert.Contains(t, flatNames(em.FlattenTree()), "patrol_copy")
 
 	em.Undo()
@@ -555,8 +555,9 @@ func TestUndo_Multiple(t *testing.T) {
 	em := NewEditorModel(sampleSpec(), "")
 	em.SelectNode("root")
 
-	em.AddChild("n1", "action", "")
-	em.AddChild("n2", "action", "")
+	require.NoError(t, em.AddChild("n1", "action", ""))
+	em.SelectNode("root")
+	require.NoError(t, em.AddChild("n2", "action", ""))
 
 	em.Undo() // undo n2
 	em.Undo() // undo n1
@@ -573,7 +574,7 @@ func TestRedo_Basic(t *testing.T) {
 	em := NewEditorModel(sampleSpec(), "")
 	em.SelectNode("root")
 
-	em.AddChild("new_node", "action", "")
+	require.NoError(t, em.AddChild("new_node", "action", ""))
 	assert.True(t, em.CanUndo())
 	assert.False(t, em.CanRedo())
 
@@ -594,12 +595,12 @@ func TestRedo_ClearedOnNewEdit(t *testing.T) {
 	em := NewEditorModel(sampleSpec(), "")
 	em.SelectNode("root")
 
-	em.AddChild("n1", "action", "")
+	require.NoError(t, em.AddChild("n1", "action", ""))
 	em.Undo()
 	assert.True(t, em.CanRedo())
 
 	// New edit should clear redo
-	em.AddChild("n2", "action", "")
+	require.NoError(t, em.AddChild("n2", "action", ""))
 	assert.False(t, em.CanRedo())
 }
 
@@ -613,9 +614,9 @@ func TestRedo_MultipleUndoRedo(t *testing.T) {
 	em := NewEditorModel(sampleSpec(), "")
 	em.SelectNode("root")
 
-	em.AddChild("n1", "action", "")
+	require.NoError(t, em.AddChild("n1", "action", ""))
 	em.SelectNode("root")
-	em.AddChild("n2", "action", "")
+	require.NoError(t, em.AddChild("n2", "action", ""))
 
 	em.Undo() // undo n2
 	em.Undo() // undo n1

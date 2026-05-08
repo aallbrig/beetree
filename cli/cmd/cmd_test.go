@@ -105,9 +105,12 @@ func TestValidateCommand_FileNotFound(t *testing.T) {
 
 func TestInitCommand(t *testing.T) {
 	dir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(dir))
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
 	output, err := executeCommand("init", "--name", "my-project")
 	require.NoError(t, err)
@@ -127,9 +130,12 @@ func TestInitCommand(t *testing.T) {
 
 func TestInitCommand_DefaultName(t *testing.T) {
 	dir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(dir))
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
 	output, err := executeCommand("init")
 	require.NoError(t, err)
@@ -139,22 +145,28 @@ func TestInitCommand_DefaultName(t *testing.T) {
 
 func TestInitCommand_AlreadyExists(t *testing.T) {
 	dir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(dir))
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
-	os.WriteFile(filepath.Join(dir, "beetree.yaml"), []byte("existing"), 0644)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "beetree.yaml"), []byte("existing"), 0644))
 
-	_, err := executeCommand("init")
+	_, err = executeCommand("init")
 	assert.Error(t, err)
 }
 
 func TestNewCommand(t *testing.T) {
 	dir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.MkdirAll(filepath.Join(dir, "trees"), 0755)
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "trees"), 0755))
+	require.NoError(t, os.Chdir(dir))
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
 	output, err := executeCommand("new", "patrol-ai")
 	require.NoError(t, err)
@@ -176,14 +188,17 @@ func TestNewCommand_NoArgs(t *testing.T) {
 
 func TestNewCommand_AlreadyExists(t *testing.T) {
 	dir := t.TempDir()
-	origDir, _ := os.Getwd()
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
 	treesDir := filepath.Join(dir, "trees")
-	os.MkdirAll(treesDir, 0755)
-	os.WriteFile(filepath.Join(treesDir, "existing.beetree.yaml"), []byte("x"), 0644)
-	os.Chdir(dir)
-	defer os.Chdir(origDir)
+	require.NoError(t, os.MkdirAll(treesDir, 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(treesDir, "existing.beetree.yaml"), []byte("x"), 0644))
+	require.NoError(t, os.Chdir(dir))
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
-	_, err := executeCommand("new", "existing")
+	_, err = executeCommand("new", "existing")
 	assert.Error(t, err)
 }
 
@@ -235,7 +250,7 @@ tree:
       name: "patrol"
       node: "Patrol"
 `
-	os.WriteFile(specFile, []byte(yamlContent), 0644)
+	require.NoError(t, os.WriteFile(specFile, []byte(yamlContent), 0644))
 
 	output, err := executeCommand("render", specFile)
 	require.NoError(t, err)
@@ -260,7 +275,7 @@ tree:
       name: "attack"
       node: "Attack"
 `
-	os.WriteFile(specFile, []byte(yamlContent), 0644)
+	require.NoError(t, os.WriteFile(specFile, []byte(yamlContent), 0644))
 
 	output, err := executeCommand("render", "--format", "mermaid", specFile)
 	require.NoError(t, err)
@@ -297,7 +312,7 @@ tree:
 func TestGenerateCommand_Unity(t *testing.T) {
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "test.beetree.yaml")
-	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	require.NoError(t, os.WriteFile(specFile, []byte(generateTestYAML), 0644))
 	outDir := filepath.Join(dir, "output")
 
 	output, err := executeCommand("generate", "unity", specFile, "--output", outDir)
@@ -315,7 +330,7 @@ func TestGenerateCommand_Unity(t *testing.T) {
 func TestGenerateCommand_Unreal(t *testing.T) {
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "test.beetree.yaml")
-	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	require.NoError(t, os.WriteFile(specFile, []byte(generateTestYAML), 0644))
 	outDir := filepath.Join(dir, "output")
 
 	output, err := executeCommand("generate", "unreal", specFile, "--output", outDir)
@@ -330,7 +345,7 @@ func TestGenerateCommand_Unreal(t *testing.T) {
 func TestGenerateCommand_Godot(t *testing.T) {
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "test.beetree.yaml")
-	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	require.NoError(t, os.WriteFile(specFile, []byte(generateTestYAML), 0644))
 	outDir := filepath.Join(dir, "output")
 
 	output, err := executeCommand("generate", "godot", specFile, "--output", outDir)
@@ -345,7 +360,7 @@ func TestGenerateCommand_Godot(t *testing.T) {
 func TestGenerateCommand_DryRun(t *testing.T) {
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "test.beetree.yaml")
-	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	require.NoError(t, os.WriteFile(specFile, []byte(generateTestYAML), 0644))
 	outDir := filepath.Join(dir, "output")
 
 	output, err := executeCommand("generate", "unity", specFile, "--output", outDir, "--dry-run")
@@ -360,7 +375,7 @@ func TestGenerateCommand_DryRun(t *testing.T) {
 func TestGenerateCommand_SkipExistingStubs(t *testing.T) {
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "test.beetree.yaml")
-	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	require.NoError(t, os.WriteFile(specFile, []byte(generateTestYAML), 0644))
 	outDir := filepath.Join(dir, "output")
 
 	// First generate
@@ -369,7 +384,7 @@ func TestGenerateCommand_SkipExistingStubs(t *testing.T) {
 
 	// Modify a stub
 	stubPath := filepath.Join(outDir, "AttackAction.cs")
-	os.WriteFile(stubPath, []byte("// my custom code"), 0644)
+	require.NoError(t, os.WriteFile(stubPath, []byte("// my custom code"), 0644))
 
 	// Second generate — should skip existing stubs
 	output, err := executeCommand("generate", "unity", specFile, "--output", outDir)
@@ -377,14 +392,15 @@ func TestGenerateCommand_SkipExistingStubs(t *testing.T) {
 	assert.Contains(t, output, "skipped")
 
 	// Stub should still have custom content
-	content, _ := os.ReadFile(stubPath)
+	content, err := os.ReadFile(stubPath)
+	require.NoError(t, err)
 	assert.Contains(t, string(content), "my custom code")
 }
 
 func TestGenerateCommand_Overwrite(t *testing.T) {
 	dir := t.TempDir()
 	specFile := filepath.Join(dir, "test.beetree.yaml")
-	os.WriteFile(specFile, []byte(generateTestYAML), 0644)
+	require.NoError(t, os.WriteFile(specFile, []byte(generateTestYAML), 0644))
 	outDir := filepath.Join(dir, "output")
 
 	// First generate
@@ -393,14 +409,15 @@ func TestGenerateCommand_Overwrite(t *testing.T) {
 
 	// Modify a stub
 	stubPath := filepath.Join(outDir, "AttackAction.cs")
-	os.WriteFile(stubPath, []byte("// my custom code"), 0644)
+	require.NoError(t, os.WriteFile(stubPath, []byte("// my custom code"), 0644))
 
 	// Second generate with --overwrite
 	_, err = executeCommand("generate", "unity", specFile, "--output", outDir, "--overwrite")
 	require.NoError(t, err)
 
 	// Stub should be regenerated
-	content, _ := os.ReadFile(stubPath)
+	content, err := os.ReadFile(stubPath)
+	require.NoError(t, err)
 	assert.Contains(t, string(content), "EDIT THIS FILE")
 }
 
@@ -437,9 +454,12 @@ tree:
 `
 	require.NoError(t, os.WriteFile(filepath.Join(treesDir, "patrol.beetree.yaml"), []byte(specContent), 0644))
 
-	origDir, _ := os.Getwd()
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
 	require.NoError(t, os.Chdir(tmpDir))
-	defer os.Chdir(origDir)
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
 	output, err := executeCommand("generate", "unity", "--all", "--dry-run")
 	require.NoError(t, err)
@@ -448,11 +468,14 @@ tree:
 
 func TestGenerateCommand_AllFlagNoFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
 	require.NoError(t, os.Chdir(tmpDir))
-	defer os.Chdir(origDir)
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
-	_, err := executeCommand("generate", "unity", "--all")
+	_, err = executeCommand("generate", "unity", "--all")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no .beetree.yaml files found")
 }
@@ -562,9 +585,12 @@ tree:
 	assert.Contains(t, output, "pull-test")
 
 	// Pull
-	origDir, _ := os.Getwd()
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
 	require.NoError(t, os.Chdir(tmpDir))
-	defer os.Chdir(origDir)
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
 	output, err = executeCommand("registry", "pull", "testuser/pull-test")
 	require.NoError(t, err)
@@ -696,9 +722,12 @@ tree:
 
 func TestDoctorCommand(t *testing.T) {
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
 	require.NoError(t, os.Chdir(tmpDir))
-	defer os.Chdir(origDir)
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
 	output, err := executeCommand("doctor")
 	// Should warn about missing trees/ but not fail hard
@@ -720,9 +749,12 @@ tree:
   node: Patrol
 `), 0644))
 
-	origDir, _ := os.Getwd()
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
 	require.NoError(t, os.Chdir(tmpDir))
-	defer os.Chdir(origDir)
+	defer func() {
+		require.NoError(t, os.Chdir(origDir))
+	}()
 
 	output, err := executeCommand("doctor")
 	require.NoError(t, err)
@@ -733,10 +765,10 @@ tree:
 // --- Node edit command tests ---
 
 func writeTestSpec(t *testing.T) string {
-t.Helper()
-tmpDir := t.TempDir()
-specFile := filepath.Join(tmpDir, "test.beetree.yaml")
-require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
+	t.Helper()
+	tmpDir := t.TempDir()
+	specFile := filepath.Join(tmpDir, "test.beetree.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
 metadata:
   name: test
 tree:
@@ -756,60 +788,60 @@ tree:
       name: patrol
       node: Patrol
 `), 0644))
-return specFile
+	return specFile
 }
 
 func TestNodeAdd(t *testing.T) {
-specFile := writeTestSpec(t)
-output, err := executeCommand("node", "add", specFile, "combat", "reload", "--type", "action", "--node", "Reload")
-require.NoError(t, err)
-assert.Contains(t, output, "Added")
-assert.Contains(t, output, "reload")
+	specFile := writeTestSpec(t)
+	output, err := executeCommand("node", "add", specFile, "combat", "reload", "--type", "action", "--node", "Reload")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Added")
+	assert.Contains(t, output, "reload")
 
-// Verify the file was updated
-data, err := os.ReadFile(specFile)
-require.NoError(t, err)
-assert.Contains(t, string(data), "reload")
-assert.Contains(t, string(data), "Reload")
+	// Verify the file was updated
+	data, err := os.ReadFile(specFile)
+	require.NoError(t, err)
+	assert.Contains(t, string(data), "reload")
+	assert.Contains(t, string(data), "Reload")
 }
 
 func TestNodeRemove(t *testing.T) {
-specFile := writeTestSpec(t)
-output, err := executeCommand("node", "remove", specFile, "patrol")
-require.NoError(t, err)
-assert.Contains(t, output, "Removed")
+	specFile := writeTestSpec(t)
+	output, err := executeCommand("node", "remove", specFile, "patrol")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Removed")
 
-data, err := os.ReadFile(specFile)
-require.NoError(t, err)
-assert.NotContains(t, string(data), "patrol")
+	data, err := os.ReadFile(specFile)
+	require.NoError(t, err)
+	assert.NotContains(t, string(data), "patrol")
 }
 
 func TestNodeMove(t *testing.T) {
-specFile := writeTestSpec(t)
-output, err := executeCommand("node", "move", specFile, "patrol", "--to", "combat")
-require.NoError(t, err)
-assert.Contains(t, output, "Moved")
-assert.Contains(t, output, "patrol")
-assert.Contains(t, output, "combat")
+	specFile := writeTestSpec(t)
+	output, err := executeCommand("node", "move", specFile, "patrol", "--to", "combat")
+	require.NoError(t, err)
+	assert.Contains(t, output, "Moved")
+	assert.Contains(t, output, "patrol")
+	assert.Contains(t, output, "combat")
 
-data, err := os.ReadFile(specFile)
-require.NoError(t, err)
-// patrol should now be nested under combat in the YAML
-assert.Contains(t, string(data), "patrol")
+	data, err := os.ReadFile(specFile)
+	require.NoError(t, err)
+	// patrol should now be nested under combat in the YAML
+	assert.Contains(t, string(data), "patrol")
 }
 
 func TestNodeAdd_DuplicateFails(t *testing.T) {
-specFile := writeTestSpec(t)
-_, err := executeCommand("node", "add", specFile, "root", "patrol", "--type", "action")
-assert.Error(t, err)
-assert.Contains(t, err.Error(), "already exists")
+	specFile := writeTestSpec(t)
+	_, err := executeCommand("node", "add", specFile, "root", "patrol", "--type", "action")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
 }
 
 func TestNodeRemove_RootFails(t *testing.T) {
-specFile := writeTestSpec(t)
-_, err := executeCommand("node", "remove", specFile, "root")
-assert.Error(t, err)
-assert.Contains(t, err.Error(), "cannot remove root")
+	specFile := writeTestSpec(t)
+	_, err := executeCommand("node", "remove", specFile, "root")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot remove root")
 }
 
 func TestNodeEdit_Rename(t *testing.T) {
