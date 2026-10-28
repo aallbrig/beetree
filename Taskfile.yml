@@ -1,14 +1,127 @@
+---
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
 version: '3'
 
-tasks:
-  lint:
-    desc: Run linters
-    cmds:
-      - task: lint-go
+vars:
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo 0.0.0
 
-  lint-go:
-    desc: Run Go linters
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  setup:
+    desc: One-time install of tooling deps
+    cmds:
+      - pre-commit install
+      - cd cli && go mod download
+
+  ci:
+    desc: Run every quality gate. No live services required.
+    cmds:
+      - task: format:check
+      - task: lint
+      - task: test
+      - task: build
+      - task: dev:check
+
+  # ---- lint / format -------------------------------------------------------
+  lint:
+    desc: All linting
+    cmds:
+      - task: lint:go
+      - task: lint:shell
+
+  lint:go:
+    desc: go vet + golangci-lint
     dir: cli
     cmds:
       - go vet ./...
       - golangci-lint run ./...
+
+  lint:shell:
+    desc: Shell script syntax check
+    cmds:
+      - bash -n scripts/*.sh
+
+  format:
+    desc: All formatting
+    cmds:
+      - cd cli && gofmt -w .
+
+  format:check:
+    desc: Fail if anything needs formatting
+    cmds:
+      - |
+        out=$(cd cli && gofmt -l .)
+        if [ -n "$out" ]; then echo "gofmt needed:"; echo "$out"; exit 1; fi
+
+  # ---- test ---------------------------------------------------------------
+  test:
+    desc: All tests
+    cmds:
+      - task: test:go
+
+  test:go:
+    desc: Go tests with race detector
+    dir: cli
+    cmds:
+      - go test -race -count=1 ./...
+
+  # ---- build --------------------------------------------------------------
+  build:
+    desc: Build artifacts
+    cmds:
+      - task: build:cli
+
+  build:cli:
+    desc: Build the beetree CLI to bin/beetree
+    dir: cli
+    cmds:
+      - go build -ldflags "-X github.com/aallbrig/beetree-cli/cmd.Version={{.VERSION}}" -o ../bin/beetree .
+
+  # ---- dev session --------------------------------------------------------
+  dev:
+    desc: Start the tmuxinator session (attach if already running)
+    interactive: true
+    cmds:
+      - scripts/dev_session.sh up
+
+  dev:attach:
+    desc: Re-attach to the running session
+    interactive: true
+    cmds:
+      - scripts/dev_session.sh attach
+
+  dev:recycle:
+    desc: Kill and restart the session
+    interactive: true
+    cmds:
+      - scripts/dev_session.sh recycle
+
+  dev:check:
+    desc: Validate the tmuxinator config without starting anything
+    cmds:
+      - tmuxinator debug --project-config .tmuxinator/beetree.yml >/dev/null
+
+  # ---- site ---------------------------------------------------------------
+  site:dev:
+    desc: Start Hugo dev server
+    dir: website
+    cmds:
+      - hugo server
+
+  site:build:
+    desc: Build Hugo site
+    dir: website
+    cmds:
+      - hugo --minify
+
+  # ---- PRs ----------------------------------------------------------------
+  pr:merge:
+    desc: "Wait for PR CI, then merge (task pr:merge -- N)"
+    cmds:
+      - gh pr checks {{.CLI_ARGS}} --watch --fail-fast && gh pr merge {{.CLI_ARGS}} --merge
