@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://json.schemastore.org/tmuxinator.json
+name: beetree
+root: .
+windows:
+  - dev:
+      layout: main-vertical
+      panes:
+        - dev:
+          - clear
+        - git status -sb
+  - watch:
+      layout: even-vertical
+      panes:
+        - dev:
+          - clear
+        - watchexec -e go --watch cli --restart -- task test:go
+        - watchexec -e ts,css,html --watch web/src --restart -- task web:check
+  - sites:
+      layout: even-vertical
+      panes:
+        - dev:
+          - clear
+        - task site:dev

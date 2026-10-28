@@ -14,9 +14,9 @@ import (
 
 // GeneratedFile represents a single file output by code generation.
 type GeneratedFile struct {
-	Path     string
-	Content  string
-	IsStub   bool // true = user-editable stub; false = regenerated each run
+	Path    string
+	Content string
+	IsStub  bool // true = user-editable stub; false = regenerated each run
 }
 
 // Generator is the interface for engine-specific code generators.
@@ -293,12 +293,12 @@ func StubFileHeader(sourceFile, commentPrefix string) string {
 // TemplateFuncs returns common template functions available in all templates.
 func TemplateFuncs() template.FuncMap {
 	return template.FuncMap{
-		"pascal":    ToPascalCase,
-		"snake":     ToSnakeCase,
-		"lower":     strings.ToLower,
-		"upper":     strings.ToUpper,
-		"title":     cases.Title(language.English).String,
-		"genHeader": GeneratedFileHeader,
+		"pascal":     ToPascalCase,
+		"snake":      ToSnakeCase,
+		"lower":      strings.ToLower,
+		"upper":      strings.ToUpper,
+		"title":      cases.Title(language.English).String,
+		"genHeader":  GeneratedFileHeader,
 		"stubHeader": StubFileHeader,
 	}
 }

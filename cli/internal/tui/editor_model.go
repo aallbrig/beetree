@@ -15,13 +15,13 @@ type EditorMode int
 
 const (
 	ModeNavigate      EditorMode = iota
-	ModeAddNode                         // type selector open
-	ModeConfirmDelete                   // awaiting delete confirmation
-	ModeMove                            // node cut, awaiting paste target
-	ModeSimulate                        // interactive step-through simulation
-	ModeEdit                            // property editor form open
-	ModeSaveAs                          // save-as file path prompt
-	ModeConfirmQuit                     // unsaved changes quit confirmation
+	ModeAddNode                  // type selector open
+	ModeConfirmDelete            // awaiting delete confirmation
+	ModeMove                     // node cut, awaiting paste target
+	ModeSimulate                 // interactive step-through simulation
+	ModeEdit                     // property editor form open
+	ModeSaveAs                   // save-as file path prompt
+	ModeConfirmQuit              // unsaved changes quit confirmation
 )
 
 const maxUndoDepth = 50
@@ -603,4 +603,3 @@ func (em *EditorModel) RemoveBlackboardVar(name string) error {
 	em.undoStack = em.undoStack[:len(em.undoStack)-1]
 	return fmt.Errorf("blackboard variable %q not found", name)
 }
-

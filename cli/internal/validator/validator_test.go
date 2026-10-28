@@ -198,8 +198,8 @@ func TestValidate_ValidComplexTree(t *testing.T) {
 					},
 				},
 				{
-					Type: "decorator",
-					Name: "repeat_patrol",
+					Type:      "decorator",
+					Name:      "repeat_patrol",
 					Decorator: "repeat",
 					Children: []model.NodeSpec{
 						{Type: "action", Name: "patrol", Node: "Patrol"},

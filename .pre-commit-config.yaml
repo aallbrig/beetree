@@ -1,0 +1,45 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude: '\.(glb|png|svg)$'
+      - id: trailing-whitespace
+        exclude: '\.(glb|png|svg|tape)$'
+      - id: check-yaml
+        exclude: '^infra/template\.yaml$'
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.29.4
+    hooks:
+      - id: check-jsonschema
+        files: '^\.tmuxinator/.*\.ya?ml$'
+        args: ['--schemafile', 'https://json.schemastore.org/tmuxinator.json']
+  - repo: local
+    hooks:
+      - id: task-format-check
+        name: format check
+        entry: task format:check
+        language: system
+        pass_filenames: false
+      - id: task-lint
+        name: lint
+        entry: task lint
+        language: system
+        pass_filenames: false
+      - id: task-test
+        name: unit tests
+        entry: task test
+        language: system
+        pass_filenames: false
+      - id: task-build
+        name: build verification
+        entry: task build
+        language: system
+        pass_filenames: false

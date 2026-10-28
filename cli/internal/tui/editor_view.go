@@ -14,21 +14,21 @@ import (
 
 // EditorView wires the EditorModel to tview widgets for the 3-pane TUI layout.
 type EditorView struct {
-	App        *tview.Application
-	Model      *EditorModel
-	Root       *tview.Flex
-	treeView   *tview.TreeView
-	propsView  *tview.TextView
-	statusView *tview.TextView
-	addModal   *tview.List
-	nameInput  *tview.InputField
-	editForm   *tview.Form
+	App         *tview.Application
+	Model       *EditorModel
+	Root        *tview.Flex
+	treeView    *tview.TreeView
+	propsView   *tview.TextView
+	statusView  *tview.TextView
+	addModal    *tview.List
+	nameInput   *tview.InputField
+	editForm    *tview.Form
 	saveAsInput *tview.InputField
-	quitModal  *tview.List
-	helpView   *tview.TextView
+	quitModal   *tview.List
+	helpView    *tview.TextView
 	searchInput *tview.InputField
-	bbForm     *tview.Form
-	pages      *tview.Pages
+	bbForm      *tview.Form
+	pages       *tview.Pages
 
 	pendingAddType string
 	searchResults  []string
