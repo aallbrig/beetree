@@ -1,4 +1,4 @@
-# BeeTree 🐝🌳
+# BeeTree
 
 A behavior tree ecosystem for game developers. Create, validate, simulate, and deploy behavior trees to Unity, Unreal, and Godot — from the command line or from [beetreecraft.com](https://beetreecraft.com), where you can build trees visually, watch agents run them in a 3D scene, and share them with the community.
 

@@ -6,6 +6,7 @@
   <title>{{ if .IsHome }}{{ site.Title }} — behavior trees for game AI{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}</title>
   <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script src="/js/site.js"></script>
   <link rel="stylesheet" href="/site.css">
   {{ block "head" . }}{{ end }}
 </head>
@@ -13,15 +14,21 @@
   <a class="skip" href="#main">Skip to content</a>
   <header class="top">
     <nav aria-label="Main">
-      <a class="brand" href="/">🐝 BeeTreeCraft</a>
-      <a href="/docs/">Docs</a>
-      <a href="/docs/api/">API</a>
-      <a href="/docs/mcp/">MCP</a>
-      <a href="/app/#/community">Community</a>
-      <a href="/app/#/forum">Forum</a>
-      <span class="spacer"></span>
-      <a href="/app/#/signin">Sign in</a>
-      <a class="btn primary" href="/app/#/signup">Sign up</a>
+      <a class="brand" href="/">BeeTreeCraft</a>
+      <button id="menu-toggle" class="btn menu-toggle" type="button" aria-controls="nav-links" aria-expanded="false">Menu</button>
+      <div id="nav-links" class="links">
+        <a href="/app/#/build"><strong>Build</strong></a>
+        <a href="/app/#/explore">Explore</a>
+        <a href="/app/#/community">Community</a>
+        <a href="/app/#/forum">Forum</a>
+        <a href="/docs/">Docs</a>
+        <a href="/docs/api/">API</a>
+        <a href="/docs/mcp/">MCP</a>
+        <span class="spacer"></span>
+        <button id="theme-toggle" class="btn" type="button">Dark mode</button>
+        <a href="/app/#/signin">Sign in</a>
+        <a class="btn primary" href="/app/#/signup">Sign up</a>
+      </div>
     </nav>
   </header>
   <main id="main">{{ block "main" . }}{{ end }}</main>

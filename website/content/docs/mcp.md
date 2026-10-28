@@ -45,7 +45,7 @@ Get a token from your [profile page](/app/#/profile) (*Copy my API token*). Toke
 
 ## Tools
 
-Tools marked 🔒 need a token. Everything else works anonymously.
+Tools marked (token) need a token. Everything else works anonymously.
 
 | Tool | What it does |
 |---|---|
@@ -56,8 +56,8 @@ Tools marked 🔒 need a token. Everything else works anonymously.
 | `generate_code` | Generate `unity`, `unreal` or `godot` code |
 | `search_trees` | Search the community's public trees |
 | `get_tree` | Fetch a tree and its spec by id (private trees only for their owner) |
-| `create_tree` 🔒 | Save a tree to your account |
-| `list_my_trees` 🔒 | List your trees |
+| `create_tree` (token) | Save a tree to your account |
+| `list_my_trees` (token) | List your trees |
 
 Errors from a tool come back inside the result with `isError: true`, so the model can read them and try again.
 

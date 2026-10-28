@@ -86,6 +86,18 @@ export async function scenesView(ctx: Ctx): Promise<Cleanup | undefined> {
   world.setBeacon({ x: 0, z: 14 });
   world.start();
 
+  let savedId = sceneId;
+  /** Saves the scene (creating it if new) and resolves its id. */
+  const ensureSaved = async (): Promise<string> => {
+    const s = await api.saveScene(savedId, {
+      name: nameIn.value.trim() || 'My scene',
+      visibility: visIn.value,
+      agents,
+    });
+    savedId = s.id;
+    return s.id;
+  };
+
   const treeOptions = (): HTMLOptionElement[] => [
     ...SAMPLES.map((s) => h('option', { value: s.id }, `Sample: ${s.title}`)),
     ...mine.map((t) => h('option', { value: t.id }, `Mine: ${t.name}`)),
@@ -152,6 +164,41 @@ export async function scenesView(ctx: Ctx): Promise<Cleanup | undefined> {
       a.treeId = tree.value;
       void reload();
     });
+    const author = (path: string): void => {
+      ensureSaved().then(
+        (id) => {
+          navigate(`${path}${path.includes('?') ? '&' : '?'}scene=${id}&agent=${selected}`);
+        },
+        (e: unknown) => {
+          toast(e instanceof ApiError ? e.message : 'Could not save the scene first.', 'err');
+        },
+      );
+    };
+    const isMine = mine.some((t) => t.id === a.treeId);
+    const newTree = h(
+      'button',
+      {
+        class: 'btn small',
+        type: 'button',
+        onClick: () => {
+          author('/builder');
+        },
+      },
+      'Write a new tree for this agent',
+    );
+    const editTree = isMine
+      ? h(
+          'button',
+          {
+            class: 'btn small',
+            type: 'button',
+            onClick: () => {
+              author(`/builder/${a.treeId ?? ''}`);
+            },
+          },
+          'Edit this tree',
+        )
+      : null;
     remove.addEventListener('click', () => {
       agents = agents.filter((_, i) => i !== selected);
       selected = Math.max(0, selected - 1);
@@ -162,6 +209,7 @@ export async function scenesView(ctx: Ctx): Promise<Cleanup | undefined> {
       h('div', {}, h('label', {}, 'Name'), name),
       h('div', {}, h('label', {}, 'Character'), model),
       h('div', {}, h('label', {}, 'Behavior tree'), tree),
+      h('div', { class: 'row' }, newTree, editTree),
       h('p', { class: 'hint' }, `Position: ${a.x.toFixed(1)}, ${a.z.toFixed(1)}`),
       remove,
     );

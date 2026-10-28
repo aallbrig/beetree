@@ -14,22 +14,20 @@
   --shadow: 0 1px 2px rgb(0 0 0 / 8%), 0 4px 14px rgb(0 0 0 / 6%);
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --bg: #15130e;
-    --surface: #1f1c14;
-    --surface-2: #2a261a;
-    --text: #f6efdc;
-    --muted: #b3a98d;
-    --line: #3a3426;
-    --accent: #f5b301;
-    --accent-text: #1c1400;
-    --ok: #4ade80;
-    --warn: #fbbf24;
-    --err: #f87171;
-    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 4px 14px rgb(0 0 0 / 30%);
-    color-scheme: dark;
-  }
+:root[data-theme='dark'] {
+  --bg: #15130e;
+  --surface: #1f1c14;
+  --surface-2: #2a261a;
+  --text: #f6efdc;
+  --muted: #b3a98d;
+  --line: #3a3426;
+  --accent: #f5b301;
+  --accent-text: #1c1400;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --err: #f87171;
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 4px 14px rgb(0 0 0 / 30%);
+  color-scheme: dark;
 }
 * {
   box-sizing: border-box;
@@ -82,7 +80,7 @@ p {
 .nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   flex-wrap: wrap;
   padding: 10px 16px;
   background: var(--surface);
@@ -95,9 +93,12 @@ p {
   font-weight: 800;
   text-decoration: none;
   margin-right: 12px;
+}
+.nav .links {
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 4px;
+  flex: 1;
 }
 .nav a.link {
   padding: 6px 10px;
@@ -112,6 +113,34 @@ p {
 }
 .nav .spacer {
   flex: 1;
+}
+.nav .menu-toggle {
+  display: none;
+  margin-left: auto;
+}
+@media (max-width: 800px) {
+  .nav .menu-toggle {
+    display: inline-block;
+  }
+  .nav .links {
+    display: none;
+    flex-basis: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding-top: 8px;
+  }
+  .nav .links.open {
+    display: flex;
+  }
+  .nav .links .spacer {
+    display: none;
+  }
+  .nav a.link,
+  .nav .links .btn {
+    padding: 12px;
+    text-align: left;
+  }
 }
 
 main {
@@ -443,4 +472,11 @@ input[type='range'] {
 }
 input[type='checkbox'] {
   width: auto;
+}
+
+.note {
+  background: var(--surface-2);
+  border-left: 4px solid var(--accent);
+  padding: 10px 14px;
+  border-radius: 8px;
 }

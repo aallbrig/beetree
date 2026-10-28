@@ -18,7 +18,7 @@ export function treeCard(t: Tree): HTMLElement {
     h(
       'div',
       { class: 'small muted' },
-      `♥ ${t.likeCount} · 💬 ${t.commentCount}${t.visibility === 'private' ? ' · 🔒 private' : ''}`,
+      `${t.likeCount} likes · ${t.commentCount} comments${t.visibility === 'private' ? ' · private' : ''}`,
     ),
   );
 }
