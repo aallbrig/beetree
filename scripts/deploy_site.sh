@@ -23,10 +23,10 @@ cat > "$PUBLIC/app/config.json" <<JSON
 {"apiUrl":"$(out ApiUrl)","region":"$REGION","clientId":"$(out UserPoolClientId)","userPoolId":"$(out UserPoolId)"}
 JSON
 
-# Everything short-lived first, then hashed assets as immutable.
-aws s3 sync "$PUBLIC" "s3://$BUCKET" --delete --exclude "app/assets/*" \
+# Everything is short-lived by default; only Vite's content-hashed bundles are immutable.
+aws s3 sync "$PUBLIC" "s3://$BUCKET" --delete \
   --cache-control "public, max-age=300" --region "$REGION"
-aws s3 sync "$PUBLIC/app/assets" "s3://$BUCKET/app/assets" --delete \
+aws s3 cp "$PUBLIC/app/assets" "s3://$BUCKET/app/assets" --recursive --exclude "*" --include "index-*" \
   --cache-control "public, max-age=31536000, immutable" --region "$REGION"
 
 aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*" --query 'Invalidation.Id' --output text
