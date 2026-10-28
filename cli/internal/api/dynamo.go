@@ -110,15 +110,17 @@ func (d *DynamoStore) listPartition(ctx context.Context, pk, skPrefix string) ([
 
 func (d *DynamoStore) queryIndex(ctx context.Context, index, pkAttr, skAttr, pk, skPrefix string, newestFirst bool, limit int) ([]item, error) {
 	cond := "#pk = :pk"
+	names := map[string]string{"#pk": pkAttr}
 	vals := item{":pk": s(pk)}
 	if skPrefix != "" {
 		cond += " AND begins_with(#sk, :p)"
+		names["#sk"] = skAttr // DynamoDB rejects names that no expression uses
 		vals[":p"] = s(skPrefix)
 	}
 	in := &dynamodb.QueryInput{
 		IndexName:                 aws.String(index),
 		KeyConditionExpression:    aws.String(cond),
-		ExpressionAttributeNames:  map[string]string{"#pk": pkAttr, "#sk": skAttr},
+		ExpressionAttributeNames:  names,
 		ExpressionAttributeValues: vals,
 		ScanIndexForward:          aws.Bool(!newestFirst),
 	}
