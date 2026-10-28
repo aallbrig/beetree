@@ -34,6 +34,7 @@ tasks:
     cmds:
       - task: lint:go
       - task: lint:shell
+      - task: lint:secrets
 
   lint:go:
     desc: go vet + golangci-lint
@@ -41,6 +42,11 @@ tasks:
     cmds:
       - go vet ./...
       - golangci-lint run ./...
+
+  lint:secrets:
+    desc: Scan the working tree for secrets
+    cmds:
+      - gitleaks detect --no-banner --redact
 
   lint:shell:
     desc: Shell script syntax check
