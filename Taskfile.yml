@@ -249,6 +249,12 @@ tasks:
       - task: deploy:backend
       - task: deploy:site
 
+  # ---- release ------------------------------------------------------------
+  release:
+    desc: "Tag and publish a GitHub release with CLI archives (task release -- v1.2.3)"
+    cmds:
+      - scripts/release.sh {{.CLI_ARGS}}
+
   # ---- PRs ----------------------------------------------------------------
   pr:merge:
     desc: "Wait for PR CI, then merge (task pr:merge -- N)"
