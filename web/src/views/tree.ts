@@ -21,7 +21,7 @@ export async function treeView(ctx: Ctx): Promise<Cleanup | undefined> {
   let liked = tree.likedByMe === true;
   let likes = tree.likeCount;
   const paintLike = (): void => {
-    likeBtn.textContent = `${liked ? '♥' : '♡'} ${likes}`;
+    likeBtn.textContent = `${liked ? 'Liked' : 'Like'} (${likes})`;
     likeBtn.setAttribute('aria-pressed', String(liked));
   };
   paintLike();
@@ -135,7 +135,7 @@ export async function treeView(ctx: Ctx): Promise<Cleanup | undefined> {
             { class: 'small muted' },
             'by ',
             h('a', { href: `#/user/${tree.ownerId}` }, tree.ownerName),
-            ` · ${formatDate(tree.createdAt)}${tree.visibility === 'private' ? ' · 🔒 private' : ''}`,
+            ` · ${formatDate(tree.createdAt)}${tree.visibility === 'private' ? ' · private' : ''}`,
           ),
           h('p', {}, tree.description),
           h('div', {}, ...tree.tags.map((x) => h('span', { class: 'tag' }, x))),

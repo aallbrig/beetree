@@ -33,6 +33,8 @@ Conditions:
 
 Globals:
   Function:
+    Tags:
+      Project: beetreecraft
     Runtime: provided.al2023
     Architectures: [arm64]
     Handler: bootstrap

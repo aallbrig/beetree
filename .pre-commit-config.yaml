@@ -11,7 +11,7 @@ repos:
       - id: trailing-whitespace
         exclude: '\.(glb|png|svg|tape)$'
       - id: check-yaml
-        exclude: '^infra/template\.yaml$'
+        exclude: '^infra/(template|iam)\.yaml$'
       - id: check-json
       - id: check-added-large-files
         args: ['--maxkb=1024']

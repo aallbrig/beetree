@@ -1,0 +1,271 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: BeeTreeCraft - least-privilege roles for deploying, publishing and testing (deploy once as an admin)
+
+Parameters:
+  AdminPrincipalArn:
+    Type: String
+    Description: IAM user or role allowed to assume the roles below
+  HostedZoneId:
+    Type: String
+    Default: Z01471541CIK073SJS8RE
+  StackName:
+    Type: String
+    Default: beetreecraft
+
+Resources:
+  # Used by CloudFormation itself while it creates and updates the stack. The
+  # person deploying needs none of these rights, only permission to pass this role.
+  CfnExecRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: beetreecraft-cfn-exec
+      Description: Service role CloudFormation assumes to manage the beetreecraft stack
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: cloudformation.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {'aws:SourceAccount': !Ref 'AWS::AccountId'}
+      Policies:
+        - PolicyName: stack-resources
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: SamTransform
+                Effect: Allow
+                Action: cloudformation:CreateChangeSet
+                Resource: !Sub arn:aws:cloudformation:${AWS::Region}:aws:transform/Serverless-2016-10-31
+              - Sid: Table
+                Effect: Allow
+                Action: dynamodb:*
+                Resource:
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${StackName}-*
+              - Sid: DynamoDbAccountLevel
+                Effect: Allow
+                Action: [dynamodb:DescribeLimits, dynamodb:ListTables]
+                Resource: '*'
+              - Sid: UserPool
+                Effect: Allow
+                Action: cognito-idp:*
+                Resource: !Sub arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*
+              - Sid: Functions
+                Effect: Allow
+                Action: lambda:*
+                Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${StackName}-*
+              - Sid: LogGroups
+                Effect: Allow
+                Action: logs:*
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${StackName}-*
+              - Sid: LogsDescribe
+                Effect: Allow
+                Action: [logs:DescribeLogGroups, logs:ListTagsForResource, logs:TagResource, logs:UntagResource]
+                Resource: '*'
+              - Sid: HttpApi
+                Effect: Allow
+                Action: apigateway:*
+                Resource:
+                  - !Sub arn:aws:apigateway:${AWS::Region}::/apis
+                  - !Sub arn:aws:apigateway:${AWS::Region}::/apis/*
+                  - !Sub arn:aws:apigateway:${AWS::Region}::/domainnames
+                  - !Sub arn:aws:apigateway:${AWS::Region}::/domainnames/*
+                  - !Sub arn:aws:apigateway:${AWS::Region}::/tags/*
+              - Sid: SiteBucket
+                Effect: Allow
+                Action: s3:*
+                Resource:
+                  - !Sub arn:aws:s3:::${StackName}-sitebucket-*
+                  - !Sub arn:aws:s3:::${StackName}-sitebucket-*/*
+              - Sid: ReadLambdaPackages
+                Effect: Allow
+                Action: [s3:GetObject, s3:GetObjectVersion]
+                Resource: arn:aws:s3:::aws-sam-cli-managed-default-*/*
+              - Sid: Cdn
+                Effect: Allow
+                Action:
+                  - cloudfront:*Distribution*
+                  - cloudfront:*OriginAccessControl*
+                  - cloudfront:*Function*
+                  - cloudfront:*ResponseHeadersPolicy*
+                  - cloudfront:TagResource
+                  - cloudfront:UntagResource
+                  - cloudfront:ListTagsForResource
+                Resource: '*'
+              - Sid: Certificates
+                Effect: Allow
+                Action:
+                  - acm:RequestCertificate
+                  - acm:DescribeCertificate
+                  - acm:DeleteCertificate
+                  - acm:AddTagsToCertificate
+                  - acm:RemoveTagsFromCertificate
+                  - acm:ListTagsForCertificate
+                Resource: '*'
+              - Sid: Dns
+                Effect: Allow
+                Action: [route53:ChangeResourceRecordSets, route53:ListResourceRecordSets, route53:GetHostedZone]
+                Resource: !Sub arn:aws:route53:::hostedzone/${HostedZoneId}
+              - Sid: DnsChanges
+                Effect: Allow
+                Action: [route53:GetChange, route53:ListHostedZones]
+                Resource: '*'
+              - Sid: Alarms
+                Effect: Allow
+                Action: [cloudwatch:PutMetricAlarm, cloudwatch:DeleteAlarms, cloudwatch:DescribeAlarms, cloudwatch:TagResource, cloudwatch:UntagResource, cloudwatch:ListTagsForResource]
+                Resource: !Sub arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:${StackName}-*
+              - Sid: FunctionRoles
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:UpdateRole
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:PutRolePolicy
+                  - iam:GetRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:PassRole
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/${StackName}-*
+              - Sid: OnlyBasicExecutionManagedPolicy
+                Effect: Allow
+                Action: [iam:AttachRolePolicy, iam:DetachRolePolicy]
+                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/${StackName}-*
+                Condition:
+                  ArnEquals:
+                    iam:PolicyARN: arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Runs `sam deploy`. It can drive CloudFormation for this one stack and hand
+  # the exec role to it; it cannot touch any resource directly.
+  DeployerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: beetreecraft-deployer
+      Description: Deploys the beetreecraft stack through the CloudFormation exec role
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {AWS: !Ref AdminPrincipalArn}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: deploy-stack
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: Stack
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeStackResources
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:ListStackResources
+                Resource: !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${StackName}/*
+              - Sid: SamTransform
+                Effect: Allow
+                Action: cloudformation:CreateChangeSet
+                Resource: !Sub arn:aws:cloudformation:${AWS::Region}:aws:transform/Serverless-2016-10-31
+              - Sid: Validate
+                Effect: Allow
+                Action: [cloudformation:ValidateTemplate, cloudformation:GetTemplateSummary]
+                Resource: '*'
+              - Sid: HandOverToCloudFormation
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt CfnExecRole.Arn
+                Condition:
+                  StringEquals: {'iam:PassedToService': cloudformation.amazonaws.com}
+              - Sid: PackageBucket
+                Effect: Allow
+                Action: [s3:GetObject, s3:PutObject, s3:ListBucket, s3:GetBucketLocation, s3:GetBucketPolicy]
+                Resource:
+                  - arn:aws:s3:::aws-sam-cli-managed-default-*
+                  - arn:aws:s3:::aws-sam-cli-managed-default-*/*
+
+  # Publishes the built site: files into the site bucket, then an invalidation.
+  SitePublisherRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: beetreecraft-site-publisher
+      Description: Uploads the static site and invalidates CloudFront
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {AWS: !Ref AdminPrincipalArn}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: publish-site
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: Bucket
+                Effect: Allow
+                Action: [s3:ListBucket, s3:GetBucketLocation]
+                Resource: !Sub arn:aws:s3:::${StackName}-sitebucket-*
+              - Sid: Objects
+                Effect: Allow
+                Action: [s3:GetObject, s3:PutObject, s3:DeleteObject]
+                Resource: !Sub arn:aws:s3:::${StackName}-sitebucket-*/*
+              - Sid: Invalidate
+                Effect: Allow
+                Action: cloudfront:CreateInvalidation
+                Resource: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/*
+              - Sid: ReadOutputs
+                Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource: !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${StackName}/*
+
+  # Runs the live end-to-end test: throwaway Cognito users and their rows only.
+  SmokeTestRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: beetreecraft-smoke-test
+      Description: Creates and removes throwaway users and rows for the live smoke test
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {AWS: !Ref AdminPrincipalArn}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: smoke-test
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminCreateUser
+                  - cognito-idp:AdminSetUserPassword
+                  - cognito-idp:AdminConfirmSignUp
+                  - cognito-idp:AdminDeleteUser
+                  - cognito-idp:AdminGetUser
+                Resource: !Sub arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/*
+              - Effect: Allow
+                Action: [dynamodb:Query, dynamodb:GetItem, dynamodb:DeleteItem]
+                Resource:
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${StackName}-*
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${StackName}-*/index/*
+              - Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource: !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${StackName}/*
+
+Outputs:
+  CfnExecRoleArn:
+    Value: !GetAtt CfnExecRole.Arn
+  DeployerRoleArn:
+    Value: !GetAtt DeployerRole.Arn
+  SitePublisherRoleArn:
+    Value: !GetAtt SitePublisherRole.Arn
+  SmokeTestRoleArn:
+    Value: !GetAtt SmokeTestRole.Arn

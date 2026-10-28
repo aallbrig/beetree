@@ -31,7 +31,7 @@ Try this:
 
 ## 3. Build a tree
 
-Go to your [Dashboard](/app/#/dashboard) and choose **New tree**. (You need to be signed in.)
+Open [Build](/app/#/build) and choose **New tree**. (You need to be signed in.) Everything you make later lives under **My trees**.
 
 The builder has a live 3D preview on the right, running your tree as you edit it.
 
@@ -70,20 +70,25 @@ Anything else still runs (an action takes about a second), so any tree stays ali
 
 ## 4. Put agents in a 3D scene
 
-Open [3D Scenes](/app/#/scenes) to arrange several agents in one world.
+Open [Build](/app/#/build) and choose **New scene** to arrange several agents in one world.
 
 1. Press **Add agent**, then give it a name, a character and a behavior tree. You can use a built-in sample or any of your own trees.
 2. **Click the ground** to move the selected agent. Click an agent in the scene to select it.
-3. Choose **Private** or **Public (shareable link)** and press **Save scene**.
-4. Use **Watch it** to see the whole scene run in Explore. A public scene can be shared with a link like `https://beetreecraft.com/app/#/explore?scene=<id>`.
+3. Need a tree that does not exist yet? Press **Write a new tree for this agent**. The scene is saved, the builder opens, and saving the tree assigns it to that agent and brings you back. **Edit this tree** does the same for one of your own trees.
+4. Choose **Private** or **Public (shareable link)** and press **Save scene**.
+5. Use **Watch it** to see the whole scene run in Explore. A public scene can be shared with a link like `https://beetreecraft.com/app/#/explore?scene=<id>`.
 
-## 5. Share and collaborate
+## 5. Light and dark mode
+
+The site opens in light mode. Use the **Dark mode** / **Light mode** button in the top bar to switch; your choice is remembered on this device and applies to both the site and the app. On a phone, the top bar collapses into a **Menu** button.
+
+## 6. Share and collaborate
 
 - Set a tree's visibility to **Public** and it appears in [Community](/app/#/community), where anyone can read, like and comment on it.
 - Open any community tree and press **Fork in builder** to start your own copy.
 - Join the [Forum](/app/#/forum) to ask for help or show off your work.
 - Your [Dashboard](/app/#/dashboard) shows your trees with their likes and comments, plus your forum activity.
 
-## 6. Your profile
+## 7. Your profile
 
 On your [profile](/app/#/profile) you can change your display name and bio, and copy a short-lived **API token** for the [REST API](/docs/api/) and [MCP server](/docs/mcp/).

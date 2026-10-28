@@ -45,6 +45,9 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   let selected: Path = [];
 
   const forkId = ctx.query.get('fork');
+  // Set when a scene sent us here to author a tree for one of its agents.
+  const forScene = ctx.query.get('scene');
+  const forAgent = Number(ctx.query.get('agent') ?? '');
   if (treeId ?? forkId) {
     const t = await api.getTree((treeId ?? forkId) as string);
     if (!t.spec) throw new Error('That tree has no spec.');
@@ -68,7 +71,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   const intruderBtn = h(
     'button',
     { class: 'btn small', type: 'button', 'aria-pressed': 'true' },
-    '🎯 Intruder',
+    'Intruder',
   );
   const resetBtn = h('button', { class: 'btn small', type: 'button' }, '↺ Restart');
   const stage = h(
@@ -214,6 +217,16 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     tabs,
     ...Object.values(panels),
   );
+  if (forScene) {
+    ctx.root.append(
+      h(
+        'p',
+        { class: 'note' },
+        'Writing a tree for a scene agent. Saving assigns it to the agent and returns you to the scene. ',
+        h('a', { href: `#/scenes/${forScene}` }, 'Back to the scene without saving'),
+      ),
+    );
+  }
   ctx.root.append(h('div', { class: 'studio' }, left, stage));
 
   // ---- preview world ----------------------------------------------------
@@ -275,7 +288,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     renderProps();
     const issues = problems(spec);
     status.textContent = issues.length
-      ? `⚠ ${issues[0] ?? ''}${issues.length > 1 ? ` (+${issues.length - 1} more)` : ''}`
+      ? `${issues[0] ?? ''}${issues.length > 1 ? ` (+${issues.length - 1} more)` : ''}`
       : `${countNodes(spec.tree)} nodes`;
     status.style.color = issues.length ? 'var(--warn)' : 'var(--muted)';
     agent?.setSpec(spec.tree);
@@ -424,13 +437,27 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     api.validate(stringifySpec(spec)).then(
       (r) => {
         if (r.valid) toast(`Valid — ${r.nodeCount} nodes.`);
-        else status.textContent = `✖ ${r.errors.join(' · ')}`;
+        else status.textContent = r.errors.join(' · ');
       },
       () => {
         toast('Could not reach the validator.', 'err');
       },
     );
   });
+
+  /** Points the scene's agent at the tree just saved, then returns to the scene. */
+  const attachToScene = async (sid: string, agent: number, tid: string): Promise<void> => {
+    try {
+      const sc = await api.getScene(sid);
+      const target = sc.agents[agent];
+      if (target) target.treeId = tid;
+      await api.saveScene(sid, { name: sc.name, visibility: sc.visibility, agents: sc.agents });
+      toast('Saved and assigned to the agent.');
+      navigate(`/scenes/${sid}`);
+    } catch {
+      toast('Tree saved, but it could not be assigned to the scene.', 'err');
+    }
+  };
 
   saveBtn.addEventListener('click', () => {
     syncMeta();
@@ -449,6 +476,10 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
           localStorage.removeItem(DRAFT_KEY);
         } catch {
           // ignore
+        }
+        if (forScene && Number.isInteger(forAgent)) {
+          void attachToScene(forScene, forAgent, t.id);
+          return;
         }
         if (!treeId) navigate(`/builder/${t.id}`);
       })

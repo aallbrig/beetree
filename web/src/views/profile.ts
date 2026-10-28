@@ -76,7 +76,7 @@ export async function profileView(ctx: Ctx): Promise<void> {
           h(
             'p',
             {},
-            `♥ ${stats.likes} likes and 💬 ${stats.comments} comments on your ${stats.trees} trees (${stats.publicTrees} shared).`,
+            `${stats.likes} likes and ${stats.comments} comments on your ${stats.trees} trees (${stats.publicTrees} shared).`,
           ),
           h('p', {}, `${stats.forumThreads} forum threads and ${stats.forumPosts} replies.`),
         ),

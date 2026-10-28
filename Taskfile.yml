@@ -4,6 +4,9 @@
 version: '3'
 
 vars:
+  SAM_BUCKET: aws-sam-cli-managed-default-samclisourcebucket-kbhd1y0azh7h
+  # Applied to every resource CloudFormation can tag
+  TAGS: Project=beetreecraft Environment=prod ManagedBy=sam Repository=beetree
   VERSION:
     sh: git describe --tags --always --dirty 2>/dev/null || echo 0.0.0
 
@@ -64,6 +67,7 @@ tasks:
     desc: Lint the SAM/CloudFormation template
     cmds:
       - sam validate --lint -t infra/template.yaml --region us-east-1
+      - sam validate --lint -t infra/iam.yaml --region us-east-1
 
   lint:shell:
     desc: Shell script syntax check
@@ -153,16 +157,33 @@ tasks:
       - tmuxinator debug --project-config .tmuxinator/beetree.yml >/dev/null
 
   # ---- deploy -------------------------------------------------------------
+  deploy:iam:
+    desc: Deploy the least-privilege roles (run once as an admin; later deploys use them)
+    vars:
+      ME:
+        sh: aws sts get-caller-identity --query Arn --output text
+    cmds:
+      - |
+        sam deploy -t infra/iam.yaml --stack-name beetreecraft-iam --region us-east-1 \
+          --resolve-s3 --capabilities CAPABILITY_NAMED_IAM --no-confirm-changeset --no-fail-on-empty-changeset \
+          --tags {{.TAGS}} \
+          --parameter-overrides AdminPrincipalArn={{.ME}}
+
   deploy:backend:
-    desc: Build Lambdas and deploy the SAM stack (us-east-1). Pass DNS=true to cut over the apex; WWW=true to include www.
+    desc: Build Lambdas and deploy the SAM stack (us-east-1) as the deployer role. Pass DNS=true to cut over the apex; WWW=true to include www.
     deps: [build:lambda]
     vars:
       DNS: '{{default "false" .DNS}}'
       WWW: '{{default "false" .WWW}}'
     cmds:
       - |
-        sam deploy -t infra/template.yaml --stack-name beetreecraft --region us-east-1 \
-          --resolve-s3 --capabilities CAPABILITY_IAM --no-confirm-changeset --no-fail-on-empty-changeset \
+        EXEC="$(aws cloudformation describe-stacks --stack-name beetreecraft-iam --region us-east-1 \
+          --query "Stacks[0].Outputs[?OutputKey=='CfnExecRoleArn'].OutputValue" --output text 2>/dev/null || true)"
+        ROLE_FLAG=""; [ -n "$EXEC" ] && [ "$EXEC" != "None" ] && ROLE_FLAG="--role-arn $EXEC"
+        scripts/with_role.sh DeployerRoleArn -- \
+          sam deploy -t infra/template.yaml --stack-name beetreecraft --region us-east-1 \
+          --s3-bucket {{.SAM_BUCKET}} --capabilities CAPABILITY_IAM --no-confirm-changeset --no-fail-on-empty-changeset \
+          $ROLE_FLAG --tags {{.TAGS}} \
           --parameter-overrides ManageSiteDns={{.DNS}} IncludeWww={{.WWW}}
 
   deploy:outputs:
@@ -180,7 +201,7 @@ tasks:
     desc: End-to-end test of the deployed stack (creates and removes a throwaway user)
     dir: cli
     cmds:
-      - go test -tags smoke -count=1 -v ./smoke/
+      - ../scripts/with_role.sh SmokeTestRoleArn -- go test -tags smoke -count=1 -v ./smoke/
 
   test:dynamo:
     desc: Run the Store contract test against a throwaway DynamoDB table (needs AWS credentials)
@@ -241,7 +262,7 @@ tasks:
     desc: Build the site and publish it to S3 + CloudFront
     deps: [site:build]
     cmds:
-      - scripts/deploy_site.sh
+      - scripts/with_role.sh SitePublisherRoleArn -- scripts/deploy_site.sh
 
   deploy:
     desc: Deploy backend then site

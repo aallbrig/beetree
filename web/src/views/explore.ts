@@ -12,7 +12,7 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
   const intruderBtn = h(
     'button',
     { class: 'btn small', type: 'button', 'aria-pressed': 'true' },
-    '🎯 Intruder',
+    'Intruder',
   );
   const resetBtn = h('button', { class: 'btn small', type: 'button' }, '↺ Reset');
   const stage = h(

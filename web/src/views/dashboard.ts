@@ -30,9 +30,9 @@ export async function dashboardView(ctx: Ctx): Promise<void> {
       'tr',
       { id: `row-${t.id}` },
       h('td', {}, h('a', { href: `#/tree/${t.id}` }, t.name)),
-      h('td', {}, t.visibility === 'public' ? 'Public' : '🔒 Private'),
-      h('td', {}, `♥ ${t.likeCount}`),
-      h('td', {}, `💬 ${t.commentCount}`),
+      h('td', {}, t.visibility === 'public' ? 'Public' : 'Private'),
+      h('td', {}, `${t.likeCount} likes`),
+      h('td', {}, `${t.commentCount} comments`),
       h('td', {}, formatDate(t.updatedAt)),
       h(
         'td',
