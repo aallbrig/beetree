@@ -35,3 +35,4 @@ website/resources/
 web/dist/
 website/static/app/
 coverage.out
+web/public/config.json

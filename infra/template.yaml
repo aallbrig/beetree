@@ -1,0 +1,411 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: BeeTreeCraft - serverless site, API, auth and storage (deploy in us-east-1)
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: beetreecraft.com
+  HostedZoneId:
+    Type: String
+    Default: Z01471541CIK073SJS8RE
+    Description: Route 53 hosted zone for DomainName
+  ManageSiteDns:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: >-
+      'true' points the apex and www records at CloudFront. Leave 'false' until
+      any previous records for those names (e.g. GitHub Pages) are removed.
+
+  IncludeWww:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: >-
+      'true' adds www to the certificate and CloudFront. ACM refuses www while
+      a resolver still caches a CAA answer from a previous CNAME target.
+
+Conditions:
+  CutOverDns: !Equals [!Ref ManageSiteDns, 'true']
+  WithWww: !Equals [!Ref IncludeWww, 'true']
+  CutOverWww: !And [!Condition CutOverDns, !Condition WithWww]
+
+Globals:
+  Function:
+    Runtime: provided.al2023
+    Architectures: [arm64]
+    Handler: bootstrap
+    Timeout: 15
+    MemorySize: 256
+
+Resources:
+  # ---- storage -------------------------------------------------------------
+  Table:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: pk, AttributeType: S}
+        - {AttributeName: sk, AttributeType: S}
+        - {AttributeName: gsi1pk, AttributeType: S}
+        - {AttributeName: gsi1sk, AttributeType: S}
+        - {AttributeName: gsi2pk, AttributeType: S}
+        - {AttributeName: gsi2sk, AttributeType: S}
+      KeySchema:
+        - {AttributeName: pk, KeyType: HASH}
+        - {AttributeName: sk, KeyType: RANGE}
+      GlobalSecondaryIndexes:
+        - IndexName: gsi1
+          KeySchema:
+            - {AttributeName: gsi1pk, KeyType: HASH}
+            - {AttributeName: gsi1sk, KeyType: RANGE}
+          Projection: {ProjectionType: ALL}
+        - IndexName: gsi2
+          KeySchema:
+            - {AttributeName: gsi2pk, KeyType: HASH}
+            - {AttributeName: gsi2sk, KeyType: RANGE}
+          Projection: {ProjectionType: INCLUDE, NonKeyAttributes: [data, likeCount, commentCount, postCount, lastActivity]}
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  # ---- auth ----------------------------------------------------------------
+  PreSignUpFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: PreSignUpLogs
+    Properties:
+      FunctionName: beetreecraft-presignup
+      CodeUri: build/presignup
+      Timeout: 5
+
+  PreSignUpLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/beetreecraft-presignup
+      RetentionInDays: 30
+
+  PreSignUpPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PreSignUpFunction
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !GetAtt UserPool.Arn
+
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: beetreecraft
+      DeletionProtection: ACTIVE
+      AliasAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      UsernameConfiguration: {CaseSensitive: false}
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 10
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - {Name: verified_email, Priority: 1}
+      Schema:
+        - {Name: email, AttributeDataType: String, Required: true, Mutable: true}
+        - {Name: birthdate, AttributeDataType: String, Required: true, Mutable: false}
+      LambdaConfig:
+        PreSignUp: !GetAtt PreSignUpFunction.Arn
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailSubject: Confirm your BeeTreeCraft account
+        EmailMessage: 'Welcome to BeeTreeCraft! Your confirmation code is {####}'
+      EmailConfiguration:
+        EmailSendingAccount: COGNITO_DEFAULT
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: beetreecraft-web
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 30
+      TokenValidityUnits: {AccessToken: minutes, IdToken: minutes, RefreshToken: days}
+      ReadAttributes: [email, email_verified, birthdate]
+      WriteAttributes: [email, birthdate]
+
+  # ---- API -----------------------------------------------------------------
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: ApiLogs
+    Properties:
+      FunctionName: beetreecraft-api
+      CodeUri: build/api
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+          USER_POOL_ID: !Ref UserPool
+          USER_POOL_CLIENT_ID: !Ref UserPoolClient
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref Table}
+      Events:
+        Any:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+  ApiLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/beetreecraft-api
+      RetentionInDays: 30
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 100
+        ThrottlingRateLimit: 50
+
+  ApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !Sub api.${DomainName}
+      DomainNameConfigurations:
+        - CertificateArn: !Ref Certificate
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  ApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    DependsOn: HttpApiApiGatewayDefaultStage
+    Properties:
+      ApiId: !Ref HttpApi
+      DomainName: !Ref ApiDomain
+      Stage: $default
+
+  ApiRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub api.${DomainName}.
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt ApiDomain.RegionalHostedZoneId
+
+  # ---- site ----------------------------------------------------------------
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Sub api.${DomainName}
+        - !If [WithWww, !Sub 'www.${DomainName}', !Ref 'AWS::NoValue']
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - {DomainName: !Ref DomainName, HostedZoneId: !Ref HostedZoneId}
+        - !If
+          - WithWww
+          - {DomainName: !Sub 'www.${DomainName}', HostedZoneId: !Ref HostedZoneId}
+          - !Ref 'AWS::NoValue'
+        - {DomainName: !Sub 'api.${DomainName}', HostedZoneId: !Ref HostedZoneId}
+
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: {Service: cloudfront.amazonaws.com}
+            Action: s3:GetObject
+            Resource: !Sub ${SiteBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${SiteDistribution}
+
+  SiteOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub ${AWS::StackName}-oac
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  RewriteFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub ${AWS::StackName}-rewrite
+      AutoPublish: true
+      FunctionConfig:
+        Comment: www -> apex redirect; directory index rewrite
+        Runtime: cloudfront-js-2.0
+      FunctionCode: !Sub |
+        function handler(event) {
+          var req = event.request;
+          var host = req.headers.host.value;
+          if (host.indexOf('www.') === 0) {
+            return { statusCode: 301, statusDescription: 'Moved Permanently',
+                     headers: { location: { value: 'https://${DomainName}' + req.uri } } };
+          }
+          if (req.uri.charAt(req.uri.length - 1) === '/') {
+            req.uri += 'index.html';
+          } else if (req.uri.lastIndexOf('.') < req.uri.lastIndexOf('/')) {
+            return { statusCode: 301, statusDescription: 'Moved Permanently',
+                     headers: { location: { value: req.uri + '/' } } };
+          }
+          return req;
+        }
+
+  SecurityHeaders:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub ${AWS::StackName}-security
+        SecurityHeadersConfig:
+          StrictTransportSecurity: {AccessControlMaxAgeSec: 63072000, IncludeSubdomains: true, Override: true}
+          ContentTypeOptions: {Override: true}
+          FrameOptions: {FrameOption: DENY, Override: true}
+          ReferrerPolicy: {ReferrerPolicy: strict-origin-when-cross-origin, Override: true}
+          ContentSecurityPolicy:
+            Override: true
+            ContentSecurityPolicy: !Sub >-
+              default-src 'self';
+              script-src 'self';
+              style-src 'self' 'unsafe-inline';
+              img-src 'self' data: blob:;
+              font-src 'self' data:;
+              worker-src 'self' blob:;
+              connect-src 'self' https://api.${DomainName} https://cognito-idp.${AWS::Region}.amazonaws.com;
+              frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+
+  SiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        HttpVersion: http2and3
+        DefaultRootObject: index.html
+        Aliases:
+          - !Ref DomainName
+          - !If [WithWww, !Sub 'www.${DomainName}', !Ref 'AWS::NoValue']
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref Certificate
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        Origins:
+          - Id: site
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt SiteOAC.Id
+            S3OriginConfig: {OriginAccessIdentity: ''}
+        DefaultCacheBehavior:
+          TargetOriginId: site
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # CachingOptimized
+          ResponseHeadersPolicyId: !Ref SecurityHeaders
+          FunctionAssociations:
+            - {EventType: viewer-request, FunctionARN: !GetAtt RewriteFunction.FunctionMetadata.FunctionARN}
+        CustomErrorResponses:
+          - {ErrorCode: 403, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60}
+          - {ErrorCode: 404, ResponseCode: 404, ResponsePagePath: /404.html, ErrorCachingMinTTL: 60}
+
+  ApexRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: CutOverDns
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub ${DomainName}.
+      Type: A
+      AliasTarget: {DNSName: !GetAtt SiteDistribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2}
+
+  ApexRecordV6:
+    Type: AWS::Route53::RecordSet
+    Condition: CutOverDns
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub ${DomainName}.
+      Type: AAAA
+      AliasTarget: {DNSName: !GetAtt SiteDistribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2}
+
+  WwwRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: CutOverWww
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub www.${DomainName}.
+      Type: A
+      AliasTarget: {DNSName: !GetAtt SiteDistribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2}
+
+  WwwRecordV6:
+    Type: AWS::Route53::RecordSet
+    Condition: CutOverWww
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub www.${DomainName}.
+      Type: AAAA
+      AliasTarget: {DNSName: !GetAtt SiteDistribution.DomainName, HostedZoneId: Z2FDTNDATAQYW2}
+
+  # ---- alarms --------------------------------------------------------------
+  ApiErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: API Lambda is erroring
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions: [{Name: FunctionName, Value: !Ref ApiFunction}]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+Outputs:
+  SiteUrl:
+    Value: !Sub https://${DomainName}
+  ApiUrl:
+    Value: !Sub https://api.${DomainName}
+  ApiGatewayUrl:
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+  TableName:
+    Value: !Ref Table
+  BucketName:
+    Value: !Ref SiteBucket
+  DistributionId:
+    Value: !Ref SiteDistribution

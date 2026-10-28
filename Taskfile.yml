@@ -35,6 +35,7 @@ tasks:
       - task: lint:go
       - task: lint:shell
       - task: lint:secrets
+      - task: lint:infra
 
   lint:go:
     desc: go vet + golangci-lint
@@ -47,6 +48,11 @@ tasks:
     desc: Scan the working tree for secrets
     cmds:
       - gitleaks detect --no-banner --redact
+
+  lint:infra:
+    desc: Lint the SAM/CloudFormation template
+    cmds:
+      - sam validate --lint -t infra/template.yaml --region us-east-1
 
   lint:shell:
     desc: Shell script syntax check
@@ -124,6 +130,29 @@ tasks:
     desc: Validate the tmuxinator config without starting anything
     cmds:
       - tmuxinator debug --project-config .tmuxinator/beetree.yml >/dev/null
+
+  # ---- deploy -------------------------------------------------------------
+  deploy:backend:
+    desc: Build Lambdas and deploy the SAM stack (us-east-1). Pass DNS=true to cut over the apex; WWW=true to include www.
+    deps: [build:lambda]
+    vars:
+      DNS: '{{default "false" .DNS}}'
+      WWW: '{{default "false" .WWW}}'
+    cmds:
+      - |
+        sam deploy -t infra/template.yaml --stack-name beetreecraft --region us-east-1 \
+          --resolve-s3 --capabilities CAPABILITY_IAM --no-confirm-changeset --no-fail-on-empty-changeset \
+          --parameter-overrides ManageSiteDns={{.DNS}} IncludeWww={{.WWW}}
+
+  deploy:outputs:
+    desc: Print stack outputs as JSON
+    cmds:
+      - aws cloudformation describe-stacks --stack-name beetreecraft --region us-east-1 --query 'Stacks[0].Outputs' --output json
+
+  test:dynamo:
+    desc: Run the Store contract test against a throwaway DynamoDB table (needs AWS credentials)
+    cmds:
+      - scripts/test_dynamo.sh
 
   # ---- site ---------------------------------------------------------------
   site:dev:
