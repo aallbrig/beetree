@@ -36,3 +36,4 @@ web/dist/
 website/static/app/
 coverage.out
 web/public/config.json
+website/static/vendor/

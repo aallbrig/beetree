@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ if .IsHome }}{{ site.Title }} — behavior trees for game AI{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}</title>
+  <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/site.css">
+  {{ block "head" . }}{{ end }}
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <nav aria-label="Main">
+      <a class="brand" href="/">🐝 BeeTreeCraft</a>
+      <a href="/docs/">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a href="/docs/mcp/">MCP</a>
+      <a href="/app/#/community">Community</a>
+      <a href="/app/#/forum">Forum</a>
+      <span class="spacer"></span>
+      <a href="/app/#/signin">Sign in</a>
+      <a class="btn primary" href="/app/#/signup">Sign up</a>
+    </nav>
+  </header>
+  <main id="main">{{ block "main" . }}{{ end }}</main>
+  <footer class="foot">
+    <p>BeeTreeCraft · <a href="https://github.com/aallbrig/beetree">Source on GitHub</a> · 3D assets by <a href="https://kenney.nl">Kenney</a> (CC0)</p>
+  </footer>
+</body>
+</html>
