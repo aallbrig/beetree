@@ -1,0 +1,632 @@
+openapi: 3.0.3
+info:
+  title: BeeTreeCraft API
+  version: 1.0.0
+  description: |
+    Create, validate, simulate, share and discuss engine-agnostic behavior trees.
+
+    Authenticate by sending a Cognito token from sign-in as `Authorization: Bearer <token>`.
+    Read-only and stateless endpoints work without a token.
+    An MCP server is available at `POST /mcp` (see the MCP docs).
+  license:
+    name: MIT
+servers:
+  - url: https://api.beetreecraft.com
+    description: Production
+tags:
+  - name: Tools
+    description: Stateless validate, simulate, render and generate
+  - name: Trees
+  - name: Social
+  - name: Account
+  - name: Forum
+  - name: Scenes
+  - name: MCP
+security:
+  - {}
+  - bearerAuth: []
+paths:
+  /v1/health:
+    get:
+      summary: Service health
+      operationId: health
+      tags: [Tools]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: string, example: ok}
+                  version: {type: string}
+  /v1/openapi.json:
+    get:
+      summary: This document as JSON
+      operationId: getOpenApi
+      tags: [Tools]
+      responses:
+        '200': {description: The OpenAPI document}
+  /v1/node-types:
+    get:
+      summary: Node types, decorators, render formats and engines
+      operationId: getNodeTypes
+      tags: [Tools]
+      responses:
+        '200': {description: OK}
+  /v1/validate:
+    post:
+      summary: Validate a spec
+      operationId: validateSpec
+      tags: [Tools]
+      requestBody: {$ref: '#/components/requestBodies/Spec'}
+      responses:
+        '200':
+          description: Validation result (valid or not)
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ValidateResult'}
+  /v1/simulate:
+    post:
+      summary: Dry-run a spec
+      operationId: simulateSpec
+      tags: [Tools]
+      requestBody: {$ref: '#/components/requestBodies/Spec'}
+      responses:
+        '200':
+          description: Execution trace
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SimulateResult'}
+        '422': {$ref: '#/components/responses/Error'}
+  /v1/render:
+    post:
+      summary: Render a spec as ascii, sigil, mermaid or dot
+      operationId: renderSpec
+      tags: [Tools]
+      requestBody: {$ref: '#/components/requestBodies/Spec'}
+      responses:
+        '200': {description: Rendered diagram}
+        '422': {$ref: '#/components/responses/Error'}
+  /v1/generate:
+    post:
+      summary: Generate engine code (unity, unreal, godot)
+      operationId: generateCode
+      tags: [Tools]
+      requestBody: {$ref: '#/components/requestBodies/Spec'}
+      responses:
+        '200': {description: Generated files}
+        '422': {$ref: '#/components/responses/Error'}
+  /v1/trees:
+    get:
+      summary: List public trees
+      operationId: listTrees
+      tags: [Trees]
+      parameters:
+        - {name: q, in: query, schema: {type: string}, description: 'Match name, description or tags'}
+        - {name: tag, in: query, schema: {type: string}}
+        - {name: sort, in: query, schema: {type: string, enum: [recent, popular]}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+      responses:
+        '200':
+          description: Trees (without spec bodies)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/Tree'}
+    post:
+      summary: Create a tree
+      operationId: createTree
+      tags: [Trees]
+      security: [{bearerAuth: []}]
+      requestBody: {$ref: '#/components/requestBodies/Tree'}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Tree'}
+        '401': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+  /v1/trees/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: Get a tree with its spec
+      operationId: getTree
+      tags: [Trees]
+      responses:
+        '200':
+          description: The tree
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Tree'}
+        '404': {$ref: '#/components/responses/Error'}
+    put:
+      summary: Replace a tree you own
+      operationId: updateTree
+      tags: [Trees]
+      security: [{bearerAuth: []}]
+      requestBody: {$ref: '#/components/requestBodies/Tree'}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Tree'}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/Error'}
+    delete:
+      summary: Delete a tree you own
+      operationId: deleteTree
+      tags: [Trees]
+      security: [{bearerAuth: []}]
+      responses:
+        '204': {description: Deleted}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/trees/{id}/like:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    put:
+      summary: Like a tree (idempotent)
+      operationId: likeTree
+      tags: [Social]
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {$ref: '#/components/responses/Like'}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+    delete:
+      summary: Remove your like
+      operationId: unlikeTree
+      tags: [Social]
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {$ref: '#/components/responses/Like'}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/trees/{id}/comments:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: List comments
+      operationId: listComments
+      tags: [Social]
+      responses:
+        '200':
+          description: Comments, oldest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/Comment'}
+        '404': {$ref: '#/components/responses/Error'}
+    post:
+      summary: Add a comment
+      operationId: addComment
+      tags: [Social]
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: {type: string, maxLength: 2000}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Comment'}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/trees/{id}/comments/{commentId}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+      - {name: commentId, in: path, required: true, schema: {type: string}}
+    delete:
+      summary: Delete a comment (author or tree owner)
+      operationId: deleteComment
+      tags: [Social]
+      security: [{bearerAuth: []}]
+      responses:
+        '204': {description: Deleted}
+        '401': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/me:
+    get:
+      summary: Your profile
+      operationId: getMe
+      tags: [Account]
+      security: [{bearerAuth: []}]
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Profile'}
+        '401': {$ref: '#/components/responses/Error'}
+    put:
+      summary: Update your profile
+      operationId: updateMe
+      tags: [Account]
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [displayName]
+              properties:
+                displayName: {type: string, pattern: '^[A-Za-z0-9_-]{3,32}$'}
+                bio: {type: string, maxLength: 500}
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Profile'}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+  /v1/me/trees:
+    get:
+      summary: Your trees, public and private
+      operationId: myTrees
+      tags: [Account]
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Trees without spec bodies}
+        '401': {$ref: '#/components/responses/Error'}
+  /v1/me/stats:
+    get:
+      summary: Your engagement stats
+      operationId: myStats
+      tags: [Account]
+      security: [{bearerAuth: []}]
+      responses:
+        '200':
+          description: Stats
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Stats'}
+        '401': {$ref: '#/components/responses/Error'}
+  /v1/users/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: A user's public profile and public trees
+      operationId: getUser
+      tags: [Account]
+      responses:
+        '200': {description: Profile and trees}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/forum/threads:
+    get:
+      summary: List forum threads, most recently active first
+      operationId: listThreads
+      tags: [Forum]
+      responses:
+        '200': {description: Threads}
+    post:
+      summary: Start a thread
+      operationId: createThread
+      tags: [Forum]
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, body]
+              properties:
+                title: {type: string, maxLength: 120}
+                body: {type: string, maxLength: 5000}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Thread'}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+  /v1/forum/threads/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: A thread and its posts
+      operationId: getThread
+      tags: [Forum]
+      responses:
+        '200': {description: Thread and posts}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/forum/threads/{id}/posts:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    post:
+      summary: Reply to a thread
+      operationId: addPost
+      tags: [Forum]
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: {type: string, maxLength: 5000}
+      responses:
+        '201': {description: Created}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/scenes:
+    get:
+      summary: Your saved 3D scenes
+      operationId: listScenes
+      tags: [Scenes]
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Scenes}
+        '401': {$ref: '#/components/responses/Error'}
+    post:
+      summary: Save a scene
+      operationId: createScene
+      tags: [Scenes]
+      security: [{bearerAuth: []}]
+      requestBody: {$ref: '#/components/requestBodies/Scene'}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Scene'}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+  /v1/scenes/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: Get a scene (public, or yours)
+      operationId: getScene
+      tags: [Scenes]
+      responses:
+        '200':
+          description: The scene
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Scene'}
+        '404': {$ref: '#/components/responses/Error'}
+    put:
+      summary: Replace a scene you own
+      operationId: updateScene
+      tags: [Scenes]
+      security: [{bearerAuth: []}]
+      requestBody: {$ref: '#/components/requestBodies/Scene'}
+      responses:
+        '200': {description: Updated}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+    delete:
+      summary: Delete a scene you own
+      operationId: deleteScene
+      tags: [Scenes]
+      security: [{bearerAuth: []}]
+      responses:
+        '204': {description: Deleted}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+  /mcp:
+    post:
+      summary: Model Context Protocol endpoint (JSON-RPC 2.0)
+      operationId: mcp
+      tags: [MCP]
+      description: Streamable HTTP transport, JSON responses. Supports initialize, ping, tools/list and tools/call.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jsonrpc, method]
+              properties:
+                jsonrpc: {type: string, enum: ['2.0']}
+                id: {}
+                method: {type: string, example: tools/list}
+                params: {type: object}
+      responses:
+        '200': {description: JSON-RPC response}
+        '202': {description: Notification accepted}
+    get:
+      summary: Not supported; use POST
+      operationId: mcpGet
+      tags: [MCP]
+      responses:
+        '405': {$ref: '#/components/responses/Error'}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: {type: string}
+  requestBodies:
+    Spec:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [spec]
+            properties:
+              spec: {type: string, description: .beetree.yaml text}
+              format: {type: string, enum: [ascii, sigil, mermaid, dot]}
+              engine: {type: string, enum: [unity, unreal, godot]}
+              overrides:
+                type: object
+                additionalProperties: {type: string, enum: [SUCCESS, FAILURE, RUNNING]}
+    Tree:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [spec]
+            properties:
+              name: {type: string, maxLength: 80}
+              description: {type: string, maxLength: 500}
+              visibility: {type: string, enum: [public, private]}
+              tags: {type: array, items: {type: string}}
+              spec: {type: string}
+    Scene:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name: {type: string}
+              visibility: {type: string, enum: [public, private]}
+              agents:
+                type: array
+                maxItems: 24
+                items: {$ref: '#/components/schemas/SceneAgent'}
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Like:
+      description: Like state
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              liked: {type: boolean}
+              likeCount: {type: integer}
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string}
+            message: {type: string}
+    ValidateResult:
+      type: object
+      properties:
+        valid: {type: boolean}
+        errors: {type: array, items: {type: string}}
+        nodeCount: {type: integer}
+    SimulateResult:
+      type: object
+      properties:
+        root: {type: string}
+        status: {type: string, enum: [SUCCESS, FAILURE, RUNNING]}
+        trace: {type: string}
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              depth: {type: integer}
+              node: {type: string}
+              type: {type: string}
+              event: {type: string}
+              status: {type: string}
+    Tree:
+      type: object
+      properties:
+        id: {type: string}
+        ownerId: {type: string}
+        ownerName: {type: string}
+        name: {type: string}
+        description: {type: string}
+        visibility: {type: string, enum: [public, private]}
+        tags: {type: array, items: {type: string}}
+        spec: {type: string}
+        likeCount: {type: integer}
+        commentCount: {type: integer}
+        likedByMe: {type: boolean}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    Comment:
+      type: object
+      properties:
+        id: {type: string}
+        treeId: {type: string}
+        authorId: {type: string}
+        author: {type: string}
+        body: {type: string}
+        createdAt: {type: string, format: date-time}
+    Profile:
+      type: object
+      properties:
+        userId: {type: string}
+        displayName: {type: string}
+        bio: {type: string}
+        email: {type: string}
+        createdAt: {type: string, format: date-time}
+    Stats:
+      type: object
+      properties:
+        trees: {type: integer}
+        publicTrees: {type: integer}
+        likes: {type: integer}
+        comments: {type: integer}
+        forumThreads: {type: integer}
+        forumPosts: {type: integer}
+        scenes: {type: integer}
+    Thread:
+      type: object
+      properties:
+        id: {type: string}
+        title: {type: string}
+        author: {type: string}
+        body: {type: string}
+        postCount: {type: integer}
+        createdAt: {type: string, format: date-time}
+        lastActivity: {type: string, format: date-time}
+    SceneAgent:
+      type: object
+      properties:
+        name: {type: string}
+        treeId: {type: string}
+        model: {type: string}
+        x: {type: number}
+        z: {type: number}
+    Scene:
+      type: object
+      properties:
+        id: {type: string}
+        name: {type: string}
+        visibility: {type: string, enum: [public, private]}
+        agents: {type: array, items: {$ref: '#/components/schemas/SceneAgent'}}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}

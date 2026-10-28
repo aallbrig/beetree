@@ -82,12 +82,24 @@ tasks:
     desc: Build artifacts
     cmds:
       - task: build:cli
+      - task: build:lambda
 
   build:cli:
     desc: Build the beetree CLI to bin/beetree
     dir: cli
     cmds:
       - go build -ldflags "-X github.com/aallbrig/beetree-cli/cmd.Version={{.VERSION}}" -o ../bin/beetree .
+
+  build:lambda:
+    desc: Cross-compile the API and pre-signup Lambdas (linux/arm64) into infra/build
+    dir: cli
+    env:
+      GOOS: linux
+      GOARCH: arm64
+      CGO_ENABLED: '0'
+    cmds:
+      - go build -tags lambda.norpc -ldflags "-s -w -X main.version={{.VERSION}}" -o ../infra/build/api/bootstrap ./lambda/api
+      - go build -tags lambda.norpc -ldflags "-s -w" -o ../infra/build/presignup/bootstrap ./lambda/presignup
 
   # ---- dev session --------------------------------------------------------
   dev:
