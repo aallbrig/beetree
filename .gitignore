@@ -27,3 +27,11 @@ bin/
 # Demo artifacts (recorded by VHS)
 dist/
 demos/segments/*.mp4
+infra/build/
+.aws-sam/
+node_modules/
+website/public/
+website/resources/
+web/dist/
+website/static/app/
+coverage.out
