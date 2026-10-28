@@ -1,3 +1,23 @@
 baseURL = 'https://beetreecraft.com/'
 languageCode = 'en-us'
-title = 'BeeTree Craft Website'
+title = 'BeeTreeCraft'
+enableRobotsTXT = true
+disableKinds = ['taxonomy', 'term', 'RSS']
+
+[params]
+  description = 'Design, simulate and share behavior trees for Unity, Unreal and Godot. Watch agents run them in 3D.'
+  appUrl = '/app/'
+  apiUrl = 'https://api.beetreecraft.com'
+
+[markup.goldmark.renderer]
+  unsafe = false
+
+[markup.highlight]
+  noClasses = false
+  style = 'github'
+
+[menus]
+  [[menus.docs]]
+    name = 'Overview'
+    pageRef = '/docs'
+    weight = 1

@@ -1,0 +1,17 @@
+{{ define "main" }}
+<div class="wrap docs">
+  <aside class="side" aria-label="Documentation">
+    <h2>Docs</h2>
+    <ul>
+      {{ range (site.GetPage "/docs").Pages.ByWeight }}
+      <li><a href="{{ .RelPermalink }}"{{ if eq .RelPermalink $.RelPermalink }} aria-current="page"{{ end }}>{{ .Title }}</a></li>
+      {{ end }}
+    </ul>
+  </aside>
+  <article class="prose">
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p class="lead muted">{{ . }}</p>{{ end }}
+    {{ .Content }}
+  </article>
+</div>
+{{ end }}

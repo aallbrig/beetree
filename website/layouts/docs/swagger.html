@@ -1,0 +1,10 @@
+{{ define "head" }}<link rel="stylesheet" href="/vendor/swagger/swagger-ui.css">{{ end }}
+{{ define "main" }}
+<div class="wrap">
+  <h1>{{ .Title }}</h1>
+  <p class="muted">Interactive reference for <code>{{ site.Params.apiUrl }}</code>. Use <b>Authorize</b> with a token from your <a href="/app/#/profile">profile page</a> to try authenticated calls. Raw spec: <a href="{{ site.Params.apiUrl }}/v1/openapi.json">openapi.json</a>.</p>
+  <div id="swagger-ui" data-spec="{{ site.Params.apiUrl }}/v1/openapi.json"></div>
+</div>
+<script src="/vendor/swagger/swagger-ui-bundle.js"></script>
+<script src="/js/swagger-init.js"></script>
+{{ end }}

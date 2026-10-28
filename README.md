@@ -1,6 +1,25 @@
 # BeeTree 🐝🌳
 
-A behavior tree ecosystem for game developers. Create, validate, simulate, and deploy behavior trees to Unity, Unreal, and Godot — all from the command line.
+A behavior tree ecosystem for game developers. Create, validate, simulate, and deploy behavior trees to Unity, Unreal, and Godot — from the command line or from [beetreecraft.com](https://beetreecraft.com), where you can build trees visually, watch agents run them in a 3D scene, and share them with the community.
+
+## Repository layout
+
+| Path | What it is |
+|---|---|
+| `cli/` | The `beetree` CLI (Go) and the serverless API: `cli/internal/api` (REST + MCP + OpenAPI), `cli/lambda/*` (Lambda entry points) |
+| `web/` | The web app (Vite + TypeScript + three.js): builder, 3D explore, scenes, community, forum, accounts |
+| `website/` | The Hugo site: home page and all documentation |
+| `infra/` | The SAM/CloudFormation stack: CloudFront, S3, API Gateway, Lambda, DynamoDB, Cognito |
+
+## Develop
+
+```bash
+task setup        # one-time: git hooks, Go and npm dependencies
+task ci           # every quality gate (no live services needed)
+task dev          # tmuxinator session
+task deploy       # deploy backend + site to AWS (needs AWS credentials)
+task smoke        # end-to-end test of the deployed stack
+```
 
 ## Features
 

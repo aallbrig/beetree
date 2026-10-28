@@ -18,6 +18,7 @@ tasks:
     cmds:
       - pre-commit install
       - cd cli && go mod download
+      - cd web && npm ci
 
   ci:
     desc: Run every quality gate. No live services required.
@@ -27,12 +28,15 @@ tasks:
       - task: test
       - task: build
       - task: dev:check
+      - task: docs:check
+      - task: site:check
 
   # ---- lint / format -------------------------------------------------------
   lint:
     desc: All linting
     cmds:
       - task: lint:go
+      - task: lint:web
       - task: lint:shell
       - task: lint:secrets
       - task: lint:infra
@@ -49,6 +53,13 @@ tasks:
     cmds:
       - gitleaks detect --no-banner --redact
 
+  lint:web:
+    desc: Type-check and ESLint (strict, no escape hatches) the web app
+    dir: web
+    cmds:
+      - npx tsc --noEmit
+      - npx eslint src
+
   lint:infra:
     desc: Lint the SAM/CloudFormation template
     cmds:
@@ -63,6 +74,7 @@ tasks:
     desc: All formatting
     cmds:
       - cd cli && gofmt -w .
+      - cd web && npx prettier --write src
 
   format:check:
     desc: Fail if anything needs formatting
@@ -70,12 +82,14 @@ tasks:
       - |
         out=$(cd cli && gofmt -l .)
         if [ -n "$out" ]; then echo "gofmt needed:"; echo "$out"; exit 1; fi
+      - cd web && npx prettier --check src
 
   # ---- test ---------------------------------------------------------------
   test:
     desc: All tests
     cmds:
       - task: test:go
+      - task: test:web
 
   test:go:
     desc: Go tests with race detector
@@ -89,12 +103,19 @@ tasks:
     cmds:
       - task: build:cli
       - task: build:lambda
+      - task: build:web
 
   build:cli:
     desc: Build the beetree CLI to bin/beetree
     dir: cli
     cmds:
       - go build -ldflags "-X github.com/aallbrig/beetree-cli/cmd.Version={{.VERSION}}" -o ../bin/beetree .
+
+  build:web:
+    desc: Build the web app into website/static/app
+    dir: web
+    cmds:
+      - npm run build
 
   build:lambda:
     desc: Cross-compile the API and pre-signup Lambdas (linux/arm64) into infra/build
@@ -149,23 +170,84 @@ tasks:
     cmds:
       - aws cloudformation describe-stacks --stack-name beetreecraft --region us-east-1 --query 'Stacks[0].Outputs' --output json
 
+  test:web:
+    desc: Vitest unit tests for the web app
+    dir: web
+    cmds:
+      - npx vitest run
+
+  smoke:
+    desc: End-to-end test of the deployed stack (creates and removes a throwaway user)
+    dir: cli
+    cmds:
+      - go test -tags smoke -count=1 -v ./smoke/
+
   test:dynamo:
     desc: Run the Store contract test against a throwaway DynamoDB table (needs AWS credentials)
     cmds:
       - scripts/test_dynamo.sh
 
   # ---- site ---------------------------------------------------------------
+  docs:cli:
+    desc: Regenerate the CLI reference page from the binary
+    deps: [build:cli]
+    cmds:
+      - bin/beetree docs -o website/content/docs/cli-reference.md
+
+  docs:check:
+    desc: Fail if the generated CLI reference is stale
+    deps: [build:cli]
+    cmds:
+      - |
+        bin/beetree docs -o /tmp/beetree-cli-reference.md
+        diff -u website/content/docs/cli-reference.md /tmp/beetree-cli-reference.md || { echo "run 'task docs:cli'"; exit 1; }
+
+  site:vendor:
+    desc: Copy Swagger UI assets into the Hugo static dir (generated, not committed)
+    cmds:
+      - mkdir -p website/static/vendor/swagger
+      - cp web/node_modules/swagger-ui-dist/swagger-ui-bundle.js web/node_modules/swagger-ui-dist/swagger-ui.css website/static/vendor/swagger/
+
+  site:check:
+    desc: Build the site and fail on broken internal links or missing pages
+    deps: [site:build]
+    cmds:
+      - scripts/check_site.sh
+
   site:dev:
     desc: Start Hugo dev server
+    deps: [site:vendor]
     dir: website
     cmds:
       - hugo server
 
   site:build:
-    desc: Build Hugo site
+    desc: Build the web app and the Hugo site into website/public
+    deps: [build:web, site:vendor]
     dir: website
     cmds:
-      - hugo --minify
+      - hugo --minify --gc
+
+  web:dev:
+    desc: Run the Vite dev server against the deployed API (writes web/public/config.json)
+    dir: web
+    cmds:
+      - |
+        out() { aws cloudformation describe-stacks --stack-name beetreecraft --region us-east-1 --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+        echo "{\"apiUrl\":\"$(out ApiUrl)\",\"region\":\"us-east-1\",\"clientId\":\"$(out UserPoolClientId)\",\"userPoolId\":\"$(out UserPoolId)\"}" > public/config.json
+      - npx vite
+
+  deploy:site:
+    desc: Build the site and publish it to S3 + CloudFront
+    deps: [site:build]
+    cmds:
+      - scripts/deploy_site.sh
+
+  deploy:
+    desc: Deploy backend then site
+    cmds:
+      - task: deploy:backend
+      - task: deploy:site
 
   # ---- PRs ----------------------------------------------------------------
   pr:merge:

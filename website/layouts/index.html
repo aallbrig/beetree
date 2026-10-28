@@ -1,11 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .Title }}</title>
-</head>
-<body>
-    {{ .Content }}
-</body>
-</html>
+{{ define "main" }}
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Behavior trees for game AI</p>
+    <h1>Design the brain once.<br>Ship it to Unity, Unreal and Godot.</h1>
+    <p class="lead">BeeTreeCraft is where you build behavior trees visually, watch agents run them in a live 3D scene, and share them with a community of game AI designers.</p>
+    <p class="cta">
+      <a class="btn primary big" href="/app/#/explore">Watch agents think →</a>
+      <a class="btn big" href="/app/#/signup">Create a free account</a>
+    </p>
+    <a href="/app/#/explore" class="shot" aria-label="Open the live 3D demo">
+      <img src="/img/explore.jpg" width="1032" height="672" alt="Three blocky characters in a 3D meadow, each labelled with the behavior tree node it is running: Patroller, Coward and Guard." fetchpriority="high">
+    </a>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2 class="center">Everything you need to go from idea to engine</h2>
+  <div class="cards">
+    <article class="card"><h3>🌳 Visual builder</h3><p>Compose sequences, selectors, parallels and decorators. Rename, reorder and tune nodes, with validation as you go.</p></article>
+    <article class="card"><h3>🧍 Live 3D preview</h3><p>Your tree drives a real character in a 3D world. Move the intruder, drop its health, and watch each node light up.</p></article>
+    <article class="card"><h3>🎮 Engine code</h3><p>One engine-agnostic <code>.beetree.yaml</code>, native output for Unity (C#), Unreal (C++) and Godot (GDScript).</p></article>
+    <article class="card"><h3>🤝 Share and discuss</h3><p>Publish trees, collect likes and comments, fork what others made, and trade patterns in the forum.</p></article>
+    <article class="card"><h3>🔌 REST API</h3><p>Everything the site does is an API call. OpenAPI 3 spec and Swagger UI included.</p></article>
+    <article class="card"><h3>🤖 MCP server</h3><p>Let Claude and other agents validate, simulate, render and generate trees through the Model Context Protocol.</p></article>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap two">
+    <div>
+      <h2>A tree is just readable YAML</h2>
+      <p>Write it by hand, build it in the browser, or generate it from the CLI. Every tool speaks the same format.</p>
+      <p><a class="btn" href="/docs/trees/">Read the format guide</a></p>
+    </div>
+<pre class="code"><code>version: "1.0"
+metadata:
+  name: guard
+tree:
+  type: selector
+  name: guard_ai
+  children:
+    - type: sequence
+      name: combat
+      children:
+        - {type: condition, name: can_see_target}
+        - {type: action, name: chase_target}
+    - {type: action, name: patrol}</code></pre>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2 class="center">The CLI, too</h2>
+  <p class="center muted">For pipelines and terminal people.</p>
+<pre class="code"><code>$ beetree validate guard.beetree.yaml
+✓ guard.beetree.yaml is valid (6 nodes)
+
+$ beetree simulate guard.beetree.yaml
+$ beetree generate godot guard.beetree.yaml</code></pre>
+  <p class="center"><a class="btn" href="/docs/cli/">CLI guide</a> <a class="btn" href="/docs/cli-reference/">Command reference</a></p>
+</section>
+
+<section class="hero small">
+  <div class="wrap">
+    <h2>Ready to build your first tree?</h2>
+    <p class="cta"><a class="btn primary big" href="/app/#/signup">Sign up free</a></p>
+    <p class="muted">You must be 18 or older to create an account.</p>
+  </div>
+</section>
+{{ end }}
