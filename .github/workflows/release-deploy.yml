@@ -51,7 +51,7 @@ jobs:
         working-directory: web
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-arn: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: us-east-1
       - name: Deploy backend
         run: task deploy:backend
