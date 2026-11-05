@@ -77,16 +77,18 @@ function renderNav(): void {
     group('Learn', [
       doc('/learn/behavior-trees/', 'Behavior trees & history'),
       doc('/learn/building-blocks/', 'Building blocks'),
-      doc('/docs/trees/', 'The tree format'),
-      doc('/docs/manual/', 'Website manual'),
+      doc('/references/', 'References'),
     ]),
-    group('Community', [l('/community', 'Community trees'), l('/forum', 'Forum')]),
-    ...(isSignedIn() ? [l('/dashboard', 'My trees')] : []),
-    group('Developers', [
+    group('Docs', [
+      doc('/docs/', 'Overview'),
+      doc('/docs/manual/', 'Website manual'),
+      doc('/docs/trees/', 'The tree format'),
       doc('/docs/cli/', 'CLI'),
       doc('/docs/api/', 'REST API'),
       doc('/docs/mcp/', 'MCP server'),
     ]),
+    group('Community', [l('/community', 'Community trees'), l('/forum', 'Forum')]),
+    ...(isSignedIn() ? [l('/dashboard', 'My trees')] : []),
     h('span', { class: 'spacer' }),
     themeBtn,
     ...(isSignedIn()

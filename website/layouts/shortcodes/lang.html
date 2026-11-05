@@ -1,5 +1,0 @@
-{{ $id := .Get 0 }}
-<div class="lang" data-lang="{{ $id }}">
-<p class="lang-label">{{ with .Get 1 }}{{ . }}{{ else }}{{ $id }}{{ end }}</p>
-{{ .Inner | markdownify }}
-</div>

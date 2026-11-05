@@ -62,3 +62,19 @@ BeeTreeCraft's runtime re-evaluates the tree from the root every tick. Put urgen
 ## Blackboard and custom nodes
 
 Optional top-level `blackboard` (typed shared variables) and `custom_nodes` (your own node types with typed parameters) generate richer engine code. See `examples/full-enemy-ai.beetree.yaml` in the [repository](https://github.com/aallbrig/beetreecraft/tree/main/examples) for a complete example.
+
+## JSON Schema
+
+The format is described by a [JSON Schema](https://beetreecraft.com/schemas/beetree.schema.json) (draft 2020-12), hosted at:
+
+```
+https://beetreecraft.com/schemas/beetree.schema.json
+```
+
+Point your editor at it to get completion and inline errors while you write a tree. In VS Code with the YAML extension, add this as the first line of your file:
+
+```yaml
+# yaml-language-server: $schema=https://beetreecraft.com/schemas/beetree.schema.json
+```
+
+The schema checks structure: required fields, the six node types, and child counts (leaves take none, sequence, selector and parallel take at least one, a decorator takes exactly one). Run `beetree validate` for the full set of checks, including duplicate blackboard variables and subtree references.

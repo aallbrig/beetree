@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beetreecraft.com/schemas/beetree.schema.json",
+  "title": "BeeTreeCraft behavior tree",
+  "description": "An engine-agnostic behavior tree in the .beetree.yaml (or JSON) format used by the BeeTreeCraft CLI, API and website.",
+  "type": "object",
+  "required": ["version", "metadata", "tree"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Format version. Currently \"1.0\".",
+      "examples": ["1.0"]
+    },
+    "metadata": { "$ref": "#/$defs/metadata" },
+    "blackboard": {
+      "type": "array",
+      "description": "Typed variables shared by all nodes. Names must be unique.",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/blackboardVar" }
+    },
+    "custom_nodes": {
+      "type": "array",
+      "description": "Your own action and condition types, with typed parameters.",
+      "items": { "$ref": "#/$defs/customNode" }
+    },
+    "notation": { "$ref": "#/$defs/notation" },
+    "tree": { "$ref": "#/$defs/node" },
+    "subtrees": {
+      "type": "array",
+      "description": "External tree files this tree refers to.",
+      "items": { "$ref": "#/$defs/subtreeRef" }
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "author": { "type": "string" },
+        "license": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "blackboardVar": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "default": {},
+        "description": { "type": "string" }
+      }
+    },
+    "parameterDef": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "default": {}
+      }
+    },
+    "customNode": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["action", "condition"] },
+        "sigil": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameterDef" } },
+        "blackboard_reads": { "type": "array", "items": { "type": "string" } },
+        "blackboard_writes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "notation": {
+      "type": "object",
+      "description": "Override the symbols used when a tree is drawn as text.",
+      "additionalProperties": false,
+      "properties": {
+        "type_sigils": { "type": "object", "additionalProperties": { "type": "string" } },
+        "node_sigils": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "subtreeRef": {
+      "type": "object",
+      "required": ["name", "file"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "file": { "type": "string", "minLength": 1 }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["type", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["action", "condition", "sequence", "selector", "parallel", "decorator"],
+          "description": "action and condition are leaves; sequence, selector and parallel take one or more children; decorator takes exactly one."
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "node": { "type": "string", "description": "A custom node type from custom_nodes." },
+        "description": { "type": "string" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "parameters": { "type": "object" },
+        "decorator": { "type": "string", "description": "Decorator kind, for example inverter or retry." },
+        "success_policy": { "type": "string" },
+        "failure_policy": { "type": "string" },
+        "ref": { "type": "string" },
+        "file": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["action", "condition"] } }, "required": ["type"] },
+          "then": { "properties": { "children": { "maxItems": 0 } } }
+        },
+        {
+          "if": { "properties": { "type": { "enum": ["sequence", "selector", "parallel"] } }, "required": ["type"] },
+          "then": { "required": ["children"], "properties": { "children": { "minItems": 1 } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "decorator" } }, "required": ["type"] },
+          "then": { "required": ["children"], "properties": { "children": { "minItems": 1, "maxItems": 1 } } }
+        }
+      ]
+    }
+  }
+}
