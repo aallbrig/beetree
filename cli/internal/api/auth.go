@@ -134,11 +134,12 @@ func (v *CognitoVerifier) refresh(ctx context.Context) error {
 	if client == nil {
 		client = &http.Client{Timeout: 5 * time.Second}
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, v.issuer()+"/.well-known/jwks.json", nil)
+	// The issuer comes from operator configuration, never from request input.
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, v.issuer()+"/.well-known/jwks.json", nil) //nolint:gosec // G704: operator-configured issuer
 	if err != nil {
 		return err
 	}
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint:gosec // G704: operator-configured issuer
 	if err != nil {
 		return err
 	}

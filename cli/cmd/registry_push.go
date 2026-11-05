@@ -28,10 +28,7 @@ var registryPushCmd = &cobra.Command{
 			return fmt.Errorf("read spec: %w", err)
 		}
 
-		public := true
-		if pushPrivate {
-			public = false
-		}
+		public := !pushPrivate
 
 		client := getRegistryClient()
 		entry, err := client.Push(context.Background(), data, registry.PushOptions{

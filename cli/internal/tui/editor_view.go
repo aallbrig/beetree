@@ -670,27 +670,27 @@ func (ev *EditorView) syncPropsView() {
 	props := ev.Model.PropertiesForSelected()
 	var b strings.Builder
 
-	b.WriteString(fmt.Sprintf("[yellow]Name:[-] %s\n", props.Name))
-	b.WriteString(fmt.Sprintf("[yellow]Type:[-] %s %s\n", renderer.TypeSigil(props.Type), props.Type))
-	b.WriteString(fmt.Sprintf("[yellow]Children:[-] %d\n", props.ChildCount))
+	fmt.Fprintf(&b, "[yellow]Name:[-] %s\n", props.Name)
+	fmt.Fprintf(&b, "[yellow]Type:[-] %s %s\n", renderer.TypeSigil(props.Type), props.Type)
+	fmt.Fprintf(&b, "[yellow]Children:[-] %d\n", props.ChildCount)
 
 	if props.NodeClass != "" {
-		b.WriteString(fmt.Sprintf("[yellow]Node Class:[-] %s\n", props.NodeClass))
+		fmt.Fprintf(&b, "[yellow]Node Class:[-] %s\n", props.NodeClass)
 	}
 	if props.Decorator != "" {
-		b.WriteString(fmt.Sprintf("[yellow]Decorator:[-] %s\n", props.Decorator))
+		fmt.Fprintf(&b, "[yellow]Decorator:[-] %s\n", props.Decorator)
 	}
 	if props.SubtreeRef != "" {
-		b.WriteString(fmt.Sprintf("[yellow]Subtree:[-] %s\n", props.SubtreeRef))
+		fmt.Fprintf(&b, "[yellow]Subtree:[-] %s\n", props.SubtreeRef)
 	}
 	if props.SubtreeFile != "" {
-		b.WriteString(fmt.Sprintf("[yellow]File:[-] %s\n", props.SubtreeFile))
+		fmt.Fprintf(&b, "[yellow]File:[-] %s\n", props.SubtreeFile)
 	}
 
 	if len(props.Parameters) > 0 {
 		b.WriteString("\n[green]── Parameters ──[-]\n")
 		for k, v := range props.Parameters {
-			b.WriteString(fmt.Sprintf("  %s: %v\n", k, v))
+			fmt.Fprintf(&b, "  %s: %v\n", k, v)
 		}
 	}
 
@@ -702,7 +702,7 @@ func (ev *EditorView) syncPropsView() {
 			if v.Default != nil {
 				defVal = fmt.Sprintf("%v", v.Default)
 			}
-			b.WriteString(fmt.Sprintf("  %s: %s (%s)\n", v.Name, v.Type, defVal))
+			fmt.Fprintf(&b, "  %s: %s (%s)\n", v.Name, v.Type, defVal)
 		}
 	}
 
@@ -717,7 +717,7 @@ func (ev *EditorView) syncSimTraceView() {
 		indent := strings.Repeat("  ", step.Depth)
 		switch step.Event {
 		case "enter":
-			b.WriteString(fmt.Sprintf("%s[blue]▶[-] %s %s\n", indent, renderer.TypeSigil(step.NodeType), step.NodeName))
+			fmt.Fprintf(&b, "%s[blue]▶[-] %s %s\n", indent, renderer.TypeSigil(step.NodeType), step.NodeName)
 		case "resolve":
 			var color, symbol string
 			switch step.Status {
@@ -728,12 +728,12 @@ func (ev *EditorView) syncSimTraceView() {
 			case model.StatusRunning:
 				color, symbol = "yellow", "⟳"
 			}
-			b.WriteString(fmt.Sprintf("%s[%s]%s %s → %s[-]\n", indent, color, symbol, step.NodeName, step.Status))
+			fmt.Fprintf(&b, "%s[%s]%s %s → %s[-]\n", indent, color, symbol, step.NodeName, step.Status)
 		}
 	}
 
 	if ev.Model.Sim.State == SimComplete {
-		b.WriteString(fmt.Sprintf("\n[white::b]══ Result: %s ══[-:-:-]\n", ev.Model.Sim.Result))
+		fmt.Fprintf(&b, "\n[white::b]══ Result: %s ══[-:-:-]\n", ev.Model.Sim.Result)
 	}
 
 	ev.propsView.SetText(b.String())

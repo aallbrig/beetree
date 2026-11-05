@@ -20,7 +20,7 @@ var docsCmd = &cobra.Command{
 command definitions so the published docs cannot drift from the binary.`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		var w io.Writer = cmd.OutOrStdout()
+		w := cmd.OutOrStdout()
 		if docsOut != "" {
 			f, err := os.Create(docsOut)
 			if err != nil {
@@ -45,7 +45,7 @@ func writeReference(w io.Writer, root *cobra.Command) error {
 	b.WriteString("{{< generated >}}\n\n")
 	var walk func(c *cobra.Command, level int)
 	walk = func(c *cobra.Command, level int) {
-		b.WriteString(fmt.Sprintf("%s `%s`\n\n", strings.Repeat("#", level), c.CommandPath()))
+		fmt.Fprintf(&b, "%s `%s`\n\n", strings.Repeat("#", level), c.CommandPath())
 		if c.Long != "" {
 			b.WriteString(proseBlock(c.Long))
 		} else if c.Short != "" {

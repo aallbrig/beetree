@@ -192,7 +192,7 @@ func applyDecorator(decorator string, childStatus Status) Status {
 // FormatTrace produces a human-readable trace from a simulation result.
 func FormatTrace(result *Result) string {
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("Simulation: %s → %s\n", result.NodeName, result.Status))
+	fmt.Fprintf(&b, "Simulation: %s → %s\n", result.NodeName, result.Status)
 	b.WriteString(strings.Repeat("─", 50) + "\n")
 	for _, step := range result.Steps {
 		indent := strings.Repeat("  ", step.Depth)
@@ -201,7 +201,7 @@ func FormatTrace(result *Result) string {
 			statusStr = fmt.Sprintf(" → %s", step.Status)
 		}
 		symbol := eventSymbol(step.Event)
-		b.WriteString(fmt.Sprintf("%s%s %s %s%s\n", indent, symbol, renderer.TypeSigil(step.NodeType), step.NodeName, statusStr))
+		fmt.Fprintf(&b, "%s%s %s %s%s\n", indent, symbol, renderer.TypeSigil(step.NodeType), step.NodeName, statusStr)
 	}
 	return b.String()
 }

@@ -142,7 +142,7 @@ func RenderCompact(node *model.NodeSpec, notation model.NotationConfig) string {
 func renderCompactNode(sb *strings.Builder, node *model.NodeSpec, notation model.NotationConfig, depth int) {
 	sigil := ResolveSigil(node, notation)
 	indent := strings.Repeat("  ", depth)
-	sb.WriteString(fmt.Sprintf("%s%s %s\n", indent, sigil, node.Name))
+	fmt.Fprintf(sb, "%s%s %s\n", indent, sigil, node.Name)
 
 	for i := range node.Children {
 		renderCompactNode(sb, &node.Children[i], notation, depth+1)
