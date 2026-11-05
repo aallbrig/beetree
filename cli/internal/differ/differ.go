@@ -135,15 +135,15 @@ func FormatDiff(changes []Change) string {
 		return "No differences found.\n"
 	}
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("%d change(s):\n", len(changes)))
+	fmt.Fprintf(&b, "%d change(s):\n", len(changes))
 	for _, c := range changes {
 		switch c.Type {
 		case ChangeAdded:
-			b.WriteString(fmt.Sprintf("  + %s: %s\n", c.Path, c.New))
+			fmt.Fprintf(&b, "  + %s: %s\n", c.Path, c.New)
 		case ChangeRemoved:
-			b.WriteString(fmt.Sprintf("  - %s: %s\n", c.Path, c.Old))
+			fmt.Fprintf(&b, "  - %s: %s\n", c.Path, c.Old)
 		case ChangeModified:
-			b.WriteString(fmt.Sprintf("  ~ %s: %s → %s\n", c.Path, c.Old, c.New))
+			fmt.Fprintf(&b, "  ~ %s: %s → %s\n", c.Path, c.Old, c.New)
 		}
 	}
 	return b.String()

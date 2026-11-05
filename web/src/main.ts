@@ -36,6 +36,15 @@ function renderNav(): void {
   const here = location.hash.replace(/^#/, '').split('?')[0] ?? '';
   const l = (href: string, text: string): HTMLAnchorElement =>
     h('a', { class: `link${here.startsWith(href) ? ' active' : ''}`, href: `#${href}` }, text);
+  const doc = (href: string, text: string): HTMLAnchorElement =>
+    h('a', { class: 'link', href }, text);
+  const group = (label: string, items: HTMLAnchorElement[]): HTMLDivElement =>
+    h(
+      'div',
+      { class: 'grp' },
+      h('button', { class: 'grp-label', type: 'button', 'aria-haspopup': 'true' }, label),
+      h('div', { class: 'grp-menu' }, ...items),
+    );
   const themeBtn = h('button', {
     class: 'btn small theme-toggle',
     type: 'button',
@@ -65,10 +74,19 @@ function renderNav(): void {
     { class: `links${menuOpen ? ' open' : ''}`, id: 'nav-links' },
     l('/build', 'Build'),
     l('/explore', 'Explore'),
-    l('/community', 'Community'),
-    l('/forum', 'Forum'),
+    group('Learn', [
+      doc('/learn/behavior-trees/', 'Behavior trees & history'),
+      doc('/learn/building-blocks/', 'Building blocks'),
+      doc('/docs/trees/', 'The tree format'),
+      doc('/docs/manual/', 'Website manual'),
+    ]),
+    group('Community', [l('/community', 'Community trees'), l('/forum', 'Forum')]),
     ...(isSignedIn() ? [l('/dashboard', 'My trees')] : []),
-    h('a', { class: 'link', href: '/docs/' }, 'Docs'),
+    group('Developers', [
+      doc('/docs/cli/', 'CLI'),
+      doc('/docs/api/', 'REST API'),
+      doc('/docs/mcp/', 'MCP server'),
+    ]),
     h('span', { class: 'spacer' }),
     themeBtn,
     ...(isSignedIn()

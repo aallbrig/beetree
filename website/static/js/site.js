@@ -41,5 +41,34 @@
       });
     }
     paint();
+
+    var picker = document.querySelector('.langpicker');
+    if (picker) {
+      var LKEY = 'beetreecraft-lang';
+      var pick = function (lang) {
+        if (lang === 'all') document.body.removeAttribute('data-lang');
+        else document.body.setAttribute('data-lang', lang);
+        picker.querySelectorAll('button').forEach(function (b) {
+          b.setAttribute('aria-pressed', String(b.getAttribute('data-pick') === lang));
+        });
+        try {
+          localStorage.setItem(LKEY, lang);
+        } catch (e) {
+          /* storage blocked */
+        }
+      };
+      picker.hidden = false;
+      picker.addEventListener('click', function (e) {
+        var t = e.target;
+        if (t instanceof HTMLElement && t.dataset.pick) pick(t.dataset.pick);
+      });
+      var stored = 'all';
+      try {
+        stored = localStorage.getItem(LKEY) || 'all';
+      } catch (e) {
+        /* storage blocked */
+      }
+      pick(stored);
+    }
   });
 })();

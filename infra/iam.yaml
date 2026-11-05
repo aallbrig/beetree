@@ -2,6 +2,9 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: BeeTreeCraft - least-privilege roles for deploying, publishing and testing (deploy once as an admin)
 
 Parameters:
+  GitHubRepo:
+    Type: String
+    Default: aallbrig/beetree
   AdminPrincipalArn:
     Type: String
     Description: IAM user or role allowed to assume the roles below
@@ -140,6 +143,7 @@ Resources:
   # the exec role to it; it cannot touch any resource directly.
   DeployerRole:
     Type: AWS::IAM::Role
+    DependsOn: GitHubReleaseRole
     Properties:
       RoleName: beetreecraft-deployer
       Description: Deploys the beetreecraft stack through the CloudFormation exec role
@@ -148,7 +152,7 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Principal: {AWS: !Ref AdminPrincipalArn}
+            Principal: {AWS: [!Ref AdminPrincipalArn, !Sub 'arn:aws:iam::${AWS::AccountId}:role/beetreecraft-github-release']}
             Action: sts:AssumeRole
       Policies:
         - PolicyName: deploy-stack
@@ -193,6 +197,7 @@ Resources:
   # Publishes the built site: files into the site bucket, then an invalidation.
   SitePublisherRole:
     Type: AWS::IAM::Role
+    DependsOn: GitHubReleaseRole
     Properties:
       RoleName: beetreecraft-site-publisher
       Description: Uploads the static site and invalidates CloudFront
@@ -201,7 +206,7 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Principal: {AWS: !Ref AdminPrincipalArn}
+            Principal: {AWS: [!Ref AdminPrincipalArn, !Sub 'arn:aws:iam::${AWS::AccountId}:role/beetreecraft-github-release']}
             Action: sts:AssumeRole
       Policies:
         - PolicyName: publish-site
@@ -228,6 +233,7 @@ Resources:
   # Runs the live end-to-end test: throwaway Cognito users and their rows only.
   SmokeTestRole:
     Type: AWS::IAM::Role
+    DependsOn: GitHubReleaseRole
     Properties:
       RoleName: beetreecraft-smoke-test
       Description: Creates and removes throwaway users and rows for the live smoke test
@@ -236,7 +242,7 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Effect: Allow
-            Principal: {AWS: !Ref AdminPrincipalArn}
+            Principal: {AWS: [!Ref AdminPrincipalArn, !Sub 'arn:aws:iam::${AWS::AccountId}:role/beetreecraft-github-release']}
             Action: sts:AssumeRole
       Policies:
         - PolicyName: smoke-test
@@ -260,6 +266,42 @@ Resources:
                 Action: cloudformation:DescribeStacks
                 Resource: !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${StackName}/*
 
+  # Assumed by GitHub Actions (OIDC, no stored keys) when a release is published.
+  # It holds no permissions of its own beyond handing over to the three roles
+  # above, and only a release tag of this repository can assume it.
+  GitHubReleaseRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: beetreecraft-github-release
+      Description: GitHub Actions release pipeline for beetreecraft
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals: {'token.actions.githubusercontent.com:aud': sts.amazonaws.com}
+              StringLike: {'token.actions.githubusercontent.com:sub': !Sub 'repo:${GitHubRepo}:ref:refs/tags/v*'}
+      Policies:
+        - PolicyName: hand-over
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AssumeScopedRoles
+                Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/beetreecraft-deployer
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/beetreecraft-site-publisher
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/beetreecraft-smoke-test
+              - Sid: FindRoleArns
+                Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource: !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/beetreecraft-iam/*
+
 Outputs:
   CfnExecRoleArn:
     Value: !GetAtt CfnExecRole.Arn
@@ -269,3 +311,5 @@ Outputs:
     Value: !GetAtt SitePublisherRole.Arn
   SmokeTestRoleArn:
     Value: !GetAtt SmokeTestRole.Arn
+  GitHubReleaseRoleArn:
+    Value: !GetAtt GitHubReleaseRole.Arn

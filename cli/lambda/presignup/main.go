@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
+//nolint:staticcheck // ST1005: Cognito shows this message to the user verbatim
 var errUnderage = errors.New("You must be 18 or older to create an account.")
 
 func handle(_ context.Context, ev events.CognitoEventUserPoolsPreSignup) (events.CognitoEventUserPoolsPreSignup, error) {

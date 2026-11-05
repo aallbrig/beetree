@@ -92,10 +92,10 @@ func renderMermaidNode(sb *strings.Builder, node *model.NodeSpec, parentID strin
 	}
 
 	shape := nodeShape(node.Type)
-	sb.WriteString(fmt.Sprintf("    %s%s\n", id, formatShape(id, label, shape)))
+	fmt.Fprintf(sb, "    %s%s\n", id, formatShape(id, label, shape))
 
 	if parentID != "" {
-		sb.WriteString(fmt.Sprintf("    %s --> %s\n", parentID, id))
+		fmt.Fprintf(sb, "    %s --> %s\n", parentID, id)
 	}
 
 	for i := range node.Children {
@@ -144,10 +144,10 @@ func renderDOTNode(sb *strings.Builder, node *model.NodeSpec, parentID string, c
 	label := nodeLabel(node)
 	shape := dotShape(node.Type)
 
-	sb.WriteString(fmt.Sprintf("    %s [label=%q, shape=%s];\n", id, label, shape))
+	fmt.Fprintf(sb, "    %s [label=%q, shape=%s];\n", id, label, shape)
 
 	if parentID != "" {
-		sb.WriteString(fmt.Sprintf("    %s -> %s;\n", parentID, id))
+		fmt.Fprintf(sb, "    %s -> %s;\n", parentID, id)
 	}
 
 	for i := range node.Children {

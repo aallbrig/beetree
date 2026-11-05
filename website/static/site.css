@@ -29,3 +29,26 @@ pre,code{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}pre{backgroun
 .shot{display:block;margin:36px auto 0;max-width:900px;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgb(0 0 0 / 22%);border:1px solid var(--line)}.shot img{display:block;width:100%;height:auto}
 
 @media(max-width:800px){.menu-toggle{display:inline-block}.top nav .links{display:none;flex-basis:100%;flex-direction:column;align-items:stretch}.top nav .links.open{display:flex}.top nav .links .spacer{display:none}.top nav .links a,.top nav .links .btn{padding:12px;text-align:left}.hero{padding:44px 0 36px}.wrap{padding:0 16px}}
+
+/* nav groups: hover/focus dropdowns on desktop, flat lists in the mobile menu */
+.top nav .grp{position:relative}
+.grp-label{font:inherit;color:var(--muted);background:none;border:0;padding:6px 10px;border-radius:8px;cursor:pointer}
+.grp-label::after{content:" \25BE";font-size:.8em}
+.grp:hover .grp-label,.grp:focus-within .grp-label{background:var(--surface-2);color:var(--text)}
+.grp-menu{position:absolute;top:100%;left:0;min-width:220px;display:flex;flex-direction:column;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);visibility:hidden;opacity:0;transition:opacity .12s;z-index:30}
+.grp:hover .grp-menu,.grp:focus-within .grp-menu{visibility:visible;opacity:1}
+.langpicker{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:16px 0}
+.langpicker[hidden]{display:none}
+.langpicker .btn[aria-pressed="true"]{background:var(--surface-2);font-weight:700}
+.lang-label{margin:14px 0 4px;font-size:.85rem;font-weight:700;color:var(--muted)}
+body[data-lang="unity"] .lang:not([data-lang="unity"]),body[data-lang="godot"] .lang:not([data-lang="godot"]),body[data-lang="unreal"] .lang:not([data-lang="unreal"]){display:none}
+body[data-lang] .lang-label{display:none}
+@media(max-width:800px){
+  .top nav .grp{display:block}
+  .grp-label{display:block;width:100%;text-align:left;padding:12px 12px 4px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;cursor:default}
+  .grp-label::after{content:""}
+  .grp-menu{position:static;visibility:visible;opacity:1;box-shadow:none;border:0;background:none;padding:0 0 0 12px;min-width:0}
+}
+/* the hamburger only exists on narrow screens; .btn must not re-show it on desktop */
+.top nav .menu-toggle{display:none}
+@media(max-width:800px){.top nav .menu-toggle{display:inline-block}}

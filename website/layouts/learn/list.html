@@ -1,0 +1,10 @@
+{{ define "main" }}
+<div class="wrap docs">
+  {{ partial "sidebar.html" (dict "section" (site.GetPage "/learn") "cur" .) }}
+  <article class="prose">
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p class="lead muted">{{ . }}</p>{{ end }}
+    {{ .Content }}
+  </article>
+</div>
+{{ end }}

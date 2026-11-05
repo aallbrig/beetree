@@ -1,0 +1,61 @@
+name: Release deploy
+
+# Cutting a release (task release -- vX.Y.Z) publishes a GitHub release, which
+# runs every CI gate again and then deploys the backend and the site to production.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write # GitHub OIDC -> AWS, no stored keys
+    env:
+      AWS_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.157.0'
+          extended: true
+      - name: Install SAM CLI
+        run: pipx install aws-sam-cli
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: web
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-arn: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+      - name: Deploy backend
+        run: task deploy:backend
+      - name: Deploy site
+        run: task deploy:site
+      - name: Smoke test production
+        run: task smoke
