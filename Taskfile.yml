@@ -243,9 +243,12 @@ tasks:
       - hugo server
 
   site:build:
-    desc: Build the web app and the Hugo site into website/public
+    desc: Build the web app and the Hugo site into website/public (footer shows git describe, or $HUGO_SITE_VERSION)
     deps: [build:web, site:vendor]
     dir: website
+    env:
+      HUGO_SITE_VERSION:
+        sh: echo "${HUGO_SITE_VERSION:-$(git describe --tags --always)}"
     cmds:
       - hugo --minify --gc
 
@@ -272,7 +275,7 @@ tasks:
 
   # ---- release ------------------------------------------------------------
   release:
-    desc: "Tag and publish a GitHub release with CLI archives (task release -- v1.2.3)"
+    desc: "Tag and publish a GitHub release with notes, CLI archives and the site bundle (task release -- v1.2.3)"
     cmds:
       - scripts/release.sh {{.CLI_ARGS}}
 

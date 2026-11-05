@@ -40,3 +40,11 @@ website/static/vendor/
 
 # Reference material (copyrighted, local only)
 sources/
+
+# Secrets and local agent state (this repo is public)
+.env
+.env.*
+*.pem
+*.key
+.claude/settings.local.json
+.claude/projects/
