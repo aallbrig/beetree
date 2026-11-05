@@ -167,14 +167,14 @@ tasks:
         sam deploy -t infra/iam.yaml --stack-name beetreecraft-iam --region us-east-1 \
           --resolve-s3 --capabilities CAPABILITY_NAMED_IAM --no-confirm-changeset --no-fail-on-empty-changeset \
           --tags {{.TAGS}} \
-          --parameter-overrides AdminPrincipalArn={{.ME}}
+          --parameter-overrides AdminPrincipalArn={{.ME}} GitHubRepo=aallbrig/beetreecraft
 
   deploy:backend:
-    desc: Build Lambdas and deploy the SAM stack (us-east-1) as the deployer role. Pass DNS=true to cut over the apex; WWW=true to include www.
+    desc: Build Lambdas and deploy the SAM stack (us-east-1) as the deployer role. Production keeps DNS=true WWW=true (false removes the apex/www records and the certificate).
     deps: [build:lambda]
     vars:
-      DNS: '{{default "false" .DNS}}'
-      WWW: '{{default "false" .WWW}}'
+      DNS: '{{default "true" .DNS}}'
+      WWW: '{{default "true" .WWW}}'
     cmds:
       - |
         EXEC="$(aws cloudformation describe-stacks --stack-name beetreecraft-iam --region us-east-1 \

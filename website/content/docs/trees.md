@@ -61,4 +61,4 @@ BeeTreeCraft's runtime re-evaluates the tree from the root every tick. Put urgen
 
 ## Blackboard and custom nodes
 
-Optional top-level `blackboard` (typed shared variables) and `custom_nodes` (your own node types with typed parameters) generate richer engine code. See `examples/full-enemy-ai.beetree.yaml` in the [repository](https://github.com/aallbrig/beetree/tree/main/examples) for a complete example.
+Optional top-level `blackboard` (typed shared variables) and `custom_nodes` (your own node types with typed parameters) generate richer engine code. See `examples/full-enemy-ai.beetree.yaml` in the [repository](https://github.com/aallbrig/beetreecraft/tree/main/examples) for a complete example.

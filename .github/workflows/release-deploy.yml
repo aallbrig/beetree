@@ -54,7 +54,8 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: us-east-1
       - name: Deploy backend
-        run: task deploy:backend
+        # DNS and www must stay true: false removes the apex/www records and the certificate
+        run: task deploy:backend DNS=true WWW=true
       - name: Deploy site
         run: task deploy:site
       - name: Smoke test production
