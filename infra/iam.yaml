@@ -2,9 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: BeeTreeCraft - least-privilege roles for deploying, publishing and testing (deploy once as an admin)
 
 Parameters:
-  GitHubRepo:
+  GitHubSubjectPrefix:
     Type: String
-    Default: aallbrig/beetreecraft
+    Default: repo:aallbrig@3106250/beetreecraft@834866267
+    Description: GitHub OIDC subject prefix (immutable owner and repo ids, survives renames)
   AdminPrincipalArn:
     Type: String
     Description: IAM user or role allowed to assume the roles below
@@ -284,7 +285,7 @@ Resources:
             Action: sts:AssumeRoleWithWebIdentity
             Condition:
               StringEquals: {'token.actions.githubusercontent.com:aud': sts.amazonaws.com}
-              StringLike: {'token.actions.githubusercontent.com:sub': !Sub 'repo:${GitHubRepo}:ref:refs/tags/v*'}
+              StringLike: {'token.actions.githubusercontent.com:sub': !Sub '${GitHubSubjectPrefix}:ref:refs/tags/v*'}
       Policies:
         - PolicyName: hand-over
           PolicyDocument:

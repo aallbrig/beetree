@@ -550,3 +550,16 @@ input[type='checkbox'] {
     min-width: 0;
   }
 }
+
+.tree-section {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.tree-section > summary {
+  cursor: pointer;
+  padding: 4px 0;
+}
+.tree-section.selected {
+  border-color: var(--accent);
+}

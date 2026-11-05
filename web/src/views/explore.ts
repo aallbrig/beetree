@@ -39,8 +39,7 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
     value: '100',
     'aria-label': 'Agent health',
   });
-  const agentList = h('div', { class: 'stack' });
-  const outlineHost = h('div');
+  const treeList = h('div', { class: 'stack' });
   const panel = h(
     'div',
     { class: 'card stack' },
@@ -52,8 +51,7 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
     ),
     h('div', {}, h('label', {}, 'Scene'), sceneSelect),
     h('div', {}, h('label', {}, 'Agent health (try dropping it)'), health),
-    agentList,
-    outlineHost,
+    treeList,
     h(
       'p',
       { class: 'small' },
@@ -83,41 +81,48 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
   world.start();
 
   let loaded: LoadedAgent[] = [];
-  let selected = '';
-  let panelOutline: Outline | undefined;
-  const nameOf = new Map<string, string>();
+  interface TreeSection {
+    details: HTMLDetailsElement;
+    outline: Outline;
+  }
+  const sections = new Map<string, TreeSection>();
 
+  /** Highlight one agent in the scene and bring its tree into view. */
   const showAgent = (id: string): void => {
-    selected = id;
-    const a = world.agents.get(id);
-    clear(outlineHost);
-    panelOutline = undefined;
-    if (!a) return;
-    outlineHost.append(h('h3', {}, `${a.opts.name}'s tree`));
-    panelOutline = outline(a.opts.spec);
-    outlineHost.append(panelOutline.el);
-    for (const other of world.agents.values()) other.setSelected(other === a);
+    const target = world.agents.get(id);
+    for (const other of world.agents.values()) other.setSelected(other === target);
+    for (const [key, sec] of sections) sec.details.classList.toggle('selected', key === id);
+    const sec = sections.get(id);
+    if (sec) {
+      sec.details.open = true;
+      sec.details.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
   };
 
   const load = async (agents: SceneAgent[]): Promise<void> => {
     loaded = await populate(world, agents);
-    clear(agentList);
-    nameOf.clear();
+    clear(treeList);
+    sections.clear();
     for (const a of loaded) {
-      nameOf.set(a.id, a.name);
-      agentList.append(
+      const agent = world.agents.get(a.id);
+      if (!agent) continue;
+      const tree = outline(agent.opts.spec);
+      const details = h(
+        'details',
+        { class: 'tree-section', open: true },
         h(
-          'button',
+          'summary',
           {
-            class: 'btn small',
-            type: 'button',
             onClick: () => {
               showAgent(a.id);
             },
           },
-          a.name,
+          h('strong', {}, `${a.name}'s tree`),
         ),
+        tree.el,
       );
+      sections.set(a.id, { details, outline: tree });
+      treeList.append(details);
     }
     const first = loaded[0];
     if (first) showAgent(first.id);
@@ -163,8 +168,10 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
   });
 
   const timer = setInterval(() => {
-    const a = world.agents.get(selected);
-    if (a) panelOutline?.setStatuses(a.runtime.statuses);
+    for (const [id, sec] of sections) {
+      const agent = world.agents.get(id);
+      if (agent && sec.details.open) sec.outline.setStatuses(agent.runtime.statuses);
+    }
   }, 120);
 
   return () => {
