@@ -1,0 +1,11 @@
+{{ $section := .section }}
+{{ $cur := .cur }}
+<aside class="side" aria-label="{{ $section.Title }}">
+  <h2>{{ $section.Title }}</h2>
+  <ul>
+    <li><a href="{{ $section.RelPermalink }}"{{ if eq $section.RelPermalink $cur.RelPermalink }} aria-current="page"{{ end }}>Overview</a></li>
+    {{ range $section.Pages.ByWeight }}
+    <li><a href="{{ .RelPermalink }}"{{ if eq .RelPermalink $cur.RelPermalink }} aria-current="page"{{ end }}>{{ .Title }}</a></li>
+    {{ end }}
+  </ul>
+</aside>
