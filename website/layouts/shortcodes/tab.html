@@ -1,0 +1,5 @@
+{{- $lang := .Get "lang" -}}
+<div class="codetab" data-tab="{{ .Get "id" }}" data-label="{{ .Get "label" }}" role="tabpanel">
+<p class="codetab-label">{{ .Get "label" }}</p>
+{{ highlight (trim .Inner "\n") $lang "" }}
+</div>

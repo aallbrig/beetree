@@ -4,9 +4,7 @@ description: "The six node types every behavior tree is built from, with pseudoc
 weight: 20
 ---
 
-Every behavior tree, in any engine, is made from the same six node types. This page describes each one and shows it in code. The code is **pseudocode you can adapt**: it is the smallest version that works, not a production library. Pick your engine and the code samples will follow you down the page.
-
-{{< langpicker >}}
+Every behavior tree, in any engine, is made from the same six node types. This page describes each one and shows it in code. The code is **pseudocode you can adapt**: it is the smallest version that works, not a production library. Each block starts with the engine-agnostic algorithm. Use the tabs under it to switch to Unity, GDScript or Unreal; your choice follows you down the page.
 
 ## The contract: tick and status
 
@@ -20,28 +18,29 @@ Every node has one operation, **tick**. A parent ticks a child and gets back a *
 
 The root is ticked on a schedule, usually once per frame or on an AI update interval. A node only runs when its parent ticks it.
 
-{{% lang unity "Unity C#" %}}
-```csharp
+{{< codetabs >}}
+{{< tab id="agnostic" label="Agnostic" lang="text" >}}
+status = Success | Failure | Running
+
+node.tick() -> status      // every node has exactly this one operation
+{{< /tab >}}
+{{< tab id="unity" label="Unity C#" lang="csharp" >}}
 public enum Status { Success, Failure, Running }
 
 public abstract class Node
 {
     public abstract Status Tick();
 }
-```
-{{% /lang %}}
-{{% lang godot "Godot GDScript" %}}
-```gdscript
+{{< /tab >}}
+{{< tab id="godot" label="GDScript" lang="gdscript" >}}
 class_name BTNode extends RefCounted
 
 enum Status { SUCCESS, FAILURE, RUNNING }
 
 func tick() -> Status:
     return Status.FAILURE   # override in each node type
-```
-{{% /lang %}}
-{{% lang unreal "Unreal C++" %}}
-```cpp
+{{< /tab >}}
+{{< tab id="unreal" label="Unreal C++" lang="cpp" >}}
 enum class EStatus : uint8 { Success, Failure, Running };
 
 class FNode
@@ -50,8 +49,8 @@ public:
     virtual ~FNode() = default;
     virtual EStatus Tick() = 0;
 };
-```
-{{% /lang %}}
+{{< /tab >}}
+{{< /codetabs >}}
 
 All the examples below build on this contract. The six types fall into two groups: **leaves** that do the work (Action and Condition) and **control-flow nodes** that decide which children to tick (Sequence, Fallback, Parallel and Decorator).
 
@@ -72,8 +71,14 @@ All the examples below build on this contract. The six types fall into two group
 
 An **action** does something in the world: move, play an animation, fire a weapon. It returns **Running** while it works, **Success** when it finishes and **Failure** if it cannot be done.
 
-{{% lang unity "Unity C#" %}}
-```csharp
+{{< codetabs >}}
+{{< tab id="agnostic" label="Agnostic" lang="text" >}}
+Action(work):
+    tick():
+        return work()      // Running while in progress,
+                           // Success when done, Failure if it cannot be done
+{{< /tab >}}
+{{< tab id="unity" label="Unity C#" lang="csharp" >}}
 public class ActionNode : Node
 {
     readonly System.Func<Status> work;
@@ -83,10 +88,8 @@ public class ActionNode : Node
 
 // e.g. move toward the target; Running until we arrive
 new ActionNode(() => agent.remainingDistance > 0.5f ? Status.Running : Status.Success);
-```
-{{% /lang %}}
-{{% lang godot "Godot GDScript" %}}
-```gdscript
+{{< /tab >}}
+{{< tab id="godot" label="GDScript" lang="gdscript" >}}
 class Action extends BTNode:
     var work: Callable
     func _init(w: Callable): work = w
@@ -95,10 +98,8 @@ class Action extends BTNode:
 # e.g. move toward the target; RUNNING until we arrive
 var move := Action.new(func():
     return Status.RUNNING if nav.distance_to_target() > 0.5 else Status.SUCCESS)
-```
-{{% /lang %}}
-{{% lang unreal "Unreal C++" %}}
-```cpp
+{{< /tab >}}
+{{< tab id="unreal" label="Unreal C++" lang="cpp" >}}
 class FAction : public FNode
 {
 public:
@@ -109,15 +110,21 @@ public:
 
 // e.g. move toward the target; Running until we arrive
 FAction Move([this]{ return Distance() > 50.f ? EStatus::Running : EStatus::Success; });
-```
-{{% /lang %}}
+{{< /tab >}}
+{{< /codetabs >}}
 
 ## Condition
 
 A **condition** checks something and never takes time. It returns **Success** if the check is true and **Failure** if it is false. It never returns Running. Typical examples are "can I see the player?" and "is my health low?".
 
-{{% lang unity "Unity C#" %}}
-```csharp
+{{< codetabs >}}
+{{< tab id="agnostic" label="Agnostic" lang="text" >}}
+Condition(check):
+    tick():
+        if check() then return Success
+        else return Failure      // never Running
+{{< /tab >}}
+{{< tab id="unity" label="Unity C#" lang="csharp" >}}
 public class ConditionNode : Node
 {
     readonly System.Func<bool> check;
@@ -126,10 +133,8 @@ public class ConditionNode : Node
 }
 
 new ConditionNode(() => health < 0.25f);
-```
-{{% /lang %}}
-{{% lang godot "Godot GDScript" %}}
-```gdscript
+{{< /tab >}}
+{{< tab id="godot" label="GDScript" lang="gdscript" >}}
 class Condition extends BTNode:
     var check: Callable
     func _init(c: Callable): check = c
@@ -137,10 +142,8 @@ class Condition extends BTNode:
         return Status.SUCCESS if check.call() else Status.FAILURE
 
 var low_health := Condition.new(func(): return health < 0.25)
-```
-{{% /lang %}}
-{{% lang unreal "Unreal C++" %}}
-```cpp
+{{< /tab >}}
+{{< tab id="unreal" label="Unreal C++" lang="cpp" >}}
 class FCondition : public FNode
 {
 public:
@@ -150,15 +153,24 @@ public:
 };
 
 FCondition LowHealth([this]{ return Health < 0.25f; });
-```
-{{% /lang %}}
+{{< /tab >}}
+{{< /codetabs >}}
 
 ## Sequence
 
 A **sequence** runs its children **in order, left to right**, and stops at the first one that does not succeed. It means "do this, *and then* this, *and then* this". It succeeds only if every child succeeds. If a child fails, the sequence fails. If a child is running, the sequence is running and picks up from the top on the next tick.
 
-{{% lang unity "Unity C#" %}}
-```csharp
+{{< codetabs >}}
+{{< tab id="agnostic" label="Agnostic" lang="text" >}}
+Sequence(children):               // N children
+    tick():
+        for i = 1 to N:
+            childStatus = children[i].tick()
+            if childStatus == Running: return Running
+            else if childStatus == Failure: return Failure
+        return Success
+{{< /tab >}}
+{{< tab id="unity" label="Unity C#" lang="csharp" >}}
 public class Sequence : Node
 {
     readonly Node[] children;
@@ -174,10 +186,8 @@ public class Sequence : Node
         return Status.Success;
     }
 }
-```
-{{% /lang %}}
-{{% lang godot "Godot GDScript" %}}
-```gdscript
+{{< /tab >}}
+{{< tab id="godot" label="GDScript" lang="gdscript" >}}
 class Sequence extends BTNode:
     var children: Array[BTNode]
     func _init(c: Array[BTNode]): children = c
@@ -188,10 +198,8 @@ class Sequence extends BTNode:
             if status != Status.SUCCESS:
                 return status   # FAILURE or RUNNING stops here
         return Status.SUCCESS
-```
-{{% /lang %}}
-{{% lang unreal "Unreal C++" %}}
-```cpp
+{{< /tab >}}
+{{< tab id="unreal" label="Unreal C++" lang="cpp" >}}
 class FSequence : public FNode
 {
 public:
@@ -207,15 +215,24 @@ public:
         return EStatus::Success;
     }
 };
-```
-{{% /lang %}}
+{{< /tab >}}
+{{< /codetabs >}}
 
 ## Fallback
 
 A **fallback** (also called a **selector**) is the mirror image: it tries its children **in order until one works**. It means "try this, *or else* this, *or else* this", which makes it the natural way to express priorities. It succeeds as soon as one child succeeds and fails only if every child fails.
 
-{{% lang unity "Unity C#" %}}
-```csharp
+{{< codetabs >}}
+{{< tab id="agnostic" label="Agnostic" lang="text" >}}
+Fallback(children):               // N children
+    tick():
+        for i = 1 to N:
+            childStatus = children[i].tick()
+            if childStatus == Running: return Running
+            else if childStatus == Success: return Success
+        return Failure
+{{< /tab >}}
+{{< tab id="unity" label="Unity C#" lang="csharp" >}}
 public class Fallback : Node
 {
     readonly Node[] children;
@@ -231,10 +248,8 @@ public class Fallback : Node
         return Status.Failure;
     }
 }
-```
-{{% /lang %}}
-{{% lang godot "Godot GDScript" %}}
-```gdscript
+{{< /tab >}}
+{{< tab id="godot" label="GDScript" lang="gdscript" >}}
 class Fallback extends BTNode:
     var children: Array[BTNode]
     func _init(c: Array[BTNode]): children = c
@@ -245,10 +260,8 @@ class Fallback extends BTNode:
             if status != Status.FAILURE:
                 return status   # SUCCESS or RUNNING stops here
         return Status.FAILURE
-```
-{{% /lang %}}
-{{% lang unreal "Unreal C++" %}}
-```cpp
+{{< /tab >}}
+{{< tab id="unreal" label="Unreal C++" lang="cpp" >}}
 class FFallback : public FNode
 {
 public:
@@ -264,8 +277,8 @@ public:
         return EStatus::Failure;
     }
 };
-```
-{{% /lang %}}
+{{< /tab >}}
+{{< /codetabs >}}
 
 Sequence and fallback combine into the most common shape in a game tree: a fallback of sequences, where each sequence is "if *condition*, then do *action*". The first branch whose condition holds wins.
 
@@ -273,8 +286,17 @@ Sequence and fallback combine into the most common shape in a game tree: a fallb
 
 A **parallel** ticks **all** its children on every tick. You choose a threshold **M** out of **N** children. It succeeds when at least M children have succeeded. It fails when so many have failed that M successes are no longer possible, which means more than N − M failures. Otherwise it is running. Use it for things that happen together, such as walking while aiming.
 
-{{% lang unity "Unity C#" %}}
-```csharp
+{{< codetabs >}}
+{{< tab id="agnostic" label="Agnostic" lang="text" >}}
+Parallel(children, M):            // N children, success threshold M
+    tick():
+        for i = 1 to N:
+            childStatus[i] = children[i].tick()
+        if count(childStatus == Success) >= M: return Success
+        else if count(childStatus == Failure) > N - M: return Failure
+        return Running
+{{< /tab >}}
+{{< tab id="unity" label="Unity C#" lang="csharp" >}}
 public class Parallel : Node
 {
     readonly Node[] children;
@@ -295,10 +317,8 @@ public class Parallel : Node
         return Status.Running;
     }
 }
-```
-{{% /lang %}}
-{{% lang godot "Godot GDScript" %}}
-```gdscript
+{{< /tab >}}
+{{< tab id="godot" label="GDScript" lang="gdscript" >}}
 class Parallel extends BTNode:
     var children: Array[BTNode]
     var success_threshold: int   # M
@@ -314,10 +334,8 @@ class Parallel extends BTNode:
         if successes >= success_threshold: return Status.SUCCESS
         if failures > children.size() - success_threshold: return Status.FAILURE
         return Status.RUNNING
-```
-{{% /lang %}}
-{{% lang unreal "Unreal C++" %}}
-```cpp
+{{< /tab >}}
+{{< tab id="unreal" label="Unreal C++" lang="cpp" >}}
 class FParallel : public FNode
 {
 public:
@@ -338,15 +356,33 @@ public:
         return EStatus::Running;
     }
 };
-```
-{{% /lang %}}
+{{< /tab >}}
+{{< /codetabs >}}
 
 ## Decorator
 
 A **decorator** wraps **one child** and changes how it behaves. It can change the child's result, limit how often the child runs, or decide whether to tick it at all. What it does is up to you, which is why the table says "custom". Common examples are **Inverter** (swap success and failure), **Retry N times**, **Timeout** and **Cooldown**.
 
-{{% lang unity "Unity C#" %}}
-```csharp
+{{< codetabs >}}
+{{< tab id="agnostic" label="Agnostic" lang="text" >}}
+Inverter(child):
+    tick():
+        switch child.tick():
+            Success -> return Failure
+            Failure -> return Success
+            Running -> return Running
+
+Retry(child, maxFailures):           // let the child fail up to N times
+    failures = 0
+    tick():
+        if failures >= maxFailures: return Failure   // child is not ticked
+        status = child.tick()
+        if status == Failure:
+            failures += 1
+            return (failures < maxFailures) ? Running : Failure
+        return status
+{{< /tab >}}
+{{< tab id="unity" label="Unity C#" lang="csharp" >}}
 public class Inverter : Node
 {
     readonly Node child;
@@ -373,10 +409,8 @@ public class Retry : Node   // let the child fail up to N times
         return status == Status.Failure && failures < max ? Status.Running : status;
     }
 }
-```
-{{% /lang %}}
-{{% lang godot "Godot GDScript" %}}
-```gdscript
+{{< /tab >}}
+{{< tab id="godot" label="GDScript" lang="gdscript" >}}
 class Inverter extends BTNode:
     var child: BTNode
     func _init(c: BTNode): child = c
@@ -400,10 +434,8 @@ class Retry extends BTNode:   # let the child fail up to N times
             failures += 1
             return Status.RUNNING if failures < max_failures else Status.FAILURE
         return status
-```
-{{% /lang %}}
-{{% lang unreal "Unreal C++" %}}
-```cpp
+{{< /tab >}}
+{{< tab id="unreal" label="Unreal C++" lang="cpp" >}}
 class FInverter : public FNode
 {
 public:
@@ -439,8 +471,8 @@ public:
         return Status;
     }
 };
-```
-{{% /lang %}}
+{{< /tab >}}
+{{< /codetabs >}}
 
 ## Putting it together
 

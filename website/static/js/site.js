@@ -42,33 +42,52 @@
     }
     paint();
 
-    var picker = document.querySelector('.langpicker');
-    if (picker) {
+    var blocks = document.querySelectorAll('.codetabs');
+    if (blocks.length) {
       var LKEY = 'beetreecraft-lang';
-      var pick = function (lang) {
-        if (lang === 'all') document.body.removeAttribute('data-lang');
-        else document.body.setAttribute('data-lang', lang);
-        picker.querySelectorAll('button').forEach(function (b) {
-          b.setAttribute('aria-pressed', String(b.getAttribute('data-pick') === lang));
+      var current = 'agnostic';
+      try {
+        current = localStorage.getItem(LKEY) || 'agnostic';
+      } catch (e) {
+        /* storage blocked */
+      }
+      var select = function (id) {
+        current = id;
+        blocks.forEach(function (block) {
+          var has = block.querySelector('.codetab[data-tab="' + id + '"]');
+          var active = has ? id : 'agnostic';
+          block.querySelectorAll('.codetab').forEach(function (t) {
+            t.hidden = t.getAttribute('data-tab') !== active;
+          });
+          block.querySelectorAll('.codetabs-bar button').forEach(function (b) {
+            var on = b.getAttribute('data-tab') === active;
+            b.setAttribute('aria-selected', String(on));
+            b.tabIndex = on ? 0 : -1;
+          });
         });
         try {
-          localStorage.setItem(LKEY, lang);
+          localStorage.setItem(LKEY, id);
         } catch (e) {
           /* storage blocked */
         }
       };
-      picker.hidden = false;
-      picker.addEventListener('click', function (e) {
-        var t = e.target;
-        if (t instanceof HTMLElement && t.dataset.pick) pick(t.dataset.pick);
+      blocks.forEach(function (block) {
+        var bar = block.querySelector('.codetabs-bar');
+        block.querySelectorAll('.codetab').forEach(function (t) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.setAttribute('role', 'tab');
+          b.setAttribute('data-tab', t.getAttribute('data-tab'));
+          b.textContent = t.getAttribute('data-label');
+          b.addEventListener('click', function () {
+            select(t.getAttribute('data-tab'));
+          });
+          bar.appendChild(b);
+        });
+        bar.hidden = false;
+        block.classList.add('js');
       });
-      var stored = 'all';
-      try {
-        stored = localStorage.getItem(LKEY) || 'all';
-      } catch (e) {
-        /* storage blocked */
-      }
-      pick(stored);
+      select(current);
     }
   });
 })();

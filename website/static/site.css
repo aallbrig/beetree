@@ -37,13 +37,7 @@ pre,code{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}pre{backgroun
 .grp:hover .grp-label,.grp:focus-within .grp-label{background:var(--surface-2);color:var(--text)}
 .grp-menu{position:absolute;top:100%;left:0;min-width:220px;display:flex;flex-direction:column;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);visibility:hidden;opacity:0;transition:opacity .12s;z-index:30}
 .grp:hover .grp-menu,.grp:focus-within .grp-menu{visibility:visible;opacity:1}
-.langpicker{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:16px 0}
-.langpicker[hidden]{display:none}
-.langpicker .btn[aria-pressed="true"]{background:var(--surface-2);font-weight:700}
-.lang-label{margin:14px 0 4px;font-size:.85rem;font-weight:700;color:var(--muted)}
-body[data-lang="unity"] .lang:not([data-lang="unity"]),body[data-lang="godot"] .lang:not([data-lang="godot"]),body[data-lang="unreal"] .lang:not([data-lang="unreal"]){display:none}
-body[data-lang] .lang-label{display:none}
-@media(max-width:800px){
+body[data-lang] @media(max-width:800px){
   .top nav .grp{display:block}
   .grp-label{display:block;width:100%;text-align:left;padding:12px 12px 4px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;cursor:default}
   .grp-label::after{content:""}
@@ -52,3 +46,15 @@ body[data-lang] .lang-label{display:none}
 /* the hamburger only exists on narrow screens; .btn must not re-show it on desktop */
 .top nav .menu-toggle{display:none}
 @media(max-width:800px){.top nav .menu-toggle{display:inline-block}}
+
+/* tabbed code blocks: the agnostic algorithm first, engines behind tabs under it */
+.codetabs{margin:16px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.codetabs .highlight{margin:0}.codetabs pre{margin:0;border-radius:0;border:0;overflow-x:auto}
+.codetab-label{margin:0;padding:6px 12px;font-size:.8rem;font-weight:700;color:var(--muted);background:var(--surface-2)}
+.codetabs.js .codetab-label{display:none}
+.codetab[hidden]{display:none}
+.codetabs-bar{display:flex;gap:2px;padding:4px 6px 0;background:var(--surface-2);border-top:1px solid var(--line);overflow-x:auto}
+.codetabs-bar[hidden]{display:none}
+.codetabs-bar button{font:inherit;font-size:.85rem;font-weight:600;color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.codetabs-bar button:hover{color:var(--text)}
+.codetabs-bar button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
