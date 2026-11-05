@@ -4,7 +4,7 @@ Description: BeeTreeCraft - least-privilege roles for deploying, publishing and 
 Parameters:
   GitHubRepo:
     Type: String
-    Default: aallbrig/beetree
+    Default: aallbrig/beetreecraft
   AdminPrincipalArn:
     Type: String
     Description: IAM user or role allowed to assume the roles below
