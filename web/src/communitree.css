@@ -1,0 +1,79 @@
+.ct-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(20 16 4 / 55%);
+}
+.ct-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 24px 22px;
+  border-radius: 16px;
+  background: var(--surface, #fff);
+  color: var(--text, #2a2517);
+  border: 1px solid var(--line, #e4dbc3);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
+  text-align: center;
+}
+.ct-modal h2 {
+  margin: 4px 0 6px;
+  font-size: 1.5rem;
+}
+.ct-modal p {
+  margin: 0 0 14px;
+  color: var(--muted, #6d6551);
+}
+.ct-emoji {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+.ct-modal input[type='email'] {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line, #e4dbc3);
+  background: var(--bg, #fbf7ec);
+  color: inherit;
+  font: inherit;
+}
+.ct-modal .ct-go {
+  width: 100%;
+  justify-content: center;
+}
+.ct-modal .ct-err {
+  min-height: 1.2em;
+  margin: 0 0 6px;
+  color: var(--err, #d64545);
+  font-size: 0.9rem;
+}
+.ct-modal .ct-skip {
+  margin-top: 8px;
+  background: none;
+  border: 0;
+  color: var(--muted, #6d6551);
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.ct-modal .ct-fine {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+}
+.ct-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted, #6d6551);
+  cursor: pointer;
+}

@@ -8,6 +8,7 @@ import {
   signUp,
   notifySignedIn,
 } from '../auth';
+import { maybeShowCommunitree } from '../communitree';
 import { h, toast } from '../dom';
 import { navigate, type Ctx } from '../router';
 
@@ -90,7 +91,7 @@ export function signInView(ctx: Ctx): void {
   ]);
 }
 
-export function signUpView(ctx: Ctx): void {
+export function signUpView(ctx: Ctx): () => void {
   const user = input('text', 'username', {
     autocomplete: 'username',
     minlength: '3',
@@ -137,6 +138,7 @@ export function signUpView(ctx: Ctx): void {
     navigate(`/confirm?u=${encodeURIComponent(user.value.trim())}`);
   });
   shell(ctx, 'Create your account', form, ['Already registered? ', link('#/signin', 'Sign in')]);
+  return maybeShowCommunitree('signup');
 }
 
 export function confirmView(ctx: Ctx): void {

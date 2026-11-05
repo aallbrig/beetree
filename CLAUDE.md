@@ -56,3 +56,32 @@ When creating documentation files:
 - Place them in the `docs/` directory or a subdirectory. Typical subdirectories include `docs/design/` and `docs/research/`.
 - Prepend a UTC timestamp to the `.md` filename in the format `YYYYMMDD_HHMMSS_UTC_` so files sort chronologically (e.g., `docs/design/20260329_150800_UTC_architecture_overview.md`).
 
+
+## Release Policy
+
+Every merged PR ships. After CI (the code quality gates) passes, run `task pr:merge -- N`, then cut a release from the updated `main` with `task release -- vX.Y.Z` so the change reaches beetreecraft.com. The footer shows the live version.
+
+Pick the version by the change; expect mostly **patch**:
+- **patch** (default): features, fixes, content, docs, refactors, dependency bumps
+- **minor**: a visible new capability that changes how people use the product (a new top-level area, a breaking-but-contained format change)
+- **major**: incompatible CLI, API or tree-format breaks for existing users
+
+Each release carries release notes (the script generates them from merged PRs) and its artifacts (CLI archives, the site bundle, `SHA256SUMS`). Check the `Release deploy` run succeeds and the footer on beetreecraft.com shows the new version.
+
+## Public Repo Hygiene
+
+This repository is public. Everything committed here, including commit messages, PR bodies, issues, docs and this file, is world-readable and permanent in git history.
+
+Never commit or paste into an issue or PR:
+- Credentials of any kind: AWS keys, session tokens, Cognito or API secrets, `.env` files, private keys, `config.json` with real values
+- AWS account IDs or full ARNs that contain one; use `${AWS::AccountId}` in templates and read IDs from the environment or `aws sts get-caller-identity` at run time
+- Personal data: real email addresses, names of users, collected signups (the Communitree list in `localStorage` stays in the browser), IP addresses, logs that contain them
+- Local machine details: absolute home paths, usernames, hostnames, and the contents of `~/.claude` (memory files, settings, transcripts)
+- Private plans, vendor pricing or contract terms, and anything marked internal
+
+Rules of thumb:
+- Docs and examples use placeholders (`you@example.com`, `123456789012`, `example.com`), never real values.
+- Identifiers that must be in the repo to function (Route 53 zone ID, GitHub OIDC subject, Cognito public client IDs) are identifiers, not secrets. Everything that grants access stays out.
+- Run `gitleaks` (a pre-commit gate) before every commit and never bypass it. If a secret is ever committed, rotate it first, then clean history.
+- Check `git diff --staged` for stray paths and addresses before committing.
+- Tickets that mention third-party services describe the need, not account details.

@@ -26,8 +26,12 @@ for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; d
   if [ "$os" = windows ]; then (cd "$DIST" && zip -qr "$name.zip" "$name"); else tar -C "$DIST" -czf "$DIST/$name.tar.gz" "$name"; fi
   rm -rf "$stage"
 done
+# static site bundle, built with the release version in its footer
+(cd "$ROOT" && HUGO_SITE_VERSION="$VERSION" task site:build >/dev/null)
+tar -C "$ROOT/website/public" -czf "$DIST/beetreecraft-site_${VERSION}.tar.gz" .
 (cd "$DIST" && sha256sum ./*.tar.gz ./*.zip > SHA256SUMS)
 
 git -C "$ROOT" tag -a "$VERSION" -m "$VERSION"
 git -C "$ROOT" push -q origin "$VERSION"
-gh release create "$VERSION" --title "$VERSION" --generate-notes "$DIST"/*.tar.gz "$DIST"/*.zip "$DIST/SHA256SUMS"
+gh release create "$VERSION" --title "$VERSION" --notes "Live at https://beetreecraft.com (the footer shows $VERSION). Assets: CLI archives per platform, the static site bundle and SHA256SUMS." \
+  --generate-notes "$DIST"/*.tar.gz "$DIST"/*.zip "$DIST/SHA256SUMS"
