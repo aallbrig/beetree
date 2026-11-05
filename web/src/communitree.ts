@@ -113,7 +113,6 @@ function open(source: string): HTMLElement {
           'Close',
         );
         modal.replaceChildren(
-          h('div', { class: 'ct-emoji' }, '\u{1F331}'),
           h('h2', {}, "You're in the communitree!"),
           h('p', {}, 'Thanks for joining. We will be in touch.'),
           ok,
@@ -128,7 +127,6 @@ function open(source: string): HTMLElement {
 
   modal.append(
     h('button', { class: 'ct-close', type: 'button', 'aria-label': 'Close', onClick: done }, '×'),
-    h('div', { class: 'ct-emoji' }, '\u{1F333}'),
     h('h2', { id: 'ct-title' }, 'Join the communitree'),
     h(
       'p',

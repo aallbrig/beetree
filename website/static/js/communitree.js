@@ -68,7 +68,6 @@
     form.append(input, err, go);
     modal.append(
       close,
-      el('div', 'ct-emoji', '🌳'),
       title,
       el('p', '', 'Branch out with us. Get new behavior tree patterns, features and community picks, straight to your inbox.'),
       form,
@@ -99,7 +98,6 @@
       }
       add(v, 'homepage');
       modal.replaceChildren(
-        el('div', 'ct-emoji', '🌱'),
         el('h2', '', "You're in the communitree!"),
         el('p', '', 'Thanks for joining. We will be in touch.')
       );
