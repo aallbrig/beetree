@@ -6,7 +6,7 @@ PUBLIC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/website/public"
 
 required=(index.html 404.html docs/index.html docs/manual/index.html docs/cli/index.html
   docs/cli-reference/index.html docs/trees/index.html docs/api/index.html docs/api/reference/index.html
-  docs/mcp/index.html references/index.html resources/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js version.json sitemap.xml site-map/index.html)
+  docs/mcp/index.html docs/tui/index.html references/index.html resources/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js version.json sitemap.xml site-map/index.html)
 grep -Eq 'class="?ver[" >]' "$PUBLIC/index.html" || { echo "footer version missing" >&2; exit 1; }
 grep -Eq 'id="?menu-toggle"?[^>]*aria-label' "$PUBLIC/index.html" || { echo "menu toggle must be an icon button with aria-label" >&2; exit 1; }
 for d in docs/api docs/mcp; do
@@ -18,6 +18,9 @@ n=$(grep -c '^  - title:' "$data")
 [ "$n" -ge 10 ] || { echo "resources.yaml has only $n entries" >&2; exit 1; }
 [ "$(grep -cE '^    url: "https?://' "$data")" = "$n" ] && [ "$(grep -c '^    summary:' "$data")" = "$n" ] || { echo "every resource needs url and summary" >&2; exit 1; }
 awk '/^    score:/ && $2 < 9 {bad=1} END {exit bad}' "$data" || { echo "a resource scores below the rubric threshold of 9" >&2; exit 1; }
+# the TUI page leads with the step-through debugger and embeds its recorded demos
+[ "$(grep -oE '<img[^>]*/img/tui-[a-z-]+\.gif' "$PUBLIC/docs/tui/index.html" | wc -l)" -ge 2 ] || { echo "docs/tui must embed its GIFs" >&2; exit 1; }
+for g in tui-step-through.gif tui-editor.gif; do [ -s "$PUBLIC/img/$g" ] || { echo "missing: img/$g" >&2; exit 1; }; done
 for f in "${required[@]}"; do
   [ -f "$PUBLIC/$f" ] || { echo "missing: $f" >&2; exit 1; }
 done
