@@ -176,7 +176,7 @@ route('/community', communityView);
 route('/tree/([\\w-]+)', treeView, { private: true });
 route('/forum', forumView, { private: true });
 route('/forum/([\\w-]+)', threadView, { private: true });
-route('/user/([\\w-]+)', userView, { private: true });
+route('/user/([\\w-]+)', userView);
 route('/signin', signInView);
 route('/signup', signUpView);
 route('/confirm', confirmView);

@@ -33,7 +33,7 @@ func withKey(h http.Handler, method, path, key string) resp {
 
 func TestAnonymousCallsAreRejectedExceptHealthAndSpec(t *testing.T) {
 	h, _ := newSecureServer(t)
-	for _, p := range []string{"/v1/trees", "/v1/node-types", "/v1/forum/threads", "/v1/users/x"} {
+	for _, p := range []string{"/v1/trees", "/v1/node-types", "/v1/forum/threads"} {
 		r := do(h, "GET", p, "", nil)
 		assert.Equal(t, 401, r.Code, p)
 		assert.Contains(t, string(r.Body), docsURL)

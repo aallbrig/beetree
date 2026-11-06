@@ -136,7 +136,18 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 			pub = append(pub, t)
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"profile": p.Public(), "trees": listOf(summarize(pub))["items"]})
+	scenes, err := s.Store.ListScenesByOwner(r.Context(), id)
+	if err != nil {
+		s.storeErr(w, err)
+		return
+	}
+	pubScenes := []Scene{}
+	for _, sc := range scenes {
+		if sc.Visibility == VisibilityPublic {
+			pubScenes = append(pubScenes, sc)
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"profile": p.Public(), "trees": listOf(summarize(pub))["items"], "scenes": pubScenes})
 }
 
 func (s *Server) listThreads(w http.ResponseWriter, r *http.Request) {

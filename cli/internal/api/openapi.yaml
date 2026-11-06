@@ -426,9 +426,10 @@ paths:
     parameters:
       - {$ref: '#/components/parameters/Id'}
     get:
-      summary: A user's public profile and public trees
+      summary: A user's public profile, public trees and public scenes (no sign-in needed)
       operationId: getUser
       tags: [Account]
+      security: []
       responses:
         '200': {description: Profile and trees}
         '404': {$ref: '#/components/responses/Error'}
