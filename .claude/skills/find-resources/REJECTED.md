@@ -11,3 +11,6 @@ https://ceur-ws.org/Vol-3082/paper13.pdf | unscored | PDF text not extractable; 
 https://gdcvault.com/play/1012416/Behavior-Trees-Three-Ways-of | unscored | GDC 2010 "Three Ways of Cultivating Strong AI"; free video access unconfirmed, only the description is readable
 https://helpmetest.com/blog/game-ai-behavior-testing/ | unscored | could not be read (HTTP 502); retry later
 https://cgi.csc.liv.ac.uk/~xiaowei/game_materials/lecture24.pdf | unscored | PDF text not extractable; university lecture slides
+https://www.sambuz.com/doc/automated-testing-for-multiplayer-game-ai-automated-ppt-presentation-901544 | 9 | Rare (Sea of Thieves) BT testing slides, but an ad-laden mirror with no named event; retry via the original GDC/Rare source
+https://80.lv/articles/days-gone-squad-coordination-explained | 7 | Days Gone squad confidence article; never mentions behavior trees
+https://cryengine.com/docs/static/engines/cryengine-5/categories/23756813/pages/23310620 | unscored | page body truncated, only navigation readable
