@@ -6,7 +6,7 @@ import { copyText, downloadText, fileName } from '../exporter';
 import { History } from '../history';
 import { navigate, type Cleanup, type Ctx } from '../router';
 import { pathId } from '../engine/bt';
-import { SAMPLES, sampleById } from '../samples';
+import { SAMPLES, sampleById, sampleBySlug, type Sample } from '../samples';
 import { World, type Agent } from '../scene/world';
 import {
   addChild,
@@ -51,6 +51,9 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     spec = parseSpec(t.spec);
     if (treeId) visibility = t.visibility;
     else spec.metadata.name = `${t.name}-fork`;
+  } else if (sampleBySlug(ctx.query.get('template'))) {
+    // a home-page template card: start from that template, not from the old draft
+    spec = parseSpec((sampleBySlug(ctx.query.get('template')) as Sample).yaml);
   } else {
     try {
       const draft = localStorage.getItem(DRAFT_KEY);

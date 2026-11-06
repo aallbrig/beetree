@@ -51,7 +51,8 @@ export async function render(): Promise<void> {
   cleanup?.();
   cleanup = undefined;
   const { path, query } = parse();
-  const redirect = guard?.(path);
+  const qs = query.toString();
+  const redirect = guard?.(qs ? `${path}?${qs}` : path);
   const match = routes.map((r) => ({ r, m: r.pattern.exec(path) })).find((x) => x.m !== null);
   if (!match?.m) {
     clear(outlet);
