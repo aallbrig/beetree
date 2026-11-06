@@ -6,7 +6,7 @@ PUBLIC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/website/public"
 
 required=(index.html 404.html docs/index.html docs/manual/index.html docs/cli/index.html
   docs/cli-reference/index.html docs/trees/index.html docs/api/index.html docs/api/reference/index.html
-  docs/mcp/index.html references/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js sitemap.xml)
+  docs/mcp/index.html references/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js version.json sitemap.xml)
 grep -Eq 'class="?ver[" >]' "$PUBLIC/index.html" || { echo "footer version missing" >&2; exit 1; }
 for f in "${required[@]}"; do
   [ -f "$PUBLIC/$f" ] || { echo "missing: $f" >&2; exit 1; }
