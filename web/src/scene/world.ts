@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { Runtime, type Status } from '../engine/bt';
+import { SLOTS, Squad, type Slot } from './squad';
 import type { NodeSpec } from '../spec';
 import { DamageTimer } from './timer';
 import { AgentBehaviors, type Anim, type Body, type Vec2 } from './behaviors';
@@ -140,6 +141,7 @@ export interface AgentOptions {
   name: string;
   faction?: string | undefined;
   role?: string | undefined;
+  slot?: string | undefined;
   model: string;
   x: number;
   z: number;
@@ -233,7 +235,12 @@ export class Agent implements Body {
     if (this.faction === undefined) return this.world.beacon;
     return this.world.nearestEnemy(this)?.pos;
   }
+  /** The squad slot this agent fills, when it shares one tree with others. */
+  get slot(): Slot | undefined {
+    return SLOTS.find((s) => s === this.opts.slot);
+  }
   get leader(): Vec2 | undefined {
+    if (this.slot) return this.world.slotLeader()?.pos;
     return this.world.commanderOf(this)?.pos;
   }
   get commanderAlive(): boolean {
@@ -265,7 +272,12 @@ export class Agent implements Body {
     this.runtime.reset();
   }
 
-  update(dt: number): void {
+  /** Squad agents are ticked together by the world; they only clear last frame's animation here. */
+  prepare(): void {
+    this.wantAnim = 'idle';
+  }
+
+  update(dt: number, squadStatus?: Status): void {
     this.sinceHit += dt;
     if (this.health <= 0 && !this.dead) this.dead = true;
     if (this.dead) {
@@ -277,11 +289,16 @@ export class Agent implements Body {
       this.mixer?.update(dt);
       return;
     }
-    this.wantAnim = 'idle';
-    this.rootStatus = this.runtime.tick(dt);
+    if (squadStatus === undefined) {
+      this.wantAnim = 'idle';
+      this.rootStatus = this.runtime.tick(dt);
+    } else {
+      this.rootStatus = squadStatus;
+    }
     const color = STATUS_COLOR[this.rootStatus];
     this.bar.set(this.health);
-    this.label.set(`${this.opts.name}: ${this.said || '…'}`, color);
+    const tag = this.slot ? ` [${this.slot}]` : '';
+    this.label.set(`${this.opts.name}${tag}: ${this.said || '…'}`, color);
     this.said = '';
     this.applyAnim();
     this.mixer?.update(dt);
@@ -521,6 +538,27 @@ export class World {
     return undefined;
   }
 
+  /** The living agent in the leader slot, for squad members that follow it. */
+  slotLeader(): Agent | undefined {
+    for (const a of this.agents.values()) if (a.slot === 'leader' && !a.isDead) return a;
+    return undefined;
+  }
+
+  private squad: { key: string; squad: Squad } | undefined;
+
+  /** One Squad per set of living slotted agents; rebuilt only when that set changes. */
+  private squadFor(members: Agent[]): Squad | undefined {
+    const first = members[0];
+    if (!first) return undefined;
+    const key = members.map((m) => `${m.id}:${m.slot}`).join(',');
+    if (this.squad?.key !== key) {
+      const bodies: Partial<Record<Slot, Body>> = {};
+      for (const m of members) if (m.slot) bodies[m.slot] = m;
+      this.squad = { key, squad: new Squad(first.opts.spec, bodies) };
+    }
+    return this.squad.squad;
+  }
+
   setBeacon(p: Vec2 | undefined): void {
     this.beacon = p;
     this.beaconMesh.visible = p !== undefined;
@@ -564,7 +602,10 @@ export class World {
 
   private frame(dt: number): void {
     this.timer.update(dt, this.agents.values());
-    for (const a of this.agents.values()) a.update(dt);
+    const members = [...this.agents.values()].filter((a) => a.slot && !a.isDead);
+    for (const m of members) m.prepare();
+    const squadStatus = this.squadFor(members)?.tick(dt);
+    for (const a of this.agents.values()) a.update(dt, a.slot ? squadStatus : undefined);
     this.separate();
     for (let i = this.flashes.length - 1; i >= 0; i--) {
       const f = this.flashes[i];

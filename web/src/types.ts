@@ -65,6 +65,8 @@ export interface SceneAgent {
   faction?: string;
   /** Built-in scenes only: 'commander' lets allies of the faction know when it falls. */
   role?: string;
+  /** Built-in squad scenes only: the slot (leader, flanker, support) this agent fills in a shared tree. */
+  slot?: string;
   model: string;
   x: number;
   z: number;

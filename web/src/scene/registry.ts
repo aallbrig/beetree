@@ -92,6 +92,30 @@ export const SCENES: SceneDef[] = [
       },
     ],
   },
+  {
+    id: 'squad',
+    title: 'Demo scene 3',
+    controls: ['intruder'],
+    agents: [
+      { name: 'Leader', treeId: 'example:squad', slot: 'leader', model: 'character-h', x: 0, z: 2 },
+      {
+        name: 'Flanker',
+        treeId: 'example:squad',
+        slot: 'flanker',
+        model: 'character-b',
+        x: -6,
+        z: 6,
+      },
+      {
+        name: 'Support',
+        treeId: 'example:squad',
+        slot: 'support',
+        model: 'character-d',
+        x: 5,
+        z: 7,
+      },
+    ],
+  },
 ];
 
 export function sceneHasControl(scene: SceneDef | undefined, control: string): boolean {
