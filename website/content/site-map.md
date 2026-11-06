@@ -10,6 +10,7 @@ Every part of BeeTreeCraft, grouped the way the top navigation groups it. Machin
 
 - [Builder](/app/): design a behavior tree and watch agents run it in 3D
 - [Explore](/app/#/explore): browse templates and agents
+- [Download the CLI](/get/): archives, checksums and the install script
 
 ## Learn
 

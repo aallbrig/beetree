@@ -6,7 +6,7 @@ PUBLIC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/website/public"
 
 required=(index.html 404.html docs/index.html docs/manual/index.html docs/cli/index.html
   docs/cli-reference/index.html docs/trees/index.html docs/api/index.html docs/api/reference/index.html
-  docs/mcp/index.html docs/tui/index.html references/index.html resources/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js version.json sitemap.xml site-map/index.html)
+  docs/mcp/index.html docs/tui/index.html references/index.html resources/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js version.json sitemap.xml site-map/index.html get/index.html install.sh)
 grep -Eq 'class="?ver[" >]' "$PUBLIC/index.html" || { echo "footer version missing" >&2; exit 1; }
 grep -Eq 'id="?menu-toggle"?[^>]*aria-label' "$PUBLIC/index.html" || { echo "menu toggle must be an icon button with aria-label" >&2; exit 1; }
 grep -q 'prefers-color-scheme' "$PUBLIC/js/site.js" || { echo "site.js must follow prefers-color-scheme until the visitor chooses" >&2; exit 1; }
@@ -156,3 +156,10 @@ while IFS= read -r link; do
   echo "broken link: $link" >&2; bad=1
 done < <(grep -rhoE 'href="/[^"]*"' "$PUBLIC" --include=*.html | sed -E 's/^href="//; s/"$//' | sort -u)
 exit $bad
+
+# the Downloads page leads with the install script and the nav and CLI docs link to it
+grep -q 'install.sh' "$PUBLIC/get/index.html" || { echo "get page must show the install script" >&2; exit 1; }
+grep -q 'downloads/latest/latest.json' "$PUBLIC/get/index.html" || { echo "get page must read latest.json" >&2; exit 1; }
+grep -q 'sha256sum' "$PUBLIC/get/index.html" || { echo "get page must explain checksum verification" >&2; exit 1; }
+grep -Eq 'href="?/get/[" >]' "$PUBLIC/index.html" || { echo "nav must link /get/" >&2; exit 1; }
+grep -q 'install.sh' "$PUBLIC/docs/cli/index.html" || { echo "CLI docs must lead with the install script" >&2; exit 1; }
