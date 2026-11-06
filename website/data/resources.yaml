@@ -151,3 +151,17 @@ items:
     kind: Tool
     summary: "The Nav2 documentation page on how a production robot navigation stack uses behavior trees to orchestrate independent planner, controller and recovery servers. Shows a minimal replanning tree in XML and lists the provided trees, from point-to-point navigation to following a dynamic point. A short overview with links to a node-by-node walkthrough of the default tree."
     score: 12
+  - title: "On the Implementation of Behavior Trees in Robotics"
+    url: "https://arxiv.org/abs/2106.15227"
+    kind: Paper
+    year: "2021"
+    author: "Michele Colledanchise and Lorenzo Natale"
+    summary: "A paper on what changes when behavior trees leave the whiteboard and run on real robots. It compares how open-source libraries handle asynchronous actions, parameter passing and memory nodes, and shows where each fits in a robot software architecture, with a use case. Read it before choosing or writing a runtime, since the library differences decide how your tree behaves."
+    score: 12
+  - title: "A principled analysis of Behavior Trees and their generalisations"
+    url: "https://arxiv.org/abs/2008.11906"
+    kind: Paper
+    year: "2020"
+    author: "Oliver Biggar, Mohammad Zamani and Iman Shames"
+    summary: "A formal look at why behavior trees work, built on two principles: reactiveness and modularity. It tests them against hard use cases from the literature and proposes generalised trees (k-BTs) that handle those cases while keeping the principles. Dense in places, but it explains why a tree stays easy to compose and reuse as it grows."
+    score: 13
