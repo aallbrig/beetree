@@ -13,6 +13,7 @@
     </div>
     <p class="muted install-note">Install the CLI, or <a href="/app/#/explore">try Explore</a> and the <a href="/app/#/builder">builder</a> now: no account needed to build. Saving asks you to sign in.</p>
     <a href="/app/#/explore" class="shot" aria-label="Open the live 3D demo">
+      <span class="shot-live" aria-hidden="true">Live demo: click to run</span>
       <img src="/img/explore.jpg" width="1032" height="672" alt="Three blocky characters in a 3D meadow, each labelled with the behavior tree node it is running: Patroller, Coward and Guard." fetchpriority="high">
     </a>
   </div>
@@ -35,6 +36,7 @@
     <li><strong id="stat-docs">{{ len (where .Site.RegularPages "Section" "docs") }}</strong><span>documentation pages</span></li>
     <li><strong id="stat-resources">{{ len .Site.Data.resources.items }}</strong><span>vetted reading-list resources</span></li>
     <li><strong id="stat-trees" data-api="https://api.beetreecraft.com/v1/public/trees">-</strong><span>public trees shared (live)</span></li>
+    {{ with getenv "HUGO_RELEASE_COUNT" }}<li><strong id="stat-releases">{{ . }}</strong><span>releases shipped</span></li>{{ end }}
     {{ with getenv "HUGO_SITE_VERSION" }}<li><strong id="stat-version">{{ . }}</strong><span>current release</span></li>{{ end }}
   </ul>
   <script>

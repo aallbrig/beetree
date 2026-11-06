@@ -254,6 +254,8 @@ tasks:
     env:
       HUGO_SITE_VERSION:
         sh: echo "${HUGO_SITE_VERSION:-$(git describe --tags --always)}"
+      HUGO_RELEASE_COUNT:
+        sh: echo "${HUGO_RELEASE_COUNT:-$(git tag --list 'v*' | wc -l | tr -d ' ')}"
     cmds:
       - hugo --minify --gc
       - printf '{"version":"%s"}\n' "$HUGO_SITE_VERSION" > public/version.json

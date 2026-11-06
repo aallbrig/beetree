@@ -78,6 +78,8 @@ for id in stat-docs stat-resources stat-trees; do
 done
 tr -d '\n' < "$PUBLIC/index.html" | grep -Eq 'id="?stat-resources"?>[1-9][0-9]*<' || { echo "stat-resources must be a real non-zero count" >&2; exit 1; }
 tr -d '\n' < "$PUBLIC/index.html" | grep -Eq 'id="?stat-docs"?>[1-9][0-9]*<' || { echo "stat-docs must be a real non-zero count" >&2; exit 1; }
+tr -d '\n' < "$PUBLIC/index.html" | grep -Eq 'id="?stat-releases"?>[1-9][0-9]*<' || { echo "stat-releases must be a real non-zero count" >&2; exit 1; }
+tr -d '\n' < "$PUBLIC/index.html" | grep -Eq 'class="?shot-live' || { echo "home demo needs its live badge" >&2; exit 1; }
 grep -Fq 'api.beetreecraft.com/v1/public/trees' "$PUBLIC/index.html" || { echo "home proof must read the public snapshot" >&2; exit 1; }
 
 # sign-up belongs below the fold: the hero section must not link to it
