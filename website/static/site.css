@@ -28,7 +28,7 @@ pre,code{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}pre{backgroun
 
 .shot{display:block;margin:36px auto 0;max-width:900px;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgb(0 0 0 / 22%);border:1px solid var(--line)}.shot img{display:block;width:100%;height:auto}
 
-@media(max-width:800px){.menu-toggle{display:inline-block}.top nav .links{display:none;flex-basis:100%;flex-direction:column;align-items:stretch}.top nav .links.open{display:flex}.top nav .links .spacer{display:none}.top nav .links a,.top nav .links .btn{padding:12px;text-align:left}.hero{padding:44px 0 36px}.wrap{padding:0 16px}}
+@media(max-width:800px){.menu-toggle{display:inline-flex}.top nav .links{display:none;flex-basis:100%;flex-direction:column;align-items:stretch}.top nav .links.open{display:flex}.top nav .links .spacer{display:none}.top nav .links a,.top nav .links .btn{padding:12px;text-align:left}.hero{padding:44px 0 36px}.wrap{padding:0 16px}}
 
 /* nav groups: hover/focus dropdowns on desktop, flat lists in the mobile menu */
 .top nav .grp{position:relative}
@@ -45,7 +45,7 @@ body[data-lang] @media(max-width:800px){
 }
 /* the hamburger only exists on narrow screens; .btn must not re-show it on desktop */
 .top nav .menu-toggle{display:none}
-@media(max-width:800px){.top nav .menu-toggle{display:inline-block}}
+@media(max-width:800px){.top nav .menu-toggle{display:inline-flex}}
 
 /* tabbed code blocks: the agnostic algorithm first, engines behind tabs under it */
 .codetabs{margin:16px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
