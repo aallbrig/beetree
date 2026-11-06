@@ -14,6 +14,7 @@ import {
   rename,
   findProblems,
   stringifySpec,
+  parseValidatorError,
   walk,
 } from './spec';
 
@@ -144,5 +145,29 @@ describe('restructuring', () => {
     const leaf = newSpec();
     expect(typeof indent(leaf.tree, [0, 1])).toBe('string');
     expect(getNode(leaf.tree, [0, 1])?.name).toBe('chase_target');
+  });
+});
+
+describe('parseValidatorError', () => {
+  it('maps a server error to the node path it names', () => {
+    expect(parseValidatorError('tree: type is required')).toEqual({
+      path: [],
+      message: 'type is required',
+    });
+    expect(
+      parseValidatorError(
+        'tree.children[1].children[0]: composite "sequence" must have at least one child',
+      ),
+    ).toEqual({
+      path: [1, 0],
+      message: 'composite "sequence" must have at least one child',
+    });
+  });
+
+  it('leaves errors that name no node unpathed', () => {
+    expect(parseValidatorError('metadata.name is required')).toEqual({
+      path: null,
+      message: 'metadata.name is required',
+    });
   });
 });

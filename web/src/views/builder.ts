@@ -25,6 +25,7 @@ import {
   rename,
   findProblems,
   stringifySpec,
+  parseValidatorError,
   type NodeType,
   type Path,
   type TreeSpec,
@@ -661,7 +662,26 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     api.validate(stringifySpec(spec)).then(
       (r) => {
         if (r.valid) toast(`Valid — ${r.nodeCount} nodes.`);
-        else status.textContent = r.errors.join(' · ');
+        else {
+          clear(status);
+          status.style.color = 'var(--warn)';
+          for (const e of r.errors) {
+            const { path, message } = parseValidatorError(e);
+            const target = path;
+            if (target && getNode(spec.tree, target)) {
+              const b = h(
+                'button',
+                { class: 'btn', type: 'button', 'data-validation-error': '' },
+                message,
+              );
+              b.addEventListener('click', () => {
+                selected = target;
+                refresh();
+              });
+              status.append(h('div', {}, b));
+            } else status.append(h('div', { 'data-validation-error': '' }, message));
+          }
+        }
       },
       () => {
         toast('Could not reach the validator.', 'err');
