@@ -293,6 +293,35 @@ paths:
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
         '429': {$ref: '#/components/responses/Error'}
+  /v1/trees/{id}/report:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    post:
+      summary: Report a public tree, such as an unchanged copy of someone else's work
+      description: Files a report for moderators against a public tree. Private trees answer 404. Reporting twice is accepted and counted once per reporter.
+      operationId: reportTree
+      tags: [Trees]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: {type: string, maxLength: 500}
+      responses:
+        '201':
+          description: The report
+          content:
+            application/json:
+              schema: {type: object}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/trees/{id}/like:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -917,6 +946,7 @@ components:
         commentCount: {type: integer}
         likedByMe: {type: boolean}
         remixedFrom: {$ref: '#/components/schemas/Lineage'}
+        unchangedCopy: {type: boolean, description: 'On a single read, true for a public remix whose spec still matches its original.'}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
     Lineage:

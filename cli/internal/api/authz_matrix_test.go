@@ -104,6 +104,7 @@ var authzMatrix = map[string][5]int{
 	"PUT /v1/trees/{id}":                         {401, 200, 404, 403, 200},
 	"DELETE /v1/trees/{id}":                      {401, 204, 404, 403, 204},
 	"POST /v1/trees/{id}/remix":                  {401, 404, 404, 403, 404},
+	"POST /v1/trees/{id}/report":                 {401, 404, 404, 403, 404},
 	"PUT /v1/trees/{id}/like":                    {401, 200, 404, 403, 200},
 	"DELETE /v1/trees/{id}/like":                 {401, 200, 404, 403, 200},
 	"GET /v1/trees/{id}/comments":                {404, 200, 404, 200, 200},

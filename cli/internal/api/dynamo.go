@@ -495,8 +495,10 @@ func (d *DynamoStore) ListPosts(ctx context.Context, threadID string) ([]Post, e
 }
 
 func (d *DynamoStore) AddReport(ctx context.Context, r Report) error {
-	if _, err := d.GetThread(ctx, r.ThreadID); err != nil {
-		return err
+	if r.Kind != "tree" { // tree reports are checked by the handler
+		if _, err := d.GetThread(ctx, r.ThreadID); err != nil {
+			return err
+		}
 	}
 	data, err := json.Marshal(r)
 	if err != nil {

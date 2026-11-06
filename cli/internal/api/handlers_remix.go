@@ -209,3 +209,34 @@ func (s *Server) remixScene(w http.ResponseWriter, r *http.Request) {
 	sc.RemixedFrom = s.withLineageState(r, sc.RemixedFrom)
 	writeJSON(w, http.StatusCreated, sceneRemix{Scene: sc, Trees: trees})
 }
+
+// reportTree files a report against a public tree, for example an unchanged
+// copy of someone else's work. Reporting twice is counted once.
+func (s *Server) reportTree(w http.ResponseWriter, r *http.Request) {
+	c, ok := requireAuth(w, r)
+	if !ok {
+		return
+	}
+	t, err := s.Store.GetTree(r.Context(), r.PathValue("id"))
+	if err != nil || t.Visibility != VisibilityPublic {
+		writeErr(w, http.StatusNotFound, "not_found", "not found")
+		return
+	}
+	var req struct {
+		Reason string `json:"reason"`
+	}
+	if !readJSON(w, r, &req) {
+		return
+	}
+	reason := clip(req.Reason, 500)
+	if reason == "" {
+		writeErr(w, http.StatusBadRequest, "invalid_request", "reason is required")
+		return
+	}
+	rep := Report{ID: s.NewID(), ThreadID: "tree:" + t.ID, Kind: "tree", ReporterID: c.Sub, Reason: reason, CreatedAt: s.stamp()}
+	if err := s.Store.AddReport(r.Context(), rep); err != nil {
+		s.storeErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, rep)
+}

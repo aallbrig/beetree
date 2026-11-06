@@ -33,6 +33,8 @@ type Tree struct {
 	UpdatedAt    string   `json:"updatedAt"`
 	LikedByMe    bool     `json:"likedByMe,omitempty"`
 	RemixedFrom  *Lineage `json:"remixedFrom,omitempty"`
+	// UnchangedCopy is derived on single reads: a public remix whose spec still matches its original.
+	UnchangedCopy bool `json:"unchangedCopy,omitempty"`
 }
 
 // LineageRef is a frozen record of an original at the moment it was remixed.
@@ -127,9 +129,11 @@ type Post struct {
 
 // Report flags a thread (PostID empty) or one of its posts for review.
 type Report struct {
-	ID         string `json:"id"`
-	ThreadID   string `json:"threadId"`
-	PostID     string `json:"postId,omitempty"`
+	ID       string `json:"id"`
+	ThreadID string `json:"threadId"`
+	PostID   string `json:"postId,omitempty"`
+	// Kind is "tree" when ThreadID holds a tree id; empty for forum reports.
+	Kind       string `json:"kind,omitempty"`
 	ReporterID string `json:"reporterId"`
 	Reason     string `json:"reason"`
 	CreatedAt  string `json:"createdAt"`
