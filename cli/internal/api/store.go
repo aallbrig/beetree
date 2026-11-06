@@ -46,6 +46,9 @@ type Store interface {
 	PutAPIKey(ctx context.Context, k APIKey) error
 	GetAPIKeyByHash(ctx context.Context, hash string) (APIKey, error)
 	ListAPIKeys(ctx context.Context, ownerID string) ([]APIKey, error)
+	// TouchAPIKey sets lastUsedAt on an existing key; it never recreates a
+	// revoked key (ErrNotFound).
+	TouchAPIKey(ctx context.Context, hash, usedAt string) error
 	// DeleteAPIKey removes the owner's key with this id; ErrNotFound otherwise.
 	DeleteAPIKey(ctx context.Context, ownerID, id string) error
 

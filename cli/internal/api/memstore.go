@@ -392,3 +392,15 @@ func (m *MemStore) DeleteAPIKey(_ context.Context, ownerID, id string) error {
 	}
 	return ErrNotFound
 }
+
+func (m *MemStore) TouchAPIKey(_ context.Context, hash, usedAt string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	k, ok := m.keys[hash]
+	if !ok {
+		return ErrNotFound
+	}
+	k.LastUsedAt = usedAt
+	m.keys[hash] = k
+	return nil
+}

@@ -111,7 +111,7 @@ func (s *Server) Handler() http.Handler {
 	}
 	mux := http.NewServeMux()
 	for _, r := range s.Routes() {
-		mux.HandleFunc(r.Method+" "+r.Path, r.Handler)
+		mux.HandleFunc(r.Method+" "+r.Path, scoped(routeScopes[r.Method+" "+r.Path], r.Handler))
 	}
 	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		writeErr(w, http.StatusNotFound, "not_found", "no such route")
@@ -138,7 +138,13 @@ func (s *Server) middleware(next http.Handler) http.Handler {
 				writeErr(w, http.StatusUnauthorized, "unauthenticated", "invalid or revoked API key")
 				return
 			}
+			if k.expired(s.Now()) {
+				writeErr(w, http.StatusUnauthorized, "unauthenticated", "this API key has expired; create a new one")
+				return
+			}
+			s.touchKey(r.Context(), k)
 			ctx := WithClaims(r.Context(), Claims{Sub: k.OwnerID, Username: k.Username})
+			ctx = context.WithValue(ctx, keyScopesCtx{}, k.effectiveScopes())
 			r = r.WithContext(context.WithValue(ctx, viaKeyCtx{}, true))
 		} else if tok != "" && s.Auth != nil {
 			c, err := s.Auth.Verify(r.Context(), tok)

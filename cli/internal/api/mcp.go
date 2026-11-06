@@ -237,6 +237,11 @@ func (s *Server) mcpCall(w http.ResponseWriter, r *http.Request, req rpcRequest)
 			return
 		}
 	}
+	if granted, ok := checkScope(r.Context(), toolScopes[p.Name]); !ok {
+		need := toolScopes[p.Name]
+		writeRPC(w, rpcResponse{ID: req.ID, Result: toolText("insufficient_scope: this API key lacks "+need+" (granted: "+strings.Join(granted, ", ")+"). Create a key that includes it.", true)})
+		return
+	}
 	claims, authed := ClaimsFrom(r.Context())
 	if tool.needsAuth && !authed {
 		writeRPC(w, rpcResponse{ID: req.ID, Result: toolText("This tool needs a signed-in user. Send an Authorization: Bearer token.", true)})

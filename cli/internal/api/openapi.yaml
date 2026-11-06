@@ -641,7 +641,10 @@ paths:
       summary: Create an API key
       operationId: createKey
       tags: [Account]
-      description: Needs a signed-in session. The secret is returned once; only its hash is stored. Up to 5 keys per account.
+      description: |
+        Needs a signed-in session. The secret is returned once; only its hash is stored. Up to 5 keys per account.
+
+        A key has no scopes by default: send a `preset` or an explicit `scopes` list (not both). Scopes are `resource:action` and chain upward, so `delete` implies `write` implies `read`. Resources: trees, scenes, forum (read, write, delete); profile (read, write); keys (read, write). Presets: `read-only` (all read), `read-write` (read and write, no delete), `full` (everything except keys). Scopes cannot change after creation. A call outside the key's scopes returns 403 `insufficient_scope` with the `required` scope and the `granted` list; an expired or revoked key returns 401. Keys made before scopes existed act as `full`. A key can never manage keys, whatever its scopes.
       security: [{bearerAuth: []}]
       requestBody:
         required: true
@@ -652,6 +655,11 @@ paths:
               required: [name]
               properties:
                 name: {type: string, maxLength: 60}
+                preset: {type: string, enum: [read-only, read-write, full]}
+                scopes:
+                  type: array
+                  items: {type: string, example: 'trees:read'}
+                expiry: {type: string, enum: [30d, 90d, 365d, never], default: 90d}
       responses:
         '201':
           description: Created; copy the key now
@@ -799,6 +807,13 @@ components:
         name: {type: string}
         prefix: {type: string, description: 'First characters of the key, for recognition'}
         createdAt: {type: string, format: date-time}
+        scopes:
+          type: array
+          items: {type: string}
+          description: 'Effective scopes; keys made before scopes existed show the full preset'
+        legacy: {type: boolean, description: 'True for a key made before scopes existed'}
+        expiresAt: {type: string, format: date-time, description: 'Absent when the key never expires'}
+        lastUsedAt: {type: string, format: date-time, description: 'Updated at most once an hour'}
     Error:
       type: object
       properties:

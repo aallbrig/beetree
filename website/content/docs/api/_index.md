@@ -26,6 +26,18 @@ export BEETREE_API_KEY="btc_<paste your key here>"
 
 You can have up to 5 keys. Revoke one on the same page if it leaks; it stops working immediately. Only a signed-in session can create or revoke keys, so a leaked key cannot mint new ones.
 
+### Key scopes and expiry
+
+A key only does what its scopes allow. Scopes are `resource:action`, and they chain upward: `delete` implies `write` implies `read`. Trees, scenes and forum have read, write and delete; profile has read and write; keys has read and write (an API key can never manage keys, whatever it holds).
+
+| Preset | Grants |
+|---|---|
+| `read-only` | read on trees, scenes, forum and profile |
+| `read-write` | read and write, no delete |
+| `full` | everything except keys |
+
+Creating a key requires a `preset` or a `scopes` list, and an optional `expiry` of `30d`, `90d` (default), `365d` or `never`. Scopes cannot be changed afterwards; create a new key instead. A call outside the key's scopes returns `403` with `{"error":{"code":"insufficient_scope","required":"trees:delete","granted":[...]}}`; an expired or revoked key returns `401`. Keys made before scopes existed behave as `full` until you revoke them. MCP tools follow the same scopes (for example `create_tree` needs `trees:write`).
+
 Send the key in either header:
 
 ```bash
@@ -109,7 +121,7 @@ Manage keys over the API with a sign-in token (a key cannot do this):
 ```bash
 curl -s https://api.beetreecraft.com/v1/keys -H "Authorization: Bearer $TOKEN"
 curl -s -X POST https://api.beetreecraft.com/v1/keys -H "Authorization: Bearer $TOKEN" \
-  -H 'content-type: application/json' -d '{"name":"laptop"}'
+  -H 'content-type: application/json' -d '{"name":"laptop","preset":"read-only"}'
 curl -s -X DELETE https://api.beetreecraft.com/v1/keys/<id> -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -142,7 +154,7 @@ Errors are JSON: `{"error": {"code": "invalid_spec", "message": "..."}}`.
 |---|---|
 | 400 | Bad request body |
 | 401 | Missing, invalid, revoked or expired key or token |
-| 403 | Not allowed (for example deleting someone else's comment, or managing API keys with an API key) |
+| 403 | Not allowed (for example deleting someone else's comment, managing API keys with an API key, or a key without the needed scope: code `insufficient_scope`) |
 | 404 | Not found, or private and not yours |
 | 413 | Request body too large (512 KB limit) |
 | 422 | The spec is invalid; the message lists why |
