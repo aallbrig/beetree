@@ -115,7 +115,7 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 				"prompts":   map[string]any{"listChanged": false},
 			},
 			"serverInfo":   map[string]string{"name": "beetreecraft", "version": s.Version},
-			"instructions": "BeeTree authors engine-agnostic behavior trees. Pass specs as .beetree.yaml text. Tools that touch an account need an Authorization: Bearer token.",
+			"instructions": "BeeTree authors engine-agnostic behavior trees. Pass specs as .beetree.yaml text. Read beetree://schema/beetree for the format and beetree://examples/patrol for a working tree. Workflow: validate_tree before simulate_start; simulate_answer keeps no state, so replay every earlier answer in order each call. Tools that touch an account need an Authorization: Bearer token.",
 		})})
 	case "ping":
 		writeRPC(w, rpcResponse{ID: req.ID, Result: jsonRaw(map[string]any{})})

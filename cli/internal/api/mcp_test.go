@@ -50,6 +50,11 @@ func TestMCPHandshake(t *testing.T) {
 	assert.Equal(t, mcpProtocolVersion, res["protocolVersion"])
 	assert.Equal(t, "beetreecraft", res["serverInfo"].(map[string]any)["name"])
 
+	ins := res["instructions"].(string)
+	for _, want := range []string{"beetree://schema/beetree", "beetree://examples/patrol", "validate_tree", "simulate_answer"} {
+		assert.Contains(t, ins, want)
+	}
+
 	code, _ = rpc(h, "", nil, "notifications/initialized", nil)
 	assert.Equal(t, 202, code, "notifications get no body")
 
