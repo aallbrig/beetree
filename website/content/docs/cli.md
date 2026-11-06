@@ -24,7 +24,7 @@ cd beetreecraft && make install
 ## Your first tree
 
 ```bash
-beetree init                     # creates a project with trees/ and generated/
+beetree init                     # creates beetree.yaml, trees/ and subtrees/
 beetree new guard                # creates trees/guard.beetree.yaml
 beetree builder trees/guard.beetree.yaml   # interactive terminal editor
 beetree validate trees/guard.beetree.yaml
