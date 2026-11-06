@@ -9,6 +9,12 @@ required=(index.html 404.html docs/index.html docs/manual/index.html docs/cli/in
   docs/mcp/index.html docs/tui/index.html references/index.html resources/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js version.json sitemap.xml site-map/index.html)
 grep -Eq 'class="?ver[" >]' "$PUBLIC/index.html" || { echo "footer version missing" >&2; exit 1; }
 grep -Eq 'id="?menu-toggle"?[^>]*aria-label' "$PUBLIC/index.html" || { echo "menu toggle must be an icon button with aria-label" >&2; exit 1; }
+for p in index.html docs/index.html learn/building-blocks/index.html; do
+  for t in 'property="?og:title' 'property="?og:image"? content="?https://[^" >]*/img/explore.jpg' 'name="?twitter:card'; do
+    grep -Eq "$t" "$PUBLIC/$p" || { echo "$p missing social card tag: $t" >&2; exit 1; }
+  done
+done
+[ -s "$PUBLIC/img/explore.jpg" ] || { echo "missing: img/explore.jpg" >&2; exit 1; }
 grep -q 'public/trees' "$PUBLIC/docs/api/index.html" || { echo "docs/api must document /v1/public/trees" >&2; exit 1; }
 for d in docs/api docs/mcp; do
   grep -q 'X-API-Key' "$PUBLIC/$d/index.html" || { echo "$d must document X-API-Key" >&2; exit 1; }
