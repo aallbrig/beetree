@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readdirSync, readFileSync } from 'node:fs';
+import { parse } from 'yaml';
 import {
   addChild,
   countNodes,
@@ -185,4 +187,19 @@ describe('findProblems fix hints', () => {
       expect(p?.fix.length).toBeGreaterThan(10);
     }
   });
+});
+
+describe('example trees survive import then export', () => {
+  const dir = new URL('../../examples/', import.meta.url);
+  const files = readdirSync(dir).filter((f) => f.endsWith('.beetree.yaml'));
+  it('finds the scene 2 trees', () => {
+    for (const n of ['trooper', 'skirmisher', 'shieldbearer', 'commander'])
+      expect(files).toContain(`${n}.beetree.yaml`);
+  });
+  for (const f of files) {
+    it(`${f} loses nothing`, () => {
+      const text = readFileSync(new URL(f, dir), 'utf8');
+      expect(parse(stringifySpec(parseSpec(text)))).toEqual(parse(text));
+    });
+  }
 });
