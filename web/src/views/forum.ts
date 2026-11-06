@@ -4,6 +4,38 @@ import { clear, formatDate, h, toast } from '../dom';
 import { queueRows, reportBody, REPORT_REASONS } from '../report';
 import { navigate, type Ctx } from '../router';
 
+const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
+
+/** A character counter under a text field; goes amber near the limit. */
+function counted(field: HTMLInputElement | HTMLTextAreaElement, max: number): HTMLElement {
+  const n = h('div', { class: 'hint counter', 'aria-live': 'off' });
+  const paint = (): void => {
+    n.textContent = `${field.value.length} / ${max}`;
+    n.classList.toggle('near', field.value.length > max * 0.9);
+  };
+  field.addEventListener('input', paint);
+  paint();
+  return n;
+}
+
+/** Runs an async post once at a time, so a double tap cannot post twice. */
+function once(btn: HTMLButtonElement, busy: string, run: () => Promise<void>): void {
+  const label = btn.textContent;
+  btn.addEventListener('click', () => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = busy;
+    run()
+      .catch((e: unknown) => {
+        toast(e instanceof ApiError ? e.message : 'Could not post.', 'err');
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.textContent = label;
+      });
+  });
+}
+
 /** A "Report" button that opens an inline reason picker; postId omitted reports the thread. */
 function reportControl(threadId: string, postId?: string): HTMLElement {
   const wrap = h('span', { class: 'report' });
@@ -88,9 +120,14 @@ export async function forumView(ctx: Ctx): Promise<void> {
         { class: 'card' },
         h('h3', {}, h('a', { href: `#/forum/${t.id}` }, t.title)),
         h(
+          'p',
+          { class: 'excerpt' },
+          t.body.length > 140 ? `${t.body.slice(0, 140).trimEnd()}…` : t.body,
+        ),
+        h(
           'div',
           { class: 'small muted' },
-          `${t.author} · ${t.postCount} replies · active ${formatDate(t.lastActivity)}`,
+          `${t.author} · ${plural(t.postCount, 'reply', 'replies')} · active ${formatDate(t.lastActivity)}`,
         ),
       ),
     );
@@ -110,15 +147,13 @@ export async function forumView(ctx: Ctx): Promise<void> {
     'aria-label': 'Body',
   });
   const go = h('button', { class: 'btn primary', type: 'button' }, 'Start thread');
-  go.addEventListener('click', () => {
-    api.createThread(title.value, body.value).then(
-      (t) => {
-        navigate(`/forum/${t.id}`);
-      },
-      (e: unknown) => {
-        toast(e instanceof ApiError ? e.message : 'Could not post.', 'err');
-      },
-    );
+  once(go, 'Posting…', async () => {
+    if (!title.value.trim() || !body.value.trim()) {
+      toast('Add a title and some text first.', 'err');
+      return;
+    }
+    const t = await api.createThread(title.value, body.value);
+    navigate(`/forum/${t.id}`);
   });
   ctx.root.append(
     h('h1', {}, 'Forum'),
@@ -128,8 +163,15 @@ export async function forumView(ctx: Ctx): Promise<void> {
           'div',
           { class: 'card stack', style: 'margin-bottom:20px' },
           h('h2', {}, 'New thread'),
+          h(
+            'p',
+            { class: 'small muted' },
+            'Plain text only. Links, images and formatting are not supported.',
+          ),
           title,
+          counted(title, 120),
           body,
+          counted(body, 5000),
           go,
         )
       : h(
@@ -161,7 +203,7 @@ export async function threadView(ctx: Ctx): Promise<void> {
             ` · ${formatDate(p.createdAt)} · `,
             reportControl(id, p.id),
           ),
-          h('div', {}, p.body),
+          h('div', { class: 'post-body' }, p.body),
         ),
       );
     }
@@ -173,21 +215,19 @@ export async function threadView(ctx: Ctx): Promise<void> {
     'aria-label': 'Reply',
   });
   const send = h('button', { class: 'btn primary', type: 'button' }, 'Reply');
-  send.addEventListener('click', () => {
+  once(send, 'Posting…', async () => {
     if (!isSignedIn()) {
       navigate(`/signin?next=${encodeURIComponent(`/forum/${id}`)}`);
       return;
     }
-    api.addPost(id, reply.value).then(
-      () =>
-        api.thread(id).then((d) => {
-          reply.value = '';
-          paint(d.posts);
-        }),
-      (e: unknown) => {
-        toast(e instanceof ApiError ? e.message : 'Could not reply.', 'err');
-      },
-    );
+    if (!reply.value.trim()) {
+      toast('Write something first.', 'err');
+      return;
+    }
+    await api.addPost(id, reply.value);
+    const d = await api.thread(id);
+    reply.value = '';
+    paint(d.posts);
   });
   ctx.root.append(
     h('p', {}, h('a', { href: '#/forum' }, '← All threads')),
@@ -201,9 +241,17 @@ export async function threadView(ctx: Ctx): Promise<void> {
         `${data.thread.author} · ${formatDate(data.thread.createdAt)} · `,
         reportControl(id),
       ),
-      h('p', {}, data.thread.body),
+      h('div', { class: 'post-body' }, data.thread.body),
     ),
     posts,
-    h('div', { class: 'card stack' }, h('h2', {}, 'Reply'), reply, send),
+    h(
+      'div',
+      { class: 'card stack' },
+      h('h2', {}, 'Reply'),
+      h('p', { class: 'small muted' }, 'Plain text only.'),
+      reply,
+      counted(reply, 5000),
+      send,
+    ),
   );
 }

@@ -732,3 +732,20 @@ input[type='date'] {
   -webkit-appearance: none;
   appearance: none;
 }
+
+/* forum: text only, so keep the writer's line breaks and never overflow on a phone */
+.post-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.excerpt {
+  margin: 4px 0 6px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.counter {
+  text-align: right;
+}
+.counter.near {
+  color: var(--err);
+}

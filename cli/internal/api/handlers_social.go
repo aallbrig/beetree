@@ -157,7 +157,7 @@ func (s *Server) createThread(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &req) {
 		return
 	}
-	title, body := clip(req.Title, 120), clip(req.Body, 5000)
+	title, body := plainText(req.Title, 120, true), plainText(req.Body, 5000, false)
 	if title == "" || body == "" {
 		writeErr(w, http.StatusBadRequest, "invalid_request", "title and body are required")
 		return
@@ -284,7 +284,7 @@ func (s *Server) addPost(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &req) {
 		return
 	}
-	body := clip(req.Body, 5000)
+	body := plainText(req.Body, 5000, false)
 	if body == "" {
 		writeErr(w, http.StatusBadRequest, "invalid_request", "body is required")
 		return

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode"
 )
 
 const maxBodyBytes = 512 * 1024
@@ -241,6 +242,35 @@ func clip(s string, n int) string {
 		return string([]rune(s)[:n])
 	}
 	return s
+}
+
+// plainText cleans forum text: the forum carries text only, so control
+// characters go, line endings are unified and runs of blank lines collapse.
+// oneLine also folds line breaks into spaces (for titles). Markup is not
+// interpreted anywhere; clients render the result as text.
+func plainText(s string, n int, oneLine bool) string {
+	s = strings.ReplaceAll(strings.ReplaceAll(s, "\r\n", "\n"), "\r", "\n")
+	var b strings.Builder
+	for _, r := range s {
+		switch {
+		case r == '\n' && oneLine, r == '\t':
+			b.WriteRune(' ')
+		case r == '\n':
+			b.WriteRune(r)
+		case unicode.IsControl(r) || r == '\u200b' || r == '\u202e':
+			// dropped: control characters, zero-width space, right-to-left override
+		default:
+			b.WriteRune(r)
+		}
+	}
+	out := b.String()
+	for strings.Contains(out, "\n\n\n") {
+		out = strings.ReplaceAll(out, "\n\n\n", "\n\n")
+	}
+	if oneLine {
+		out = strings.Join(strings.Fields(out), " ")
+	}
+	return clip(out, n)
 }
 
 func listOf[T any](items []T) map[string]any {

@@ -574,3 +574,22 @@ func TestProfileAvatarAndMarketingConsent(t *testing.T) {
 	assert.NotContains(t, string(pub.Body), "marketing", "the consent record is private")
 	assert.Contains(t, string(pub.Body), "a100", "the avatar is public")
 }
+
+func TestPlainText(t *testing.T) {
+	assert.Equal(t, "a\nb", plainText("a\r\nb", 100, false))
+	assert.Equal(t, "a\n\nb", plainText("a\n\n\n\n\nb", 100, false), "blank-line runs collapse")
+	assert.Equal(t, "hi there", plainText("hi\x00\x07 there", 100, false), "control characters go")
+	assert.Equal(t, "ab", plainText("a\u200b\u202eb", 100, false), "invisible and direction tricks go")
+	assert.Equal(t, "one two three", plainText("one\ntwo\tthree", 100, true), "titles stay on one line")
+	assert.Equal(t, "<b>x</b>", plainText("<b>x</b>", 100, false), "markup is kept as literal text, never interpreted")
+	assert.Equal(t, "abc", plainText("abcdef", 3, false))
+}
+
+func TestForumKeepsTextOnly(t *testing.T) {
+	h := newTestServer(t)
+	r := do(h, "POST", "/v1/forum/threads", "alice", map[string]string{"title": "Hello\nworld", "body": "line1\r\n\x00line2"})
+	require.Equal(t, 201, r.Code)
+	got := r.JSON(t)
+	assert.Equal(t, "Hello world", got["title"])
+	assert.Equal(t, "line1\nline2", got["body"])
+}
