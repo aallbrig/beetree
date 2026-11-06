@@ -3,7 +3,8 @@ import { isSignedIn } from '../auth';
 import { outline, type Outline } from '../components/outline';
 import { clear, h, toast } from '../dom';
 import type { Ctx, Cleanup } from '../router';
-import { DEMO_SCENE, populate, type LoadedAgent } from '../scene/loader';
+import { populate, type LoadedAgent } from '../scene/loader';
+import { DEFAULT_SCENE_ID, SCENES, sceneDefById } from '../scene/registry';
 import { World } from '../scene/world';
 import type { SceneAgent } from '../types';
 
@@ -30,7 +31,7 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
   const sceneSelect = h(
     'select',
     { 'aria-label': 'Scene' },
-    h('option', { value: 'demo' }, 'Demo scene'),
+    ...SCENES.map((s) => h('option', { value: s.id }, s.title)),
   );
   const health = h('input', {
     type: 'range',
@@ -146,11 +147,14 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
   } catch {
     toast('Could not load saved scenes.', 'err');
   }
+  const agentsFor = (id: string): SceneAgent[] =>
+    myScenes.get(id) ?? sceneDefById(id)?.agents ?? sceneDefById(DEFAULT_SCENE_ID)?.agents ?? [];
+  if (sceneParam && sceneDefById(sceneParam)) sceneSelect.value = sceneParam;
   if (sceneParam && myScenes.has(sceneParam)) sceneSelect.value = sceneParam;
-  await load(myScenes.get(sceneSelect.value) ?? DEMO_SCENE);
+  await load(agentsFor(sceneSelect.value));
 
   sceneSelect.addEventListener('change', () => {
-    load(myScenes.get(sceneSelect.value) ?? DEMO_SCENE).catch(() => {
+    load(agentsFor(sceneSelect.value)).catch(() => {
       toast('Could not load that scene.', 'err');
     });
   });
