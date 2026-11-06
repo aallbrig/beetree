@@ -151,6 +151,7 @@ func (s *Server) getScene(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusNotFound, "not_found", "not found")
 		return
 	}
+	sc.RemixedFrom = s.withLineageState(r, sc.RemixedFrom)
 	writeJSON(w, http.StatusOK, sc)
 }
 

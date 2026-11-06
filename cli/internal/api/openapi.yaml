@@ -636,6 +636,20 @@ paths:
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
         '429': {$ref: '#/components/responses/Error'}
+  /v1/scenes/{id}/remix:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    post:
+      summary: Remix a public scene into your account
+      description: Copies a public scene and every public tree its agents use into your account as private items, each with remixedFrom lineage. A tree used by two agents is copied once. Private trees in the scene are not copied and their agents lose the tree reference. The call counts as one remix toward the limit of 20 per user per day. The response is the scene plus a trees list of the copies.
+      operationId: remixScene
+      tags: [Scenes]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
+      responses:
+        '201': {description: The private scene copy with its trees}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/keys:
     get:
       summary: List your API keys
@@ -984,5 +998,6 @@ components:
         name: {type: string}
         visibility: {type: string, enum: [public, private]}
         agents: {type: array, items: {$ref: '#/components/schemas/SceneAgent'}}
+        remixedFrom: {$ref: '#/components/schemas/Lineage'}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}

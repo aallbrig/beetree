@@ -716,3 +716,60 @@ func TestPublishUnchangedRemixBlocked(t *testing.T) {
 	changed := strings.Replace(goodSpec, "name: ", "name: x", 1)
 	assert.Equal(t, 200, put(changed, "public"), "a real change publishes")
 }
+
+func TestRemixScene(t *testing.T) {
+	h := newTestServer(t)
+	tr := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec, "name": "Patrol", "visibility": "public"}).JSON(t)["id"].(string)
+	priv := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec, "name": "Hidden"}).JSON(t)["id"].(string)
+	agents := []any{
+		map[string]any{"name": "a", "treeId": tr, "model": "bee", "x": 1, "z": 1},
+		map[string]any{"name": "b", "treeId": tr, "model": "bee", "x": 2, "z": 2},
+		map[string]any{"name": "c", "treeId": priv, "model": "bee", "x": 3, "z": 3},
+	}
+	pubScene := do(h, "POST", "/v1/scenes", "alice", map[string]any{"name": "Meadow", "visibility": "public", "agents": agents})
+	require.Equal(t, 409, pubScene.Code, "private tree needs confirm")
+	sceneID := do(h, "POST", "/v1/scenes", "alice", map[string]any{"name": "Meadow", "visibility": "public", "agents": agents[:2]}).JSON(t)["id"].(string)
+	privScene := do(h, "POST", "/v1/scenes", "alice", map[string]any{"name": "Hid", "agents": []any{}}).JSON(t)["id"].(string)
+
+	assert.Equal(t, 401, do(h, "POST", "/v1/scenes/"+sceneID+"/remix", "", nil).Code)
+	assert.Equal(t, 404, do(h, "POST", "/v1/scenes/"+privScene+"/remix", "bob", nil).Code)
+
+	r := do(h, "POST", "/v1/scenes/"+sceneID+"/remix", "bob", nil)
+	require.Equal(t, 201, r.Code, string(r.Body))
+	got := r.JSON(t)
+	assert.Equal(t, "Meadow (Remix)", got["name"])
+	assert.Equal(t, "private", got["visibility"])
+	assert.Equal(t, "bob", got["ownerId"])
+	lin := got["remixedFrom"].(map[string]any)
+	assert.Equal(t, "scene", lin["kind"])
+	assert.Equal(t, sceneID, lin["id"])
+	assert.Equal(t, "public", lin["state"])
+	trees := got["trees"].([]any)
+	require.Len(t, trees, 1, "a tree shared by two agents is copied once")
+	cp := trees[0].(map[string]any)
+	assert.Equal(t, "private", cp["visibility"])
+	assert.Equal(t, tr, cp["remixedFrom"].(map[string]any)["id"])
+	ag := got["agents"].([]any)
+	require.Len(t, ag, 2)
+	for _, a := range ag {
+		assert.Equal(t, cp["id"], a.(map[string]any)["treeId"])
+	}
+	// the copy is stored and readable by its owner only
+	assert.Equal(t, 200, do(h, "GET", "/v1/scenes/"+got["id"].(string), "bob", nil).Code)
+	assert.Equal(t, 404, do(h, "GET", "/v1/scenes/"+got["id"].(string), "carol", nil).Code)
+
+	// original goes private: lineage state follows
+	do(h, "PUT", "/v1/scenes/"+sceneID, "alice", map[string]any{"name": "Meadow", "visibility": "private", "agents": agents[:2]})
+	assert.Equal(t, "private", do(h, "GET", "/v1/scenes/"+got["id"].(string), "bob", nil).JSON(t)["remixedFrom"].(map[string]any)["state"])
+}
+
+func TestRemixSceneCountsOnce(t *testing.T) {
+	h := newTestServer(t)
+	tr := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec, "visibility": "public"}).JSON(t)["id"].(string)
+	ag := []any{map[string]any{"name": "a", "treeId": tr, "model": "bee"}, map[string]any{"name": "b", "treeId": tr, "model": "bee"}}
+	sc := do(h, "POST", "/v1/scenes", "alice", map[string]any{"name": "S", "visibility": "public", "agents": ag}).JSON(t)["id"].(string)
+	for i := 0; i < RemixLimit; i++ {
+		require.Equal(t, 201, do(h, "POST", "/v1/scenes/"+sc+"/remix", "bob", nil).Code, "remix %d", i)
+	}
+	assert.Equal(t, 429, do(h, "POST", "/v1/scenes/"+sc+"/remix", "bob", nil).Code)
+}

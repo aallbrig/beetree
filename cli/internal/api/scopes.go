@@ -190,11 +190,12 @@ var routeScopes = map[string]string{
 	"GET /v1/forum/reports":              "forum:read",
 	"GET /v1/forum/threads/{id}/reports": "forum:read",
 
-	"GET /v1/scenes":         "scenes:read",
-	"POST /v1/scenes":        "scenes:write",
-	"GET /v1/scenes/{id}":    "scenes:read",
-	"PUT /v1/scenes/{id}":    "scenes:write",
-	"DELETE /v1/scenes/{id}": "scenes:delete",
+	"GET /v1/scenes":             "scenes:read",
+	"POST /v1/scenes":            "scenes:write",
+	"GET /v1/scenes/{id}":        "scenes:read",
+	"PUT /v1/scenes/{id}":        "scenes:write",
+	"POST /v1/scenes/{id}/remix": "scenes:write",
+	"DELETE /v1/scenes/{id}":     "scenes:delete",
 
 	"GET /v1/keys":         "keys:read",
 	"POST /v1/keys":        "keys:write",

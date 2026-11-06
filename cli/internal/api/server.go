@@ -69,6 +69,7 @@ func (s *Server) Routes() []Route {
 		{"PUT", "/v1/trees/{id}", s.updateTree},
 		{"DELETE", "/v1/trees/{id}", s.deleteTree},
 		{"POST", "/v1/trees/{id}/remix", s.remixTree},
+		{"POST", "/v1/scenes/{id}/remix", s.remixScene},
 		{"PUT", "/v1/trees/{id}/like", s.likeTree},
 		{"DELETE", "/v1/trees/{id}/like", s.unlikeTree},
 		{"GET", "/v1/trees/{id}/comments", s.listComments},
