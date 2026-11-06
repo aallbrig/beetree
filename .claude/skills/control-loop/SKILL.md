@@ -16,8 +16,6 @@ The loop is `scripts/agent-loop.sh`: one headless Claude run per iteration, in i
 | Stop now | `task agent:loop:stop` | kills the loop's tmux session; an iteration in flight is abandoned and its half-done branch stays in `../beetree-loop` |
 | Start | `task agent:loop:start` | detached tmux session `beetreecraft-loop` (or run the `loop` window of `task dev`) |
 
-| Phone agent | `task agent:remote:start` / `task agent:remote:stop` | the Remote Control session named "beetreecraft.com dev loop" |
-
 `task agent:loop:start` also holds a sleep inhibitor (tmux session `beetreecraft-awake`) so the machine does not suspend while the loop runs; `task agent:loop:stop` releases it.
 
 Only one loop runs at a time (a lock enforces it).

@@ -1,7 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/tmuxinator.json
 name: beetree
 root: .
-enable_pane_titles: true
 windows:
   - dev:
       layout: main-vertical
@@ -29,5 +28,3 @@ windows:
           - clear
         - while true; do scripts/agent-loop.sh; [ $? -eq 75 ] && break; echo "loop exited or already running; retrying in 5 min"; sleep 300; done
         - watch -n 30 task agent:loop:status
-        - agent:
-          - task agent:remote-control
