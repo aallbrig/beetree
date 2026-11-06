@@ -26,6 +26,7 @@ export interface Profile {
   displayName: string;
   bio: string;
   email?: string;
+  moderator?: boolean;
   createdAt: string;
 }
 export interface Stats {

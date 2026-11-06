@@ -1,7 +1,7 @@
 import { api, ApiError } from '../api';
 import { isSignedIn } from '../auth';
 import { clear, formatDate, h, toast } from '../dom';
-import { reportBody, REPORT_REASONS } from '../report';
+import { queueRows, reportBody, REPORT_REASONS } from '../report';
 import { navigate, type Ctx } from '../router';
 
 /** A "Report" button that opens an inline reason picker; postId omitted reports the thread. */
@@ -43,7 +43,42 @@ function reportControl(threadId: string, postId?: string): HTMLElement {
   return wrap;
 }
 
+/** The moderator review queue; resolves to null for everyone else. */
+async function reviewQueue(): Promise<HTMLElement | null> {
+  if (!isSignedIn()) return null;
+  let rows;
+  try {
+    if (!(await api.me()).moderator) return null;
+    rows = queueRows((await api.recentReports()).items);
+  } catch {
+    return null;
+  }
+  const card = h('section', {
+    class: 'card stack',
+    'aria-label': 'Review queue',
+    style: 'margin-bottom:20px',
+  });
+  card.append(h('h2', {}, 'Review queue'));
+  if (!rows.length) card.append(h('p', { class: 'muted' }, 'No reports to review.'));
+  for (const r of rows) {
+    card.append(
+      h(
+        'div',
+        {},
+        h('a', { href: `#/forum/${r.threadId}` }, `Reported ${r.target}`),
+        h(
+          'span',
+          { class: 'small muted' },
+          ` · ${r.count} ${r.count === 1 ? 'report' : 'reports'} · ${r.reasons.join(', ')} · ${formatDate(r.latest)}`,
+        ),
+      ),
+    );
+  }
+  return card;
+}
+
 export async function forumView(ctx: Ctx): Promise<void> {
+  const queue = await reviewQueue();
   const threads = (await api.threads()).items;
   const list = h('div', { class: 'stack' });
   for (const t of threads) {
@@ -103,6 +138,7 @@ export async function forumView(ctx: Ctx): Promise<void> {
           h('a', { href: '#/signin?next=%2Fforum' }, 'Sign in'),
           ' to start a thread or reply.',
         ),
+    ...(queue ? [queue] : []),
     list,
   );
 }
