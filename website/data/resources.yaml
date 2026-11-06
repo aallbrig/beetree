@@ -89,3 +89,20 @@ items:
     author: "Ben Weber"
     summary: "A write-up of a GDC 2017 AI Summit talk. Covers extra node types such as spawn goal and success test, authoring patterns such as daemon behaviors, message passing and behavior locking, and ways to connect a tree to external planners, with examples from a StarCraft bot."
     score: 9
+  - title: "Behavior trees for AI: How they work"
+    url: "https://www.gamedeveloper.com/programming/behavior-trees-for-ai-how-they-work"
+    kind: Article
+    year: "2014"
+    author: "Chris Simpson"
+    summary: "A long practical walkthrough of node types, return statuses and shared context, with worked examples including item acquisition from Project Zomboid and stack-based utility nodes."
+    score: 11
+  - title: "BehaviorTree.CPP: Behavior Tree basics"
+    url: "https://www.behaviortree.dev/docs/learn-the-basics/BT_basics"
+    kind: Tool
+    summary: "Official documentation for the C++ library used widely in ROS 2. The basics page explains ticks, return states, Sequence, Fallback and Decorator nodes with a runnable fetch-me-a-beer example; a good bridge from theory to a real engine."
+    score: 13
+  - title: "LimboAI: Creating behavior trees"
+    url: "https://limboai.readthedocs.io/en/stable/behavior-trees/create-tree.html"
+    kind: Tool
+    summary: "Documentation for the Godot behavior tree plugin: adding a BTPlayer, authoring a tree in the editor and debugging a live tree with the blackboard inspector. Useful for Godot users exporting from BeeTreeCraft."
+    score: 9
