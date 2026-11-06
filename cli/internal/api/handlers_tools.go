@@ -35,6 +35,7 @@ type specRequest struct {
 	Format    string            `json:"format"`
 	Engine    string            `json:"engine"`
 	Overrides map[string]string `json:"overrides"`
+	Answers   []string          `json:"answers"`
 }
 
 func (s *Server) validate(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +58,19 @@ func (s *Server) simulate(w http.ResponseWriter, r *http.Request) {
 	res, err := simulateYAML(req.Spec, req.Overrides)
 	if err != nil {
 		writeErr(w, http.StatusUnprocessableEntity, "invalid_spec", err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
+}
+
+func (s *Server) simulateStep(w http.ResponseWriter, r *http.Request) {
+	var req specRequest
+	if !readJSON(w, r, &req) {
+		return
+	}
+	res, err := stepYAML(req.Spec, req.Answers)
+	if err != nil {
+		writeErr(w, http.StatusUnprocessableEntity, "invalid_request", err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, res)

@@ -59,6 +59,8 @@ func mcpTools() []mcpTool {
 		{Name: "validate_tree", Description: "Validate a .beetree.yaml spec. Returns whether it is valid and every error found.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec})},
 		{Name: "render_tree", Description: "Render a spec as ascii, sigil, mermaid or dot.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "format": strProp("ascii | sigil | mermaid | dot (default ascii)")})},
 		{Name: "simulate_tree", Description: "Dry-run a spec and return the execution trace. Overrides force named nodes to SUCCESS, FAILURE or RUNNING.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "overrides": map[string]any{"type": "object", "description": "node name -> SUCCESS|FAILURE|RUNNING", "additionalProperties": map[string]any{"type": "string"}}})},
+		{Name: "simulate_start", Description: "Begin a step-through simulation. Returns the first pending leaf; answer it with simulate_answer.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec})},
+		{Name: "simulate_answer", Description: "Answer the pending leaf of a step-through simulation with SUCCESS, FAILURE or RUNNING. Pass the same spec and every earlier answer in order (the server keeps no state). Returns the next pending leaf, or the final status and trace.", InputSchema: objSchema([]string{"spec", "status"}, map[string]any{"spec": spec, "status": strProp("SUCCESS | FAILURE | RUNNING for the pending leaf"), "answers": map[string]any{"type": "array", "description": "earlier answers, oldest first (empty after simulate_start)", "items": map[string]any{"type": "string"}}})},
 		{Name: "generate_code", Description: "Generate engine code (unity, unreal or godot) from a spec.", InputSchema: objSchema([]string{"spec", "engine"}, map[string]any{"spec": spec, "engine": strProp("unity | unreal | godot")})},
 		{Name: "search_trees", Description: "Search public behavior trees shared by the community.", InputSchema: objSchema(nil, map[string]any{"query": strProp("text to match against name, description and tags"), "tag": strProp("exact tag"), "limit": map[string]any{"type": "integer"}})},
 		{Name: "get_tree", Description: "Fetch a tree, including its spec, by id. Private trees need the owner's token.", InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("tree id")})},
@@ -143,6 +145,8 @@ type toolArgs struct {
 	Format      string            `json:"format"`
 	Engine      string            `json:"engine"`
 	Overrides   map[string]string `json:"overrides"`
+	Answers     []string          `json:"answers"`
+	Status      string            `json:"status"`
 	Query       string            `json:"query"`
 	Tag         string            `json:"tag"`
 	Limit       int               `json:"limit"`
@@ -207,6 +211,18 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 			return fail(err)
 		}
 		return toolText(res.Trace, false)
+	case "simulate_start":
+		res, err := stepYAML(a.Spec, nil)
+		if err != nil {
+			return fail(err)
+		}
+		return toolJSON(res)
+	case "simulate_answer":
+		res, err := stepYAML(a.Spec, append(append([]string{}, a.Answers...), a.Status))
+		if err != nil {
+			return fail(err)
+		}
+		return toolJSON(res)
 	case "generate_code":
 		files, err := generateYAML(a.Spec, a.Engine)
 		if err != nil {

@@ -44,6 +44,7 @@ func (s *Server) Routes() []Route {
 		{"GET", "/v1/node-types", s.getNodeTypes},
 		{"POST", "/v1/validate", s.validate},
 		{"POST", "/v1/simulate", s.simulate},
+		{"POST", "/v1/simulate/step", s.simulateStep},
 		{"POST", "/v1/render", s.render},
 		{"POST", "/v1/generate", s.generate},
 

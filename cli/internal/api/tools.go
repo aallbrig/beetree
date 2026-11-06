@@ -12,6 +12,7 @@ import (
 	"github.com/aallbrig/beetree-cli/internal/simulator"
 	"github.com/aallbrig/beetree-cli/internal/spec"
 	"github.com/aallbrig/beetree-cli/internal/validator"
+	"github.com/aallbrig/beetree-cli/internal/walker"
 )
 
 // Limits that keep stateless tools cheap enough to expose publicly.
@@ -184,4 +185,75 @@ func nodeTypes() ([]NodeTypeInfo, []string) {
 	}
 	sort.Strings(decs)
 	return types, decs
+}
+
+// PendingLeaf is the leaf a step-through simulation is paused on.
+type PendingLeaf struct {
+	Node string `json:"node"`
+	Type string `json:"type"`
+}
+
+// StepResult is the state of a step-through simulation. While Done is false,
+// Pending names the leaf that needs a status; the caller sends every answer so
+// far on the next call, which keeps the server stateless.
+type StepResult struct {
+	Done     bool         `json:"done"`
+	Pending  *PendingLeaf `json:"pending,omitempty"`
+	Answered int          `json:"answered"`
+	Root     string       `json:"root"`
+	Status   string       `json:"status,omitempty"`
+	Steps    []SimStep    `json:"steps"`
+	Trace    string       `json:"trace,omitempty"`
+}
+
+// stepYAML replays answers (SUCCESS, FAILURE or RUNNING, one per leaf visited
+// in order) against the spec and reports the next pending leaf or the result.
+func stepYAML(yamlText string, answers []string) (*StepResult, error) {
+	s, err := validSpec(yamlText)
+	if err != nil {
+		return nil, err
+	}
+	if len(answers) > maxNodes {
+		return nil, fmt.Errorf("too many answers; a tree has at most %d leaves", maxNodes)
+	}
+	w := walker.NewSimWalker(&s.Tree)
+	w.Step()
+	for i, a := range answers {
+		if w.State != walker.SimWaitingForInput {
+			return nil, fmt.Errorf("answer %d: the simulation already finished after %d answers", i+1, i)
+		}
+		var st model.Status
+		switch strings.ToUpper(a) {
+		case "SUCCESS":
+			st = model.StatusSuccess
+		case "FAILURE":
+			st = model.StatusFailure
+		case "RUNNING":
+			st = model.StatusRunning
+		default:
+			return nil, fmt.Errorf("answer %d: status must be SUCCESS, FAILURE or RUNNING", i+1)
+		}
+		w.Resolve(st)
+	}
+	out := &StepResult{Answered: len(answers), Root: s.Tree.Name, Steps: []SimStep{}}
+	var tb strings.Builder
+	for _, t := range w.Trace {
+		st := ""
+		if t.Event == "resolve" {
+			st = strings.ToUpper(t.Status.String())
+		}
+		out.Steps = append(out.Steps, SimStep{Depth: t.Depth, Node: t.NodeName, Type: t.NodeType, Event: t.Event, Status: st})
+		if st != "" {
+			st = " -> " + st
+		}
+		fmt.Fprintf(&tb, "%s%s %s%s\n", strings.Repeat("  ", t.Depth), t.Event, t.NodeName, st)
+	}
+	if w.State == walker.SimWaitingForInput {
+		out.Pending = &PendingLeaf{Node: w.CurrentNode.Name, Type: w.CurrentNode.Type}
+		return out, nil
+	}
+	out.Done = true
+	out.Status = strings.ToUpper(w.Result.String())
+	out.Trace = tb.String()
+	return out, nil
 }

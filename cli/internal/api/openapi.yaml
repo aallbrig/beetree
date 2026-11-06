@@ -84,6 +84,35 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/SimulateResult'}
         '422': {$ref: '#/components/responses/Error'}
+  /v1/simulate/step:
+    post:
+      summary: Step through a simulation one leaf at a time
+      description: >
+        Stateless. Send the spec and the answers given so far (empty to start).
+        While done is false, pending names the leaf that needs a status; send
+        its status appended to answers on the next call. When done is true the
+        response carries the final status and trace.
+      operationId: simulateStep
+      tags: [Tools]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [spec]
+              properties:
+                spec: {type: string, description: Tree spec as YAML}
+                answers:
+                  type: array
+                  items: {type: string, enum: [SUCCESS, FAILURE, RUNNING]}
+      responses:
+        '200':
+          description: Pending leaf, or the final result
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/StepResult'}
+        '422': {$ref: '#/components/responses/Error'}
   /v1/render:
     post:
       summary: Render a spec as ascii, sigil, mermaid or dot
@@ -624,6 +653,30 @@ components:
         valid: {type: boolean}
         errors: {type: array, items: {type: string}}
         nodeCount: {type: integer}
+    StepResult:
+      type: object
+      required: [done, answered, root, steps]
+      properties:
+        done: {type: boolean}
+        answered: {type: integer}
+        root: {type: string}
+        pending:
+          type: object
+          properties:
+            node: {type: string}
+            type: {type: string}
+        status: {type: string, enum: [SUCCESS, FAILURE, RUNNING]}
+        trace: {type: string}
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              depth: {type: integer}
+              node: {type: string}
+              type: {type: string}
+              event: {type: string}
+              status: {type: string}
     SimulateResult:
       type: object
       properties:
