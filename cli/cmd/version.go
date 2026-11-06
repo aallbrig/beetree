@@ -15,5 +15,7 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.Version = Version
+	rootCmd.SetVersionTemplate("beetree version {{.Version}}\n")
 	rootCmd.AddCommand(versionCmd)
 }

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/aallbrig/beetree-cli/internal/spec"
 	"github.com/aallbrig/beetree-cli/internal/validator"
@@ -14,6 +15,10 @@ var validateCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := args[0]
+
+		if _, statErr := os.Stat(path); statErr != nil {
+			return fmt.Errorf("cannot read %s: %w", path, statErr)
+		}
 
 		treeSpec, err := spec.ParseFile(path)
 		if err != nil {
