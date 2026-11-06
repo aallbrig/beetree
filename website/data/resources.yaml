@@ -220,3 +220,24 @@ items:
     author: "BehaviorTree.CPP documentation (Auryn Robotics)"
     summary: "Explains why a tick that blocks freezes the whole tree, and how to write nodes that return RUNNING and stop quickly when halted. Walks through a stateful sleep node with start, running and halted callbacks, shows the blocking and thread-based versions that go wrong, and says to run long work in another process. The tree engine is single threaded, so the same rules apply to any engine you export to."
     score: 13
+  - title: "On the programming effort required to generate Behavior Trees and Finite State Machines for robotic applications"
+    url: "https://arxiv.org/abs/2209.07392"
+    kind: Paper
+    year: "2022"
+    author: "Matteo Iovino, Julian Forster, Pietro Falco, Jen Jen Chung, Roland Siegwart and Christian Smith"
+    summary: "Compares a backward-chained behavior tree with a fault-tolerant state machine for a mobile manipulator fetching items in simulation, and measures how much code must change to extend each. A practical case for the modularity argument: adding behavior to a tree touches less than adding it to a state machine. Submitted to ICRA 2023; free on arXiv."
+    score: 12
+  - title: "Formalizing Stateful Behavior Trees"
+    url: "https://arxiv.org/abs/2411.14165"
+    kind: Paper
+    year: "2024"
+    author: "Serena S. Serbinowska, Preston Robinette, Gabor Karsai and Taylor T. Johnson"
+    summary: "Formalizes behavior trees that keep variables on a blackboard, and shows they are as powerful as Turing machines with unbounded integers but only finite state automata when variable types are finite. Presents a DSL and the BehaVerify tool, which model-checks temporal logic properties of a tree. Useful if you want to prove a tree cannot reach a bad state. Published at FMAS 2024."
+    score: 13
+  - title: "Continuous-Time Behavior Trees as Discontinuous Dynamical Systems"
+    url: "https://arxiv.org/abs/2109.01575"
+    kind: Paper
+    year: "2021"
+    author: "Christopher Iliffe Sprague and Petter Ogren"
+    summary: "Gives the first continuous-time formulation of behavior trees, treating them as discontinuous dynamical systems, and derives sufficient conditions for a tree to converge to a desired region of the state space. Control-theory heavy, aimed at robotics, but it shows why a tree that switches between policies can still be guaranteed to reach its goal."
+    score: 12
