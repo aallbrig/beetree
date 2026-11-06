@@ -207,6 +207,7 @@ var routeScopes = map[string]string{
 // public tools). A test fails when a tool is missing here.
 var toolScopes = map[string]string{
 	"list_node_types": "",
+	"get_template":    "",
 	"validate_tree":   "",
 	"render_tree":     "",
 	"simulate_tree":   "",

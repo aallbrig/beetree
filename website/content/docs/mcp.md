@@ -59,6 +59,7 @@ Every tool needs a valid API key. Tools marked (account) also act on your accoun
 | `delete_tree` (account) | Permanently delete a tree you own |
 | `get_scene` | Fetch an Explore scene by id (private scenes only for their owner) |
 | `list_my_scenes` (account) | List your Explore scenes |
+| `get_template` | List starter templates, or fetch one by name (for clients without resource support) |
 | `list_my_trees` (account) | List your trees |
 
 Errors from a tool come back inside the result with `isError: true`, so the model can read them and try again.
