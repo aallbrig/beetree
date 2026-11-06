@@ -755,18 +755,18 @@ func (ev *EditorView) syncStatusBar() {
 	var status string
 	switch ev.Model.Mode {
 	case ModeNavigate:
-		status = navigateHint
+		status = tview.Escape(navigateHint)
 	case ModeMove:
-		status = fmt.Sprintf("[yellow]MOVE MODE[-] — navigate to target, [m] to place, [Esc] cancel  (moving: %s)", ev.Model.CutNodeName)
+		status = fmt.Sprintf("[yellow]MOVE MODE[-] — navigate to target, "+tview.Escape("[m]")+" to place, "+tview.Escape("[Esc]")+" cancel  (moving: %s)", ev.Model.CutNodeName)
 	case ModeAddNode:
-		status = "[↑↓] select type  [Enter] confirm  [Esc] cancel"
+		status = "[↑↓] select type  " + tview.Escape("[Enter]") + " confirm  " + tview.Escape("[Esc]") + " cancel"
 	case ModeSimulate:
 		if ev.Model.Sim != nil && ev.Model.Sim.State == SimWaitingForInput {
-			status = "[aqua]SIM[-] [green][S][-]uccess  [red][F][-]ailure  [yellow][R][-]unning  │  [Esc] stop"
+			status = "[aqua]SIM[-] [green]" + tview.Escape("[S]") + "[-]uccess  [red]" + tview.Escape("[F]") + "[-]ailure  [yellow]" + tview.Escape("[R]") + "[-]unning  │  " + tview.Escape("[Esc]") + " stop"
 		} else if ev.Model.Sim != nil && ev.Model.Sim.State == SimComplete {
-			status = fmt.Sprintf("[aqua]SIM COMPLETE[-] — tree returned [::b]%s[-:-:-]  │  [Q]uit sim  [Esc] stop", ev.Model.Sim.Result)
+			status = fmt.Sprintf("[aqua]SIM COMPLETE[-] — tree returned [::b]%s[-:-:-]  │  "+tview.Escape("[Q]")+"uit sim  "+tview.Escape("[Esc]")+" stop", ev.Model.Sim.Result)
 		} else {
-			status = "[aqua]SIM[-] [Esc] stop"
+			status = "[aqua]SIM[-] " + tview.Escape("[Esc]") + " stop"
 		}
 	default:
 		status = ""
