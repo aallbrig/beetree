@@ -14,3 +14,4 @@ https://cgi.csc.liv.ac.uk/~xiaowei/game_materials/lecture24.pdf | unscored | PDF
 https://www.sambuz.com/doc/automated-testing-for-multiplayer-game-ai-automated-ppt-presentation-901544 | 9 | Rare (Sea of Thieves) BT testing slides, but an ad-laden mirror with no named event; retry via the original GDC/Rare source
 https://80.lv/articles/days-gone-squad-coordination-explained | 7 | Days Gone squad confidence article; never mentions behavior trees
 https://cryengine.com/docs/static/engines/cryengine-5/categories/23756813/pages/23310620 | unscored | page body truncated, only navigation readable
+https://docs.unity3d.com/Packages/com.unity.behavior@1.0/manual/index.html | 8 | Unity Behavior overview; shallow, no examples, calls them graphs

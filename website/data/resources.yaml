@@ -214,3 +214,9 @@ items:
     author: "Cody Olivier"
     summary: "A shipped-game postmortem on boss attacks in a top-down shooter. A hand-built attack branch with timer decorators was hard to change and test, so the author replaced it with a random selector over self-contained attack leaves that fail unless their conditions hold. Small, concrete and reusable across bosses; a good example of choosing a node type to keep a tree flat and testable."
     score: 12
+  - title: "BehaviorTree.CPP: Asynchronous Actions"
+    url: "https://www.behaviortree.dev/docs/guides/asynchronous_nodes"
+    kind: Article
+    author: "BehaviorTree.CPP documentation (Auryn Robotics)"
+    summary: "Explains why a tick that blocks freezes the whole tree, and how to write nodes that return RUNNING and stop quickly when halted. Walks through a stateful sleep node with start, running and halted callbacks, shows the blocking and thread-based versions that go wrong, and says to run long work in another process. The tree engine is single threaded, so the same rules apply to any engine you export to."
+    score: 13
