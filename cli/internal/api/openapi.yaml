@@ -44,6 +44,7 @@ paths:
                 properties:
                   status: {type: string, example: ok}
                   version: {type: string}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/openapi.json:
     get:
       security: []
@@ -52,6 +53,7 @@ paths:
       tags: [Tools]
       responses:
         '200': {description: The OpenAPI document}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/node-types:
     get:
       summary: Node types, decorators, render formats and engines
@@ -59,6 +61,7 @@ paths:
       tags: [Tools]
       responses:
         '200': {description: OK}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/validate:
     post:
       summary: Validate a spec
@@ -71,6 +74,8 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/ValidateResult'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/simulate:
     post:
       summary: Dry-run a spec
@@ -84,6 +89,8 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/SimulateResult'}
         '422': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/simulate/step:
     post:
       summary: Step through a simulation one leaf at a time
@@ -113,6 +120,8 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/StepResult'}
         '422': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/render:
     post:
       summary: Render a spec as ascii, sigil, mermaid or dot
@@ -122,6 +131,8 @@ paths:
       responses:
         '200': {description: Rendered diagram}
         '422': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/generate:
     post:
       summary: Generate engine code (unity, unreal, godot)
@@ -131,6 +142,8 @@ paths:
       responses:
         '200': {description: Generated files}
         '422': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/public/trees:
     get:
       summary: Visitor showcase of public trees (no credentials)
@@ -154,6 +167,7 @@ paths:
                     items: {$ref: '#/components/schemas/Tree'}
                   generatedAt: {type: string, format: date-time}
                   note: {type: string}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/trees:
     get:
       summary: List public trees
@@ -175,6 +189,7 @@ paths:
                   items:
                     type: array
                     items: {$ref: '#/components/schemas/Tree'}
+        '429': {$ref: '#/components/responses/Error'}
     post:
       summary: Create a tree
       operationId: createTree
@@ -189,6 +204,8 @@ paths:
               schema: {$ref: '#/components/schemas/Tree'}
         '401': {$ref: '#/components/responses/Error'}
         '422': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/trees/{id}:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -203,6 +220,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Tree'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     put:
       summary: Replace a tree you own
       operationId: updateTree
@@ -218,6 +236,8 @@ paths:
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
         '422': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     delete:
       summary: Delete a tree you own
       operationId: deleteTree
@@ -227,6 +247,7 @@ paths:
         '204': {description: Deleted}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/trees/{id}/like:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -239,6 +260,7 @@ paths:
         '200': {$ref: '#/components/responses/Like'}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     delete:
       summary: Remove your like
       operationId: unlikeTree
@@ -248,6 +270,7 @@ paths:
         '200': {$ref: '#/components/responses/Like'}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/trees/{id}/comments:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -267,6 +290,7 @@ paths:
                     type: array
                     items: {$ref: '#/components/schemas/Comment'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     post:
       summary: Add a comment
       operationId: addComment
@@ -289,6 +313,8 @@ paths:
               schema: {$ref: '#/components/schemas/Comment'}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/trees/{id}/comments/{commentId}:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -303,6 +329,7 @@ paths:
         '401': {$ref: '#/components/responses/Error'}
         '403': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/me:
     get:
       summary: Your profile
@@ -316,6 +343,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Profile'}
         '401': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     put:
       summary: Update your profile
       operationId: updateMe
@@ -339,6 +367,8 @@ paths:
               schema: {$ref: '#/components/schemas/Profile'}
         '400': {$ref: '#/components/responses/Error'}
         '401': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/me/trees:
     get:
       summary: Your trees, public and private
@@ -348,6 +378,7 @@ paths:
       responses:
         '200': {description: Trees without spec bodies}
         '401': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/me/stats:
     get:
       summary: Your engagement stats
@@ -361,6 +392,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Stats'}
         '401': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/users/{id}:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -371,6 +403,7 @@ paths:
       responses:
         '200': {description: Profile and trees}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/forum/threads:
     get:
       summary: List forum threads, most recently active first
@@ -378,6 +411,7 @@ paths:
       tags: [Forum]
       responses:
         '200': {description: Threads}
+        '429': {$ref: '#/components/responses/Error'}
     post:
       summary: Start a thread
       operationId: createThread
@@ -401,6 +435,8 @@ paths:
               schema: {$ref: '#/components/schemas/Thread'}
         '400': {$ref: '#/components/responses/Error'}
         '401': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/forum/threads/{id}:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -411,6 +447,7 @@ paths:
       responses:
         '200': {description: Thread and posts}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/forum/threads/{id}/posts:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -432,6 +469,8 @@ paths:
         '201': {description: Created}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/forum/threads/{id}/report:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -455,6 +494,8 @@ paths:
         '400': {$ref: '#/components/responses/Error'}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/forum/reports:
     get:
       summary: Most recent reports across all threads, newest first (moderators only)
@@ -465,6 +506,7 @@ paths:
         '200': {description: Reports}
         '401': {$ref: '#/components/responses/Error'}
         '403': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/forum/threads/{id}/reports:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -478,6 +520,7 @@ paths:
         '401': {$ref: '#/components/responses/Error'}
         '403': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/scenes:
     get:
       summary: Your saved 3D scenes
@@ -487,6 +530,7 @@ paths:
       responses:
         '200': {description: Scenes}
         '401': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     post:
       summary: Save a scene
       operationId: createScene
@@ -501,6 +545,8 @@ paths:
               schema: {$ref: '#/components/schemas/Scene'}
         '400': {$ref: '#/components/responses/Error'}
         '401': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/scenes/{id}:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -515,6 +561,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/Scene'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     put:
       summary: Replace a scene you own
       operationId: updateScene
@@ -526,6 +573,8 @@ paths:
         '400': {$ref: '#/components/responses/Error'}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     delete:
       summary: Delete a scene you own
       operationId: deleteScene
@@ -535,6 +584,7 @@ paths:
         '204': {description: Deleted}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/keys:
     get:
       summary: List your API keys
@@ -555,6 +605,7 @@ paths:
                     items: {$ref: '#/components/schemas/APIKeyInfo'}
         '401': {$ref: '#/components/responses/Error'}
         '403': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     post:
       summary: Create an API key
       operationId: createKey
@@ -586,6 +637,8 @@ paths:
         '401': {$ref: '#/components/responses/Error'}
         '403': {$ref: '#/components/responses/Error'}
         '409': {$ref: '#/components/responses/Error'}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/keys/{id}:
     parameters:
       - $ref: '#/components/parameters/Id'
@@ -599,6 +652,7 @@ paths:
         '401': {$ref: '#/components/responses/Error'}
         '403': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /mcp:
     post:
       summary: Model Context Protocol endpoint (JSON-RPC 2.0)
@@ -620,12 +674,15 @@ paths:
       responses:
         '200': {description: JSON-RPC response}
         '202': {description: Notification accepted}
+        '413': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
     get:
       summary: Not supported; use POST
       operationId: mcpGet
       tags: [MCP]
       responses:
         '405': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
 components:
   securitySchemes:
     bearerAuth:
