@@ -51,3 +51,4 @@ sources/
 
 # agent loop state
 .agent-loop/
+__pycache__/

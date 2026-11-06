@@ -314,6 +314,7 @@ tasks:
     desc: "Check the loop's prompt-injection defenses"
     cmds:
       - scripts/check_loop.sh
+      - scripts/check_security_audit.sh
 
   agent:loop:start:
     desc: "Start the beetree tmux session (dev, watch, sites and the loop window) detached; no-op when it already runs"
