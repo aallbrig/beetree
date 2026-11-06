@@ -198,3 +198,21 @@ export function* walk(n: NodeSpec, path: Path = []): Generator<[NodeSpec, Path]>
     if (child) yield* walk(child, [...path, i]);
   }
 }
+
+export interface Problem {
+  path: Path;
+  message: string;
+}
+
+/** Structural problems the validator would reject, each tied to the offending node. */
+export function findProblems(root: NodeSpec): Problem[] {
+  const out: Problem[] = [];
+  for (const [n, path] of walk(root)) {
+    const kids = n.children?.length ?? 0;
+    if (isComposite(n.type) && kids === 0)
+      out.push({ path, message: `${n.name}: a ${n.type} needs at least one child` });
+    if (n.type === 'decorator' && kids !== 1)
+      out.push({ path, message: `${n.name}: a decorator needs exactly one child` });
+  }
+  return out;
+}
