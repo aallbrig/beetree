@@ -62,9 +62,11 @@ func TestCognitoVerifier(t *testing.T) {
 	t.Run("id token", func(t *testing.T) {
 		c, err := v.Verify(context.Background(), sign(t, key, jwt.MapClaims{
 			"iss": iss, "exp": exp, "token_use": "id", "aud": "client",
-			"sub": "u1", "email": "a@b.c", "cognito:username": "alice"}))
+			"sub": "u1", "email": "a@b.c", "cognito:username": "alice",
+			"cognito:groups": []string{"moderators"}}))
 		require.NoError(t, err)
-		assert.Equal(t, Claims{Sub: "u1", Username: "alice", Email: "a@b.c"}, c)
+		assert.Equal(t, Claims{Sub: "u1", Username: "alice", Email: "a@b.c", Groups: []string{"moderators"}}, c)
+		assert.True(t, c.IsModerator())
 	})
 	t.Run("access token", func(t *testing.T) {
 		c, err := v.Verify(context.Background(), sign(t, key, jwt.MapClaims{

@@ -40,7 +40,11 @@ func (fakeAuth) Verify(_ context.Context, token string) (Claims, error) {
 		return Claims{}, ErrUnauthenticated
 	}
 	n := strings.TrimPrefix(token, "token-")
-	return Claims{Sub: n, Username: n, Email: n + "@example.com"}, nil
+	c := Claims{Sub: n, Username: n, Email: n + "@example.com"}
+	if n == "mod" {
+		c.Groups = []string{ModeratorGroup}
+	}
+	return c, nil
 }
 
 func newTestServer(t *testing.T) http.Handler {
@@ -324,6 +328,16 @@ func TestForum(t *testing.T) {
 	assert.Equal(t, 404, do(h, "POST", "/v1/forum/threads/nope/report", "bob", rp).Code)
 	assert.Equal(t, 404, do(h, "POST", "/v1/forum/threads/"+id+"/report", "bob", map[string]string{"reason": "x", "postId": "nope"}).Code)
 	assert.Equal(t, 201, do(h, "POST", "/v1/forum/threads/"+id+"/report", "bob", rp).Code)
+
+	q := "/v1/forum/threads/" + id + "/reports"
+	assert.Equal(t, 401, do(h, "GET", q, "", nil).Code)
+	assert.Equal(t, 403, do(h, "GET", q, "bob", nil).Code, "members cannot read the queue")
+	assert.Equal(t, 404, do(h, "GET", "/v1/forum/threads/nope/reports", "mod", nil).Code)
+	queue := do(h, "GET", q, "mod", nil)
+	require.Equal(t, 200, queue.Code)
+	items := queue.JSON(t)["items"].([]any)
+	require.Len(t, items, 1)
+	assert.Equal(t, "spam", items[0].(map[string]any)["reason"])
 
 	got := do(h, "GET", "/v1/forum/threads/"+id, "", nil).JSON(t)
 	assert.Len(t, got["posts"], 1)

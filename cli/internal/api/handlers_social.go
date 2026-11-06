@@ -204,6 +204,32 @@ func (s *Server) reportThread(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, rep)
 }
 
+// listReports is the moderators-only review queue for one thread.
+func (s *Server) listReports(w http.ResponseWriter, r *http.Request) {
+	c, ok := requireAuth(w, r)
+	if !ok {
+		return
+	}
+	if !c.IsModerator() {
+		writeErr(w, http.StatusForbidden, "forbidden", "moderators only")
+		return
+	}
+	id := r.PathValue("id")
+	if _, err := s.Store.GetThread(r.Context(), id); err != nil {
+		s.storeErr(w, err)
+		return
+	}
+	reps, err := s.Store.ListReports(r.Context(), id)
+	if err != nil {
+		s.storeErr(w, err)
+		return
+	}
+	if reps == nil {
+		reps = []Report{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": reps})
+}
+
 func (s *Server) addPost(w http.ResponseWriter, r *http.Request) {
 	c, ok := requireAuth(w, r)
 	if !ok {
