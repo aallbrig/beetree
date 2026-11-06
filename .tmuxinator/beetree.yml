@@ -21,7 +21,7 @@ windows:
         - dev:
           - clear
         - task site:dev
-  - loop:
+  - loops:
       layout: main-horizontal
       panes:
         - dev:
