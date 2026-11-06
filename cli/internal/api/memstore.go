@@ -16,6 +16,7 @@ type MemStore struct {
 	threads  map[string]Thread
 	posts    map[string][]Post
 	scenes   map[string]Scene
+	keys     map[string]APIKey // by hash
 }
 
 // NewMemStore returns an empty MemStore.
@@ -28,6 +29,7 @@ func NewMemStore() *MemStore {
 		threads:  map[string]Thread{},
 		posts:    map[string][]Post{},
 		scenes:   map[string]Scene{},
+		keys:     map[string]APIKey{},
 	}
 }
 
@@ -305,4 +307,46 @@ func (m *MemStore) Stats(_ context.Context, userID string) (Stats, error) {
 		}
 	}
 	return s, nil
+}
+
+func (m *MemStore) PutAPIKey(_ context.Context, k APIKey) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.keys[k.Hash] = k
+	return nil
+}
+
+func (m *MemStore) GetAPIKeyByHash(_ context.Context, hash string) (APIKey, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	k, ok := m.keys[hash]
+	if !ok {
+		return APIKey{}, ErrNotFound
+	}
+	return k, nil
+}
+
+func (m *MemStore) ListAPIKeys(_ context.Context, ownerID string) ([]APIKey, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var out []APIKey
+	for _, k := range m.keys {
+		if k.OwnerID == ownerID {
+			out = append(out, k)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt > out[j].CreatedAt })
+	return out, nil
+}
+
+func (m *MemStore) DeleteAPIKey(_ context.Context, ownerID, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for h, k := range m.keys {
+		if k.ID == id && k.OwnerID == ownerID {
+			delete(m.keys, h)
+			return nil
+		}
+	}
+	return ErrNotFound
 }

@@ -35,6 +35,13 @@ type Store interface {
 	DeleteScene(ctx context.Context, id string) error
 	ListScenesByOwner(ctx context.Context, ownerID string) ([]Scene, error)
 
+	// API keys are stored by hash; the secret is never persisted.
+	PutAPIKey(ctx context.Context, k APIKey) error
+	GetAPIKeyByHash(ctx context.Context, hash string) (APIKey, error)
+	ListAPIKeys(ctx context.Context, ownerID string) ([]APIKey, error)
+	// DeleteAPIKey removes the owner's key with this id; ErrNotFound otherwise.
+	DeleteAPIKey(ctx context.Context, ownerID, id string) error
+
 	// Stats aggregates engagement for one user.
 	Stats(ctx context.Context, userID string) (Stats, error)
 }

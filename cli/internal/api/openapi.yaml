@@ -5,9 +5,11 @@ info:
   description: |
     Create, validate, simulate, share and discuss engine-agnostic behavior trees.
 
-    Authenticate by sending a Cognito token from sign-in as `Authorization: Bearer <token>`.
-    Read-only and stateless endpoints work without a token.
-    An MCP server is available at `POST /mcp` (see the MCP docs).
+    Every endpoint except `/v1/health` and `/v1/openapi.json` needs credentials. Create an API key
+    on your profile page and send it as `X-API-Key: btc_...` or `Authorization: Bearer btc_...`.
+    A Cognito token from sign-in (`Authorization: Bearer <token>`) also works, and is the only way to
+    manage API keys. See https://beetreecraft.com/docs/api/ for setup.
+    An MCP server is available at `POST /mcp` and needs the same credentials (see the MCP docs).
   license:
     name: MIT
 servers:
@@ -23,11 +25,12 @@ tags:
   - name: Scenes
   - name: MCP
 security:
-  - {}
+  - apiKeyAuth: []
   - bearerAuth: []
 paths:
   /v1/health:
     get:
+      security: []
       summary: Service health
       operationId: health
       tags: [Tools]
@@ -43,6 +46,7 @@ paths:
                   version: {type: string}
   /v1/openapi.json:
     get:
+      security: []
       summary: This document as JSON
       operationId: getOpenApi
       tags: [Tools]
@@ -123,7 +127,7 @@ paths:
       summary: Create a tree
       operationId: createTree
       tags: [Trees]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       requestBody: {$ref: '#/components/requestBodies/Tree'}
       responses:
         '201':
@@ -151,7 +155,7 @@ paths:
       summary: Replace a tree you own
       operationId: updateTree
       tags: [Trees]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       requestBody: {$ref: '#/components/requestBodies/Tree'}
       responses:
         '200':
@@ -166,7 +170,7 @@ paths:
       summary: Delete a tree you own
       operationId: deleteTree
       tags: [Trees]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '204': {description: Deleted}
         '401': {$ref: '#/components/responses/Error'}
@@ -178,7 +182,7 @@ paths:
       summary: Like a tree (idempotent)
       operationId: likeTree
       tags: [Social]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '200': {$ref: '#/components/responses/Like'}
         '401': {$ref: '#/components/responses/Error'}
@@ -187,7 +191,7 @@ paths:
       summary: Remove your like
       operationId: unlikeTree
       tags: [Social]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '200': {$ref: '#/components/responses/Like'}
         '401': {$ref: '#/components/responses/Error'}
@@ -215,7 +219,7 @@ paths:
       summary: Add a comment
       operationId: addComment
       tags: [Social]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       requestBody:
         required: true
         content:
@@ -241,7 +245,7 @@ paths:
       summary: Delete a comment (author or tree owner)
       operationId: deleteComment
       tags: [Social]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '204': {description: Deleted}
         '401': {$ref: '#/components/responses/Error'}
@@ -252,7 +256,7 @@ paths:
       summary: Your profile
       operationId: getMe
       tags: [Account]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '200':
           description: Profile
@@ -264,7 +268,7 @@ paths:
       summary: Update your profile
       operationId: updateMe
       tags: [Account]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       requestBody:
         required: true
         content:
@@ -288,7 +292,7 @@ paths:
       summary: Your trees, public and private
       operationId: myTrees
       tags: [Account]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '200': {description: Trees without spec bodies}
         '401': {$ref: '#/components/responses/Error'}
@@ -297,7 +301,7 @@ paths:
       summary: Your engagement stats
       operationId: myStats
       tags: [Account]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '200':
           description: Stats
@@ -326,7 +330,7 @@ paths:
       summary: Start a thread
       operationId: createThread
       tags: [Forum]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       requestBody:
         required: true
         content:
@@ -362,7 +366,7 @@ paths:
       summary: Reply to a thread
       operationId: addPost
       tags: [Forum]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       requestBody:
         required: true
         content:
@@ -381,7 +385,7 @@ paths:
       summary: Your saved 3D scenes
       operationId: listScenes
       tags: [Scenes]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '200': {description: Scenes}
         '401': {$ref: '#/components/responses/Error'}
@@ -389,7 +393,7 @@ paths:
       summary: Save a scene
       operationId: createScene
       tags: [Scenes]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       requestBody: {$ref: '#/components/requestBodies/Scene'}
       responses:
         '201':
@@ -417,7 +421,7 @@ paths:
       summary: Replace a scene you own
       operationId: updateScene
       tags: [Scenes]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       requestBody: {$ref: '#/components/requestBodies/Scene'}
       responses:
         '200': {description: Updated}
@@ -428,10 +432,74 @@ paths:
       summary: Delete a scene you own
       operationId: deleteScene
       tags: [Scenes]
-      security: [{bearerAuth: []}]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
       responses:
         '204': {description: Deleted}
         '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+  /v1/keys:
+    get:
+      summary: List your API keys
+      operationId: listKeys
+      tags: [Account]
+      description: Needs a signed-in session. Never returns key secrets.
+      security: [{bearerAuth: []}]
+      responses:
+        '200':
+          description: Your keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/APIKeyInfo'}
+        '401': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
+    post:
+      summary: Create an API key
+      operationId: createKey
+      tags: [Account]
+      description: Needs a signed-in session. The secret is returned once; only its hash is stored. Up to 5 keys per account.
+      security: [{bearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: {type: string, maxLength: 60}
+      responses:
+        '201':
+          description: Created; copy the key now
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIKeyInfo'
+                  - type: object
+                    properties:
+                      key: {type: string, description: 'The secret, shown once'}
+                      note: {type: string}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
+  /v1/keys/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    delete:
+      summary: Revoke an API key
+      operationId: deleteKey
+      tags: [Account]
+      security: [{bearerAuth: []}]
+      responses:
+        '204': {description: Revoked}
+        '401': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
   /mcp:
     post:
@@ -466,6 +534,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: A Cognito token from sign-in, or an API key (btc_...) sent as a bearer token.
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
   parameters:
     Id:
       name: id
@@ -530,6 +603,13 @@ components:
               liked: {type: boolean}
               likeCount: {type: integer}
   schemas:
+    APIKeyInfo:
+      type: object
+      properties:
+        id: {type: string}
+        name: {type: string}
+        prefix: {type: string, description: 'First characters of the key, for recognition'}
+        createdAt: {type: string, format: date-time}
     Error:
       type: object
       properties:

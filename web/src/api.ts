@@ -13,6 +13,13 @@ import type {
   ValidateResult,
 } from './types';
 
+export interface ApiKeyInfo {
+  id: string;
+  name: string;
+  prefix: string;
+  createdAt: string;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -76,6 +83,9 @@ export const api = {
     request<Comment>('POST', `/v1/trees/${id}/comments`, { body }),
   deleteComment: (id: string, cid: string) =>
     request<undefined>('DELETE', `/v1/trees/${id}/comments/${cid}`),
+  listKeys: () => request<Items<ApiKeyInfo>>('GET', '/v1/keys'),
+  createKey: (name: string) => request<ApiKeyInfo & { key: string }>('POST', '/v1/keys', { name }),
+  deleteKey: (id: string) => request<undefined>('DELETE', `/v1/keys/${id}`),
   me: () => request<Profile>('GET', '/v1/me'),
   updateMe: (displayName: string, bio: string) =>
     request<Profile>('PUT', '/v1/me', { displayName, bio }),

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -21,6 +22,10 @@ type Server struct {
 	NewID func() string
 	// Version is reported by /v1/health.
 	Version string
+	// AllowAnonymous lets callers without credentials use the API. It exists for
+	// tests and local development; production leaves it false so every request
+	// needs a signed-in session or an API key.
+	AllowAnonymous bool
 }
 
 // Route is one API operation. The route table drives both registration and the
@@ -70,6 +75,10 @@ func (s *Server) Routes() []Route {
 		{"PUT", "/v1/scenes/{id}", s.updateScene},
 		{"DELETE", "/v1/scenes/{id}", s.deleteScene},
 
+		{"GET", "/v1/keys", s.listKeys},
+		{"POST", "/v1/keys", s.createKey},
+		{"DELETE", "/v1/keys/{id}", s.deleteKey},
+
 		{"POST", "/mcp", s.mcp},
 		{"GET", "/mcp", s.mcpGet},
 	}
@@ -97,7 +106,7 @@ func (s *Server) middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("Access-Control-Allow-Origin", "*")
-		h.Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Mcp-Session-Id")
+		h.Set("Access-Control-Allow-Headers", "Authorization, Content-Type, Mcp-Session-Id, X-API-Key")
 		h.Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		h.Set("Access-Control-Max-Age", "600")
 		h.Set("X-Content-Type-Options", "nosniff")
@@ -106,13 +115,25 @@ func (s *Server) middleware(next http.Handler) http.Handler {
 			return
 		}
 		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
-		if tok := bearerToken(r); tok != "" && s.Auth != nil {
+		if tok := credential(r); strings.HasPrefix(tok, apiKeyPrefix) {
+			k, err := s.Store.GetAPIKeyByHash(r.Context(), hashAPIKey(tok))
+			if err != nil {
+				writeErr(w, http.StatusUnauthorized, "unauthenticated", "invalid or revoked API key")
+				return
+			}
+			ctx := WithClaims(r.Context(), Claims{Sub: k.OwnerID, Username: k.Username})
+			r = r.WithContext(context.WithValue(ctx, viaKeyCtx{}, true))
+		} else if tok != "" && s.Auth != nil {
 			c, err := s.Auth.Verify(r.Context(), tok)
 			if err != nil {
 				writeErr(w, http.StatusUnauthorized, "unauthenticated", "invalid or expired token")
 				return
 			}
 			r = r.WithContext(WithClaims(r.Context(), c))
+		}
+		if _, authed := ClaimsFrom(r.Context()); !authed && !s.AllowAnonymous && !publicPath(r.URL.Path) {
+			writeErr(w, http.StatusUnauthorized, "unauthenticated", "an API key or sign-in is required; see "+docsURL)
+			return
 		}
 		next.ServeHTTP(w, r)
 	})

@@ -16,15 +16,11 @@ It uses the Streamable HTTP transport with JSON responses (`POST` JSON-RPC 2.0, 
 
 **Claude Code**
 
-```bash
-claude mcp add --transport http beetreecraft https://api.beetreecraft.com/mcp
-```
-
-To use the tools that act on your account, add a token:
+The server needs an [API key](/docs/api/#get-an-api-key). Create one on your [profile page](/app/#/profile), keep it in an environment variable, then:
 
 ```bash
 claude mcp add --transport http beetreecraft https://api.beetreecraft.com/mcp \
-  --header "Authorization: Bearer $BEETREE_TOKEN"
+  --header "X-API-Key: $BEETREE_API_KEY"
 ```
 
 **Any MCP client** (JSON config)
@@ -35,17 +31,17 @@ claude mcp add --transport http beetreecraft https://api.beetreecraft.com/mcp \
     "beetreecraft": {
       "type": "http",
       "url": "https://api.beetreecraft.com/mcp",
-      "headers": { "Authorization": "Bearer <token>" }
+      "headers": { "X-API-Key": "<your API key>" }
     }
   }
 }
 ```
 
-Get a token from your [profile page](/app/#/profile) (*Copy my API token*). Tokens last about an hour. See [API authentication](/docs/api/#authentication) for scripted sign-in.
+Get a key from your [profile page](/app/#/profile) under **API keys**. Keys start with `btc_`, are shown once, and can be revoked there. Requests without a valid key get a 401. Never commit a key; use an environment variable or your client's secret store.
 
 ## Tools
 
-Tools marked (token) need a token. Everything else works anonymously.
+Every tool needs a valid API key. Tools marked (account) also act on your account.
 
 | Tool | What it does |
 |---|---|
@@ -56,8 +52,8 @@ Tools marked (token) need a token. Everything else works anonymously.
 | `generate_code` | Generate `unity`, `unreal` or `godot` code |
 | `search_trees` | Search the community's public trees |
 | `get_tree` | Fetch a tree and its spec by id (private trees only for their owner) |
-| `create_tree` (token) | Save a tree to your account |
-| `list_my_trees` (token) | List your trees |
+| `create_tree` (account) | Save a tree to your account |
+| `list_my_trees` (account) | List your trees |
 
 Errors from a tool come back inside the result with `isError: true`, so the model can read them and try again.
 

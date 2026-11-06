@@ -11,12 +11,37 @@ Base URL: `https://api.beetreecraft.com`
 
 Everything the website does is an API call. Specs travel as `.beetree.yaml` text inside JSON.
 
-## Quick start (no account)
+## Get an API key
+
+The API and the MCP server need an account. Every request carries an **API key**.
+
+1. [Sign up](/app/#/signup) and confirm your email, then sign in.
+2. Open your [profile](/app/#/profile), find **API keys**, give the key a name and press **Create API key**.
+3. Copy the key now. It starts with `btc_` and is shown **once**; BeeTreeCraft stores only a hash of it.
+4. Keep it out of source control: put it in an environment variable or a secrets manager.
+
+```bash
+export BEETREE_API_KEY="btc_<paste your key here>"
+```
+
+You can have up to 5 keys. Revoke one on the same page if it leaks; it stops working immediately. Only a signed-in session can create or revoke keys, so a leaked key cannot mint new ones.
+
+Send the key in either header:
+
+```bash
+curl -s https://api.beetreecraft.com/v1/me -H "X-API-Key: $BEETREE_API_KEY"
+curl -s https://api.beetreecraft.com/v1/me -H "Authorization: Bearer $BEETREE_API_KEY"
+```
+
+`GET /v1/health` and the OpenAPI document need no key.
+
+## Quick start
 
 Validate a tree:
 
 ```bash
 curl -s https://api.beetreecraft.com/v1/validate \
+  -H "X-API-Key: $BEETREE_API_KEY" \
   -H 'content-type: application/json' \
   -d '{"spec":"version: \"1.0\"\nmetadata:\n  name: demo\ntree:\n  type: action\n  name: hello\n"}'
 ```
@@ -34,11 +59,9 @@ Browse public trees: `GET /v1/trees?q=patrol&sort=popular`.
 
 ## Authentication
 
-Account endpoints need an `Authorization: Bearer <token>` header. A token is an ID or access token from BeeTreeCraft sign-in (Amazon Cognito).
+Use an [API key](#get-an-api-key) for scripts, servers and MCP clients. A sign-in token from Amazon Cognito also works, lasts about an hour, and is the only credential that can manage API keys.
 
-**Easiest:** sign in on the website and press *Copy my API token* on your [profile page](/app/#/profile).
-
-**From a script:**
+**A short-lived token from a script:**
 
 ```bash
 aws cognito-idp initiate-auth --region us-east-1 \
@@ -54,11 +77,20 @@ Tokens last about an hour. Use the returned `RefreshToken` with the `REFRESH_TOK
 curl -s https://api.beetreecraft.com/v1/me -H "Authorization: Bearer $TOKEN"
 ```
 
+Manage keys over the API with a sign-in token (a key cannot do this):
+
+```bash
+curl -s https://api.beetreecraft.com/v1/keys -H "Authorization: Bearer $TOKEN"
+curl -s -X POST https://api.beetreecraft.com/v1/keys -H "Authorization: Bearer $TOKEN" \
+  -H 'content-type: application/json' -d '{"name":"laptop"}'
+curl -s -X DELETE https://api.beetreecraft.com/v1/keys/<id> -H "Authorization: Bearer $TOKEN"
+```
+
 ## Save and share a tree
 
 ```bash
 curl -s https://api.beetreecraft.com/v1/trees \
-  -H "Authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -H "X-API-Key: $BEETREE_API_KEY" -H 'content-type: application/json' \
   -d '{"name":"My guard","visibility":"public","tags":["enemy"],"spec":"..."}'
 ```
 
@@ -80,8 +112,8 @@ Errors are JSON: `{"error": {"code": "invalid_spec", "message": "..."}}`.
 | Status | Meaning |
 |---|---|
 | 400 | Bad request body |
-| 401 | Missing, invalid or expired token |
-| 403 | Not allowed (for example deleting someone else's comment) |
+| 401 | Missing, invalid, revoked or expired key or token |
+| 403 | Not allowed (for example deleting someone else's comment, or managing API keys with an API key) |
 | 404 | Not found, or private and not yours |
 | 413 | Request body too large (512 KB limit) |
 | 422 | The spec is invalid; the message lists why |

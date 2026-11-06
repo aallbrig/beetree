@@ -1,0 +1,10 @@
+title = "BeeTreeCraft gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "beetreecraft-api-key"
+description = "BeeTreeCraft API key"
+regex = '''btc_[A-Za-z0-9_-]{43}'''
+tags = ["key", "beetreecraft"]
