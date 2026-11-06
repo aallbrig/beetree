@@ -106,3 +106,22 @@ items:
     kind: Tool
     summary: "Documentation for the Godot behavior tree plugin: adding a BTPlayer, authoring a tree in the editor and debugging a live tree with the blackboard inspector. Useful for Godot users exporting from BeeTreeCraft."
     score: 9
+  - title: "Behavior Tree in Unreal Engine: Overview"
+    url: "https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---overview"
+    kind: Tool
+    summary: "Epic's official overview of Unreal's event-driven behavior trees. Explains why conditions live in decorators, how Services refresh blackboard data, and how Simple Parallel and Observer Aborts replace general parallel nodes, with a cat-and-mouse example. Essential for anyone exporting to Unreal."
+    score: 12
+  - title: "Handling Complexity in the Halo 2 AI"
+    url: "https://gamedeveloper.com/programming/gdc-2005-proceeding-handling-complexity-in-the-i-halo-2-i-ai"
+    kind: Article
+    year: "2005"
+    author: "Damian Isla"
+    summary: "The GDC 2005 write-up that popularised behavior trees in games. Describes Halo 2's behavior DAG and how impulses, stimulus behaviors, tagging and orders keep a large AI manageable, with concrete examples such as entering a vehicle or fleeing when a leader dies."
+    score: 11
+  - title: "AI Arborist: Proper Cultivation and Care for Your Behavior Trees"
+    url: "https://gamedeveloper.com/design/video-cultivating-and-caring-for-great-ai-behavior-trees"
+    kind: Talk
+    year: "2017"
+    author: "Bobby Anguelov, Mika Vehkala and Ben Weber"
+    summary: "A GDC 2017 talk of guidelines from working AI developers on keeping behavior trees healthy: common pitfalls, debugging practice and design habits. Free to watch on the official GDC YouTube channel."
+    score: 12
