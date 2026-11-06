@@ -362,7 +362,7 @@ func (s *Server) deleteComment(w http.ResponseWriter, r *http.Request) {
 	}
 	treeID, commentID := r.PathValue("id"), r.PathValue("commentId")
 	t, err := s.Store.GetTree(r.Context(), treeID)
-	if err != nil {
+	if err != nil || !canRead(r, t) {
 		writeErr(w, http.StatusNotFound, "not_found", "not found")
 		return
 	}
