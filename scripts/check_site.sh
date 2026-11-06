@@ -69,6 +69,7 @@ done
 
 # the builder offers a template picker for new trees
 grep -rqF "template-picker" "$PUBLIC/app/assets" || { echo "builder is missing the template picker" >&2; exit 1; }
+grep -rqF "template-lesson" "$PUBLIC/app/assets" || { echo "builder must show what a template teaches" >&2; exit 1; }
 
 # the dashboard ships tree search, sort and rename
 for c in tree-search tree-sort 'Renamed.'; do

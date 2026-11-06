@@ -297,11 +297,13 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     h('option', { value: '' }, 'Empty tree'),
     ...SAMPLES.map((t) => h('option', { value: t.id }, t.title)),
   );
+  const lessonHint = h('p', { class: 'hint', id: 'template-lesson' });
   const templateRow = h(
     'div',
     {},
     h('label', { for: 'template-picker' }, 'Start from a template'),
     templateSel,
+    lessonHint,
   );
   templateSel.addEventListener('change', () => {
     const t = sampleById(templateSel.value);
@@ -310,6 +312,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     if (countNodes(spec.tree) > 1 && !window.confirm('Replace the tree you are editing?')) return;
     yamlArea.value = t.yaml;
     applyYaml();
+    lessonHint.textContent = `${t.title}: ${t.lesson}`;
   });
 
   const saveBtn = h(

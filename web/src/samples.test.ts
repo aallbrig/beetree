@@ -16,6 +16,10 @@ describe('built-in templates', () => {
       expect(ids, trope).toContain(`sample:${trope}`);
   });
 
+  it('says what each template teaches', () => {
+    for (const s of SAMPLES) expect(s.lesson.trim().length, s.id).toBeGreaterThan(30);
+  });
+
   for (const sample of SAMPLES) {
     it(`${sample.title} parses, has unique node names and runs in 3D`, () => {
       const spec = parseSpec(sample.yaml);
