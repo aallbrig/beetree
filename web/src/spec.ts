@@ -152,6 +152,14 @@ export function countNodes(n: NodeSpec): number {
   return 1 + (n.children ?? []).reduce((sum, c) => sum + countNodes(c), 0);
 }
 
+export const NODE_CEILING = 25;
+
+/** Soft size warning so authors keep trees small enough to read whole. */
+export function sizeWarning(count: number, ceiling = NODE_CEILING): string | undefined {
+  if (count <= ceiling) return undefined;
+  return `${count} nodes, over the ${ceiling}-node target. Fix: extract a branch into a subtree or merge similar nodes`;
+}
+
 export function allNames(n: NodeSpec, into = new Set<string>()): Set<string> {
   into.add(n.name);
   for (const c of n.children ?? []) allNames(c, into);
