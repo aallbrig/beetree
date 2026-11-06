@@ -200,3 +200,17 @@ items:
     author: "Tommy Thompson"
     summary: "How Halo 3 moved from scripted goals to a declarative task tree that squads claim by priority, with shared squad knowledge. Useful background for driving several agents from one tree; high level, no code."
     score: 9
+  - title: "Active Inference and Behavior Trees for Reactive Action Planning and Execution in Robotics"
+    url: "https://arxiv.org/abs/2011.09756"
+    kind: Paper
+    year: "2022"
+    author: "Corrado Pezzato, Carlos Hernandez Corbato, Stefan Bonhof and Martijn Wisse"
+    summary: "Adds a leaf node that names a desired state instead of an action, and lets active inference pick the actions to reach it at run time. The tree keeps the nominal plan while the leaf reacts to surprises, and the authors report far fewer hand-written nodes than a classical tree, tested in simulation and on two mobile manipulators in a retail setting. Published in IEEE Transactions on Robotics; read it for a rigorous take on goal-driven leaves and how they cut tree size."
+    score: 14
+  - title: "Using Behavior Trees to Create Retro Boss AI"
+    url: "https://www.gamedeveloper.com/programming/using-behavior-trees-to-create-retro-boss-ai"
+    kind: Article
+    year: "2015"
+    author: "Cody Olivier"
+    summary: "A shipped-game postmortem on boss attacks in a top-down shooter. A hand-built attack branch with timer decorators was hard to change and test, so the author replaced it with a random selector over self-contained attack leaves that fail unless their conditions hold. Small, concrete and reusable across bosses; a good example of choosing a node type to keep a tree flat and testable."
+    score: 12
