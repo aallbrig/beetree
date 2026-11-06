@@ -47,6 +47,7 @@ func (s *Server) Routes() []Route {
 		{"GET", "/v1/openapi.json", s.openapi},
 		{"GET", "/v1/public/trees", s.publicTrees},
 		{"GET", "/v1/node-types", s.getNodeTypes},
+		{"GET", "/v1/templates", s.listTemplates},
 		{"POST", "/v1/validate", s.validate},
 		{"POST", "/v1/simulate", s.simulate},
 		{"POST", "/v1/simulate/step", s.simulateStep},

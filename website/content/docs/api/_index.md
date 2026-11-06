@@ -55,6 +55,10 @@ Render, simulate and generate use the same body shape:
 | `POST /v1/simulate` | `overrides`: `{"node_name": "FAILURE"}` | `{status, trace, steps}` |
 | `POST /v1/generate` | `engine`: `unity` `unreal` `godot` | `{files: [{path, content, isStub}]}` |
 
+## Start from a template
+
+`GET /v1/templates` returns the five builder templates as `{templates: [{name, description, spec}]}`. Each `spec` is a valid `.beetree.yaml` you can send to `POST /v1/trees` or the endpoints above. MCP clients read the same files as `beetree://templates/{name}`.
+
 ## Step through a simulation
 
 `POST /v1/simulate` evaluates a whole tree with fixed overrides. To answer leaf by leaf instead, call `POST /v1/simulate/step`. It is stateless: send the spec and every answer so far (empty to start). While `done` is `false`, `pending` is the leaf that needs a status; append `SUCCESS`, `FAILURE` or `RUNNING` to `answers` and call again. The last response carries `status` and `trace`.
