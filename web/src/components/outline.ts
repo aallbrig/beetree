@@ -16,6 +16,8 @@ export interface Outline {
   el: HTMLElement;
   setStatuses(statuses: ReadonlyMap<string, Status>): void;
   setSelected(path: Path | undefined): void;
+  /** Marks nodes on the debugger's visited path, and the leaf it is paused on. */
+  setDebug(visited: ReadonlySet<string>, waiting: string | undefined): void;
   setProblems(problems: readonly Problem[]): void;
 }
 
@@ -68,6 +70,12 @@ export function outline(root: NodeSpec, onSelect?: (path: Path) => void): Outlin
         } else {
           delete btn.dataset.problem;
         }
+      }
+    },
+    setDebug(visited, waiting) {
+      for (const [id, btn] of buttons) {
+        btn.classList.toggle('visited', visited.has(id));
+        btn.classList.toggle('waiting', id === waiting);
       }
     },
     setSelected(path) {

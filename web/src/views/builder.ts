@@ -3,6 +3,7 @@ import { outline, type Outline } from '../components/outline';
 import { clear, h, toast } from '../dom';
 import { History } from '../history';
 import { navigate, type Cleanup, type Ctx } from '../router';
+import { pathId } from '../engine/bt';
 import { World, type Agent } from '../scene/world';
 import {
   addChild,
@@ -23,6 +24,7 @@ import {
   type Path,
   type TreeSpec,
 } from '../spec';
+import { runAll, SimWalker, type Policy } from '../walker';
 
 const DRAFT_KEY = 'beetree.draft';
 
@@ -192,6 +194,39 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     h('div', { class: 'stack' }, h('div', { class: 'row' }, engineSel, genBtn), codeOut),
   );
 
+  // ---- debug tab: step through, or run all ------------------------------
+  let walker: SimWalker | undefined;
+  let walkerSnapshot = '';
+  const dbgPrompt = h('div', { class: 'stack', role: 'status', 'aria-live': 'polite' });
+  const dbgTrace = h('pre', { class: 'code', 'aria-label': 'Trace' });
+  const stepBtn = h('button', { class: 'btn small', type: 'button' }, 'Step through');
+  const runBtn = h('button', { class: 'btn small', type: 'button' }, 'Run all');
+  const policySel = h(
+    'select',
+    { 'aria-label': 'Answer every leaf with' },
+    h('option', { value: 'success' }, 'every leaf succeeds'),
+    h('option', { value: 'failure' }, 'every leaf fails'),
+    h('option', { value: 'running' }, 'every leaf is running'),
+    h('option', { value: 'cycle' }, 'leaves cycle success, failure, running'),
+  );
+  const stopBtn = h('button', { class: 'btn small', type: 'button' }, 'Stop debugging');
+  addTab(
+    'debug',
+    'Debug',
+    h(
+      'div',
+      { class: 'stack' },
+      h(
+        'p',
+        { class: 'hint' },
+        'Step through pauses at each leaf so you pick its status. Composites resolve from their children.',
+      ),
+      h('div', { class: 'row' }, stepBtn, runBtn, policySel, stopBtn),
+      dbgPrompt,
+      dbgTrace,
+    ),
+  );
+
   const saveBtn = h(
     'button',
     { class: 'btn primary', type: 'button' },
@@ -297,8 +332,74 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
       : `${countNodes(spec.tree)} nodes`;
     status.style.color = issues.length ? 'var(--warn)' : 'var(--muted)';
     agent?.setSpec(spec.tree);
+    if (walker) {
+      // selecting a node rebuilds the outline; only a real edit ends the session
+      if (stringifySpec(spec) !== walkerSnapshot) stopDebug();
+      else showDebug(walker);
+    }
     persistDraft();
   }
+
+  function showDebug(w: SimWalker): void {
+    walker = w;
+    walkerSnapshot = stringifySpec(spec);
+    ol?.setStatuses(w.statuses());
+    ol?.setDebug(w.visited(), w.current ? pathId(w.current.path) : undefined);
+    clear(dbgPrompt);
+    const cur = w.current;
+    if (w.state === 'waiting' && cur) {
+      dbgPrompt.append(
+        h(
+          'div',
+          {},
+          `Paused at ${cur.node.type} `,
+          h('strong', {}, cur.node.name),
+          '. Its status?',
+        ),
+        h(
+          'div',
+          { class: 'row' },
+          ...(['success', 'failure', 'running'] as const).map((st) =>
+            h(
+              'button',
+              {
+                class: 'btn small',
+                type: 'button',
+                onClick: () => {
+                  w.resolve(st);
+                  showDebug(w);
+                },
+              },
+              st,
+            ),
+          ),
+        ),
+      );
+    } else if (w.state === 'complete') {
+      dbgPrompt.append(h('div', {}, 'Finished: ', h('strong', {}, w.result ?? '')));
+    }
+    dbgTrace.textContent = w.trace
+      .map(
+        (s) =>
+          `${'  '.repeat(s.depth)}${s.event === 'enter' ? '>' : '<'} ${s.name}${s.status ? ` -> ${s.status}` : ''}`,
+      )
+      .join('\n');
+  }
+  function stopDebug(): void {
+    walker = undefined;
+    clear(dbgPrompt);
+    dbgTrace.textContent = '';
+    ol?.setDebug(new Set(), undefined);
+  }
+  stepBtn.addEventListener('click', () => {
+    const w = new SimWalker(spec.tree);
+    w.step();
+    showDebug(w);
+  });
+  runBtn.addEventListener('click', () => {
+    showDebug(runAll(spec.tree, policySel.value as Policy));
+  });
+  stopBtn.addEventListener('click', stopDebug);
 
   function renderProps(): void {
     clear(propsHost);
@@ -565,7 +666,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   showTab('design');
   refresh();
   const timer = setInterval(() => {
-    if (agent) ol?.setStatuses(agent.runtime.statuses);
+    if (agent && !walker) ol?.setStatuses(agent.runtime.statuses);
   }, 120);
   return () => {
     clearInterval(timer);
