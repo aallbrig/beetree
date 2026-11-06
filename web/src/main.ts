@@ -182,7 +182,8 @@ route('/signup', signUpView);
 route('/confirm', confirmView);
 route('/forgot', forgotView);
 route('/dashboard', dashboardView, { private: true });
-route('/builder', builderView, { private: true, wide: true });
+// scratch mode: anyone can build; saving, validating and codegen ask for sign-in
+route('/builder', builderView, { wide: true });
 route('/builder/([\\w-]+)', builderView, { private: true, wide: true });
 route('/scenes', scenesView, { private: true, wide: true });
 route('/scenes/([\\w-]+)', scenesView, { private: true, wide: true });

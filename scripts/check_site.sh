@@ -80,6 +80,10 @@ if printf '%s' "$hero" | grep -q '#/signup'; then echo "hero must not link to si
 # hero carries a copyable install command, and the clone URL is the one the CLI docs use
 printf '%s' "$hero" | grep -Eq 'data-copy="?#home-install-cmd' || { echo "hero needs an install copy button" >&2; exit 1; }
 printf '%s' "$hero" | grep -q 'make install' || { echo "hero install command must end in make install" >&2; exit 1; }
+# scratch mode: the builder route is public, and saving from it asks for sign-in
+grep -E "^route\('/builder'," web/src/main.ts | grep -vq 'private' || { echo "the /builder route must be public (scratch mode)" >&2; exit 1; }
+printf '%s' "$hero" | grep -Eq 'href="?/app/#/builder[" >]' || { echo "hero must link to the builder without an account" >&2; exit 1; }
+grep -rqF "Your draft is kept" "$PUBLIC/app/assets" || { echo "builder must keep the draft when asking anonymous visitors to sign in" >&2; exit 1; }
 grep -q 'data-copy' website/static/js/site.js || { echo "site.js must handle data-copy buttons" >&2; exit 1; }
 grep -q 'git clone https://github.com/aallbrig/beetreecraft' website/content/docs/cli.md || { echo "hero install command drifted from docs/cli" >&2; exit 1; }
 
