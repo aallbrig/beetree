@@ -158,3 +158,36 @@ func TestMCPBadCalls(t *testing.T) {
 	_, r = rpc(h, "", 1, "tools/call", map[string]any{"name": "validate_tree", "arguments": "not-an-object"})
 	assert.EqualValues(t, rpcInvalidParams, r["error"].(map[string]any)["code"])
 }
+
+func TestMCPResourcesAndPrompts(t *testing.T) {
+	h := newTestServer(t)
+
+	_, r := rpc(h, "", 1, "resources/list", nil)
+	list := r["result"].(map[string]any)["resources"].([]any)
+	require.Len(t, list, 2)
+
+	for _, uri := range []string{"beetree://node-types", "beetree://examples/patrol"} {
+		_, r = rpc(h, "", 2, "resources/read", map[string]any{"uri": uri})
+		c := r["result"].(map[string]any)["contents"].([]any)[0].(map[string]any)
+		assert.Equal(t, uri, c["uri"])
+		assert.NotEmpty(t, c["text"])
+	}
+
+	// the starter spec must pass the real validator
+	res, _ := validateYAML(starterSpec)
+	assert.True(t, res.Valid, "%v", res.Errors)
+
+	_, r = rpc(h, "", 3, "resources/read", map[string]any{"uri": "beetree://nope"})
+	assert.NotNil(t, r["error"])
+
+	_, r = rpc(h, "", 4, "prompts/list", nil)
+	assert.Len(t, r["result"].(map[string]any)["prompts"].([]any), 1)
+
+	_, r = rpc(h, "", 5, "prompts/get", map[string]any{"name": "design_behavior_tree", "arguments": map[string]any{"character": "a guard dog", "engine": "godot"}})
+	msg := r["result"].(map[string]any)["messages"].([]any)[0].(map[string]any)["content"].(map[string]any)["text"].(string)
+	assert.Contains(t, msg, "a guard dog")
+	assert.Contains(t, msg, "generate_code with engine godot")
+
+	_, r = rpc(h, "", 6, "prompts/get", map[string]any{"name": "design_behavior_tree"})
+	assert.NotNil(t, r["error"])
+}
