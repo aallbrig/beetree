@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -106,4 +107,31 @@ func (s *Server) generate(w http.ResponseWriter, r *http.Request) {
 func jsonRaw(v any) json.RawMessage {
 	b, _ := json.Marshal(v)
 	return b
+}
+
+type templateInfo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Spec        string `json:"spec"`
+}
+
+// listTemplates serves the embedded builder templates over REST, the same
+// files MCP exposes as beetree://templates/{name}.
+func (s *Server) listTemplates(w http.ResponseWriter, _ *http.Request) {
+	entries, _ := templatesFS.ReadDir("templates")
+	list := make([]templateInfo, 0, len(entries))
+	for _, e := range entries {
+		b, err := templatesFS.ReadFile("templates/" + e.Name())
+		if err != nil {
+			continue
+		}
+		var doc struct {
+			Metadata struct {
+				Description string `yaml:"description"`
+			} `yaml:"metadata"`
+		}
+		_ = yaml.Unmarshal(b, &doc)
+		list = append(list, templateInfo{Name: strings.TrimSuffix(e.Name(), ".beetree.yaml"), Description: doc.Metadata.Description, Spec: string(b)})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"templates": list})
 }

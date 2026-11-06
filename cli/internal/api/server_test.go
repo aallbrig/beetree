@@ -495,3 +495,18 @@ func TestListTreesCursorPagination(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, do(h, "GET", "/v1/trees?"+bad, "", nil).Code, bad)
 	}
 }
+
+func TestListTemplates(t *testing.T) {
+	h := newTestServer(t)
+	r := do(h, "GET", "/v1/templates", "alice", nil)
+	require.Equal(t, 200, r.Code)
+	list, _ := r.JSON(t)["templates"].([]any)
+	require.Len(t, list, 5)
+	for _, it := range list {
+		m := it.(map[string]any)
+		assert.NotEmpty(t, m["name"])
+		assert.NotEmpty(t, m["description"])
+		v := do(h, "POST", "/v1/validate", "alice", map[string]any{"spec": m["spec"]})
+		assert.Equal(t, true, v.JSON(t)["valid"], "template %v must validate", m["name"])
+	}
+}

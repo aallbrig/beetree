@@ -62,6 +62,29 @@ paths:
       responses:
         '200': {description: OK}
         '429': {$ref: '#/components/responses/Error'}
+  /v1/templates:
+    get:
+      summary: Starter templates
+      description: The builder templates as valid specs; the same ones MCP serves as `beetree://templates/{name}`.
+      operationId: listTemplates
+      tags: [Tools]
+      responses:
+        '200':
+          description: Templates, sorted by name
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: {type: string, example: guard}
+                        description: {type: string}
+                        spec: {type: string, description: A valid .beetree.yaml document}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/validate:
     post:
       summary: Validate a spec
