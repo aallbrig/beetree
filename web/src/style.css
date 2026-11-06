@@ -120,7 +120,7 @@ p {
 }
 @media (max-width: 800px) {
   .nav .menu-toggle {
-    display: inline-block;
+    display: inline-flex;
   }
   .nav .links {
     display: none;
