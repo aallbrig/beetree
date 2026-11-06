@@ -16,3 +16,4 @@ https://80.lv/articles/days-gone-squad-coordination-explained | 7 | Days Gone sq
 https://cryengine.com/docs/static/engines/cryengine-5/categories/23756813/pages/23310620 | unscored | page body truncated, only navigation readable
 https://docs.unity3d.com/Packages/com.unity.behavior@1.0/manual/index.html | 8 | Unity Behavior overview; shallow, no examples, calls them graphs
 https://typeset.io/pdf/how-behavior-trees-modularize-hybrid-control-systems-and-3u8kkzhnfd.pdf | unscored | third-party PDF mirror of the Colledanchise and Ogren TRO paper; no confirmed official free copy
+https://limboai.readthedocs.io/en/stable/behavior-trees/create-tree.html#debugger | n/a | LimboAI debugger section is a few lines inside an entry already on the list
