@@ -148,7 +148,7 @@ func TestLiveStack(t *testing.T) {
 	code, _ = client{t: t, base: apiURL, key: "btc_notarealkey"}.do("GET", "/v1/trees", nil)
 	assert.Equal(t, 401, code, "an unknown key is rejected")
 
-	code, minted := me.do("POST", "/v1/keys", map[string]string{"name": "smoke " + name})
+	code, minted := me.do("POST", "/v1/keys", map[string]string{"name": "smoke " + name, "preset": "full"})
 	require.Equal(t, 201, code, fmt.Sprint(minted))
 	secret := minted["key"].(string)
 	keyID := minted["id"].(string)
