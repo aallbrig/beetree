@@ -1,5 +1,6 @@
 import './style.css';
 import { currentTheme, showTheme, toggleTheme } from './theme';
+import { clearDraft } from './draft';
 import { currentUsername, isSignedIn, onAuthChange, signOut } from './auth';
 import { clear, h } from './dom';
 import { navigate, render, route, setGuard, start } from './router';
@@ -124,6 +125,7 @@ function renderNav(): void {
             {
               class: 'btn small',
               onClick: () => {
+                clearDraft();
                 signOut();
                 navigate('/explore');
               },

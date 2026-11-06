@@ -31,9 +31,8 @@ import {
   type Path,
   type TreeSpec,
 } from '../spec';
+import { DRAFT_KEY } from '../draft';
 import { runAll, SimWalker, type Policy } from '../walker';
-
-const DRAFT_KEY = 'beetree.draft';
 
 export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   const treeId = ctx.params[0];
