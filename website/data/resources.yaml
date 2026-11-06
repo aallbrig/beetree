@@ -75,3 +75,17 @@ items:
     author: "Matteo Iovino, Edvards Scukins, Jonathan Styrud, Petter Ögren and Christian Smith"
     summary: "Surveys behavior tree research by method, application area and contribution, from game AI to manipulation and drones, and ends with open research challenges. A good map of the field after the introductory book."
     score: 12
+  - title: "Verifying Safety of Behaviour Trees in Event-B"
+    url: "https://arxiv.org/abs/2209.14045"
+    kind: Paper
+    year: "2022"
+    author: "Matteo Tadiello and Elena Troubitsyna"
+    summary: "Gives a formal specification of behavior trees and a method for proving invariants of an existing tree, so safety requirements can be checked before a robot runs it. Aimed at keeping the formalization simple enough to test specific tree instances."
+    score: 12
+  - title: "Extending Behavior Trees"
+    url: "https://www.gamedeveloper.com/business/extending-behavior-trees"
+    kind: Talk
+    year: "2017"
+    author: "Ben Weber"
+    summary: "A write-up of a GDC 2017 AI Summit talk. Covers extra node types such as spawn goal and success test, authoring patterns such as daemon behaviors, message passing and behavior locking, and ways to connect a tree to external planners, with examples from a StarCraft bot."
+    score: 9
