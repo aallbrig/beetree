@@ -20,6 +20,13 @@ grep -q 'public/trees' "$PUBLIC/docs/api/index.html" || { echo "docs/api must do
 for d in docs/api docs/mcp; do
   grep -q 'X-API-Key' "$PUBLIC/$d/index.html" || { echo "$d must document X-API-Key" >&2; exit 1; }
 done
+# every curl block on the MCP page must send the API key, or it returns 401 verbatim
+bad=$(sed 's/<[^>]*>//g' "$PUBLIC/docs/mcp/index.html" | awk '
+  /curl -s https:\/\/api.beetreecraft.com\/mcp/ {n++; if (open && !keyed) bad++; open=1; keyed=0}
+  open && /X-API-Key/ {keyed=1}
+  open && /^[[:space:]]*-d / {if (!keyed) bad++; open=0}
+  END {print (n < 1 ? 1 : bad + 0)}')
+[ "$bad" = 0 ] || { echo "every curl on docs/mcp must send X-API-Key" >&2; exit 1; }
 # every curated resource needs an https link, a summary and a passing score
 data="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/website/data/resources.yaml"
 n=$(grep -c '^  - title:' "$data")
