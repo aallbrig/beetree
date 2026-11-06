@@ -35,6 +35,12 @@ for l in /app/ /learn/behavior-trees/ /docs/ /docs/api/ /docs/mcp/ /references/ 
 done
 grep -Eq 'href="?/site-map/[" >]' "$PUBLIC/index.html" || { echo "footer must link /site-map/" >&2; exit 1; }
 
+# the home page names the trope templates and links to the live preview
+for t in 'Patrol loop' 'Guard' 'Coward' 'Boss with phases' 'Loyal companion'; do
+  grep -q "<h3>$t</h3>" "$PUBLIC/index.html" || { echo "home must name template: $t" >&2; exit 1; }
+done
+tr -d '\n' < "$PUBLIC/index.html" | grep -oE '<section class="?wrap"? id="?templates.*' | sed 's#</section>.*##' | grep -Eq 'href="?/app/#/explore' || { echo "home templates section must link to the live preview" >&2; exit 1; }
+
 # sign-up belongs below the fold: the hero section must not link to it
 hero=$(tr -d '\n' < "$PUBLIC/index.html" | grep -oE '<section class="?hero[" >].*' | sed 's#</section>.*##')
 [ -n "$hero" ] || { echo "home hero not found" >&2; exit 1; }
