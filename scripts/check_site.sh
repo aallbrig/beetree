@@ -73,6 +73,10 @@ for c in tree-search tree-sort 'Renamed.'; do
   grep -rqF "$c" "$PUBLIC/app/assets" || { echo "dashboard is missing the $c control" >&2; exit 1; }
 done
 
+# visitors who ask for reduced motion get no animated transitions, on the site and in the builder
+grep -qF 'prefers-reduced-motion' "$PUBLIC/site.css" || { echo "site.css must honour prefers-reduced-motion" >&2; exit 1; }
+grep -rqF 'prefers-reduced-motion' "$PUBLIC/app/assets" --include=*.css || { echo "builder css must honour prefers-reduced-motion" >&2; exit 1; }
+
 # every root-relative href in the built HTML must resolve (the /app/ SPA owns its #/ routes)
 bad=0
 while IFS= read -r link; do
