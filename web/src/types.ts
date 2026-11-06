@@ -59,6 +59,8 @@ export interface Post {
 export interface SceneAgent {
   name: string;
   treeId?: string;
+  /** Side the agent fights for; scene timers can target a whole faction. */
+  faction?: string;
   model: string;
   x: number;
   z: number;

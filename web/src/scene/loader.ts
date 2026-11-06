@@ -30,6 +30,7 @@ export async function populate(world: World, agents: SceneAgent[]): Promise<Load
     await world.addAgent({
       id,
       name: a.name,
+      faction: a.faction,
       model: a.model,
       x: a.x,
       z: a.z,
