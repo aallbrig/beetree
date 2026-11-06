@@ -65,6 +65,7 @@ type client struct {
 	t     *testing.T
 	base  string
 	token string
+	key   string // API key, sent as X-API-Key
 }
 
 func (c client) do(method, path string, body any) (int, map[string]any) {
@@ -80,6 +81,9 @@ func (c client) do(method, path string, body any) (int, map[string]any) {
 	}
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
+	if c.key != "" {
+		req.Header.Set("X-API-Key", c.key)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(c.t, err)
@@ -127,9 +131,33 @@ func TestLiveStack(t *testing.T) {
 	code, bad := cognito(t, clientID, "InitiateAuth", map[string]any{"AuthFlow": "USER_PASSWORD_AUTH", "AuthParameters": map[string]string{"USERNAME": name, "PASSWORD": "wrong-password-1"}})
 	assert.NotEqual(t, 200, code, fmt.Sprint(bad))
 
-	// 3. Authenticated REST flows.
-	code, _ = anon.do("GET", "/v1/me", nil)
-	assert.Equal(t, 401, code)
+	// 3. The API needs credentials; an API key minted by a signed-in user works.
+	code, _ = anon.do("GET", "/v1/health", nil)
+	assert.Equal(t, 200, code, "health stays open")
+	for _, p := range []string{"/v1/me", "/v1/trees", "/v1/node-types", "/v1/forum/threads"} {
+		code, _ = anon.do("GET", p, nil)
+		assert.Equal(t, 401, code, "anonymous %s must be rejected", p)
+	}
+	code, _ = anon.do("POST", "/mcp", map[string]any{"jsonrpc": "2.0", "id": 1, "method": "ping"})
+	assert.Equal(t, 401, code, "MCP needs credentials")
+	code, _ = client{t: t, base: apiURL, key: "btc_notarealkey"}.do("GET", "/v1/trees", nil)
+	assert.Equal(t, 401, code, "an unknown key is rejected")
+
+	code, minted := me.do("POST", "/v1/keys", map[string]string{"name": "smoke " + name})
+	require.Equal(t, 201, code, fmt.Sprint(minted))
+	secret := minted["key"].(string)
+	keyID := minted["id"].(string)
+	revoked := false
+	t.Cleanup(func() {
+		if !revoked {
+			_, _ = me.do("DELETE", "/v1/keys/"+keyID, nil)
+		}
+	})
+	keyed := client{t: t, base: apiURL, key: secret}
+	code, _ = keyed.do("GET", "/v1/node-types", nil)
+	assert.Equal(t, 200, code, "an API key authenticates")
+	code, _ = keyed.do("POST", "/v1/keys", map[string]string{"name": "nope"})
+	assert.Equal(t, 403, code, "a key cannot mint keys")
 	code, prof := me.do("GET", "/v1/me", nil)
 	require.Equal(t, 200, code, fmt.Sprint(prof))
 	userID := prof["userId"].(string)
@@ -140,16 +168,16 @@ func TestLiveStack(t *testing.T) {
 	treeID := tree["id"].(string)
 	t.Cleanup(func() { _, _ = me.do("DELETE", "/v1/trees/"+treeID, nil) })
 
-	code, list := anon.do("GET", "/v1/trees?q=smoke+"+name, nil)
+	code, list := keyed.do("GET", "/v1/trees?q=smoke+"+name, nil)
 	assert.Equal(t, 200, code)
-	assert.Len(t, list["items"], 1, "public tree is discoverable anonymously")
+	assert.Len(t, list["items"], 1, "public tree is discoverable with a key")
 
 	code, like := me.do("PUT", "/v1/trees/"+treeID+"/like", nil)
 	assert.Equal(t, 200, code)
 	assert.EqualValues(t, 1, like["likeCount"])
 	code, cm := me.do("POST", "/v1/trees/"+treeID+"/comments", map[string]string{"body": "smoke test comment"})
 	assert.Equal(t, 201, code, fmt.Sprint(cm))
-	_, got := anon.do("GET", "/v1/trees/"+treeID, nil)
+	_, got := keyed.do("GET", "/v1/trees/"+treeID, nil)
 	assert.EqualValues(t, 1, got["likeCount"])
 	assert.EqualValues(t, 1, got["commentCount"])
 
@@ -178,14 +206,22 @@ func TestLiveStack(t *testing.T) {
 	assert.Contains(t, fmt.Sprint(rpc["result"]), "valid")
 	_, rpc = call(me, "list_my_trees", nil)
 	assert.Contains(t, fmt.Sprint(rpc["result"]), treeID)
-	_, rpc = call(anon, "list_my_trees", nil)
-	assert.Contains(t, fmt.Sprint(rpc["result"]), "signed-in")
+	code, rpc = call(keyed, "validate_tree", map[string]any{"spec": spec})
+	assert.Equal(t, 200, code, "MCP accepts an API key")
+	assert.Contains(t, fmt.Sprint(rpc["result"]), "valid")
+	code, _ = call(anon, "list_my_trees", nil)
+	assert.Equal(t, 401, code, "MCP rejects anonymous callers")
 
 	// 5. Cleanup is verified, not assumed.
 	code, _ = me.do("DELETE", "/v1/trees/"+treeID, nil)
 	assert.Equal(t, 204, code)
-	code, _ = anon.do("GET", "/v1/trees/"+treeID, nil)
+	code, _ = keyed.do("GET", "/v1/trees/"+treeID, nil)
 	assert.Equal(t, 404, code)
+	code, _ = me.do("DELETE", "/v1/keys/"+keyID, nil)
+	assert.Equal(t, 204, code)
+	revoked = true
+	code, _ = keyed.do("GET", "/v1/node-types", nil)
+	assert.Equal(t, 401, code, "a revoked key stops working")
 	if v := os.Getenv("SMOKE_VERBOSE"); v != "" {
 		t.Logf("user %s tree %s thread %s", name, treeID, threadID)
 	}
