@@ -115,7 +115,7 @@ describe('findProblems with duplicate names', () => {
     const found = findProblems(spec.tree).filter((p) => p.message.includes('more than once'));
     expect(found).toHaveLength(1);
     expect(found[0]?.path).toEqual([1]);
-    expect(found[0]?.message).toMatch(/^go: .*rename/);
+    expect(found[0]?.fix).toMatch(/rename/i);
   });
 });
 
@@ -169,5 +169,20 @@ describe('parseValidatorError', () => {
       path: null,
       message: 'metadata.name is required',
     });
+  });
+});
+
+describe('findProblems fix hints', () => {
+  it('gives every problem kind a non-empty fix', () => {
+    const spec = parseSpec(
+      'tree:\n  type: sequence\n  name: root\n  children:\n    - type: action\n      name: go\n    - type: action\n      name: go\n    - type: sequence\n      name: empty\n    - type: decorator\n      name: deco\n',
+    );
+    const found = findProblems(spec.tree);
+    const kinds = ['more than once', 'needs at least one', 'needs exactly one'];
+    for (const k of kinds) {
+      const p = found.find((x) => x.message.includes(k));
+      expect(p, k).toBeDefined();
+      expect(p?.fix.length).toBeGreaterThan(10);
+    }
   });
 });

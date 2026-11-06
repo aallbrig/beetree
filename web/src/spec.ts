@@ -276,6 +276,8 @@ export function parseValidatorError(err: string): { path: Path | null; message: 
 export interface Problem {
   path: Path;
   message: string;
+  /** A concrete repair the author can apply. */
+  fix: string;
 }
 
 /** Structural problems the validator would reject, each tied to the offending node. */
@@ -284,13 +286,25 @@ export function findProblems(root: NodeSpec): Problem[] {
   const seen = new Set<string>();
   for (const [n, path] of walk(root)) {
     if (seen.has(n.name))
-      out.push({ path, message: `${n.name}: name is used more than once; rename one of them` });
+      out.push({
+        path,
+        message: `${n.name}: name is used more than once`,
+        fix: 'Rename one of the nodes so every name is unique.',
+      });
     seen.add(n.name);
     const kids = n.children?.length ?? 0;
     if (isComposite(n.type) && kids === 0)
-      out.push({ path, message: `${n.name}: a ${n.type} needs at least one child` });
+      out.push({
+        path,
+        message: `${n.name}: a ${n.type} needs at least one child`,
+        fix: `Add a child under ${n.name}, or delete the ${n.type}.`,
+      });
     if (n.type === 'decorator' && kids !== 1)
-      out.push({ path, message: `${n.name}: a decorator needs exactly one child` });
+      out.push({
+        path,
+        message: `${n.name}: a decorator needs exactly one child`,
+        fix: `Leave exactly one child under ${n.name}; wrap several in a sequence first.`,
+      });
   }
   return out;
 }
