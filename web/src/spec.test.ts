@@ -106,6 +106,18 @@ describe('findProblems with several bad nodes', () => {
   });
 });
 
+describe('findProblems with duplicate names', () => {
+  it('flags the second node that reuses a name, with a fix', () => {
+    const spec = parseSpec(
+      'tree:\n  type: sequence\n  name: root\n  children:\n    - type: action\n      name: go\n    - type: action\n      name: go\n',
+    );
+    const found = findProblems(spec.tree).filter((p) => p.message.includes('more than once'));
+    expect(found).toHaveLength(1);
+    expect(found[0]?.path).toEqual([1]);
+    expect(found[0]?.message).toMatch(/^go: .*rename/);
+  });
+});
+
 describe('restructuring', () => {
   it('duplicates a subtree with unique names', () => {
     const spec = newSpec();
