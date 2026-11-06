@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   addChild,
   countNodes,
+  duplicateAt,
+  indent,
+  outdent,
   getNode,
   makeNode,
   moveSibling,
@@ -89,5 +92,34 @@ describe('findProblems', () => {
     expect(Array.isArray(res)).toBe(true);
     const found = findProblems(spec.tree).filter((p) => p.message.includes('needs at least one'));
     expect(found.map((p) => p.path)).toContainEqual(res);
+  });
+});
+
+describe('restructuring', () => {
+  it('duplicates a subtree with unique names', () => {
+    const spec = newSpec();
+    const res = duplicateAt(spec.tree, [0]);
+    expect(res).toEqual([1]);
+    expect(getNode(spec.tree, [1])?.name).toBe('chase_2');
+    expect(getNode(spec.tree, [1, 0])?.name).toBe('has_target_2');
+    const names = [...walk(spec.tree)].map(([n]) => n.name);
+    expect(new Set(names).size).toBe(names.length);
+    expect(typeof duplicateAt(spec.tree, [])).toBe('string');
+  });
+
+  it('outdents a node to follow its parent', () => {
+    const spec = newSpec();
+    expect(outdent(spec.tree, [0, 1])).toEqual([1]);
+    expect(getNode(spec.tree, [1])?.name).toBe('chase_target');
+    expect(typeof outdent(spec.tree, [0])).toBe('string');
+  });
+
+  it('indents a node into the sibling above, rejecting leaves', () => {
+    const spec = newSpec();
+    expect(indent(spec.tree, [1])).toEqual([0, 2]);
+    expect(getNode(spec.tree, [0, 2])?.name).toBe('patrol');
+    const leaf = newSpec();
+    expect(typeof indent(leaf.tree, [0, 1])).toBe('string');
+    expect(getNode(leaf.tree, [0, 1])?.name).toBe('chase_target');
   });
 });
