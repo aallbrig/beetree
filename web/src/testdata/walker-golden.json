@@ -1,0 +1,1514 @@
+[
+  {
+    "template": "sample:patrol",
+    "policy": "success",
+    "result": "success",
+    "trace": [
+      {
+        "name": "patrol_forever",
+        "type": "decorator",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "patrol_cycle",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "wait_at_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "wait_at_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "next_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "next_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "patrol_cycle",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "patrol_forever",
+        "type": "decorator",
+        "depth": 0,
+        "event": "resolve",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "template": "sample:patrol",
+    "policy": "failure",
+    "result": "failure",
+    "trace": [
+      {
+        "name": "patrol_forever",
+        "type": "decorator",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "patrol_cycle",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "patrol_cycle",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "patrol_forever",
+        "type": "decorator",
+        "depth": 0,
+        "event": "resolve",
+        "status": "failure"
+      }
+    ]
+  },
+  {
+    "template": "sample:patrol",
+    "policy": "running",
+    "result": "running",
+    "trace": [
+      {
+        "name": "patrol_forever",
+        "type": "decorator",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "patrol_cycle",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "patrol_cycle",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "patrol_forever",
+        "type": "decorator",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  },
+  {
+    "template": "sample:patrol",
+    "policy": "cycle",
+    "result": "failure",
+    "trace": [
+      {
+        "name": "patrol_forever",
+        "type": "decorator",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "patrol_cycle",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "wait_at_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "wait_at_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "patrol_cycle",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "patrol_forever",
+        "type": "decorator",
+        "depth": 0,
+        "event": "resolve",
+        "status": "failure"
+      }
+    ]
+  },
+  {
+    "template": "sample:guard",
+    "policy": "success",
+    "result": "success",
+    "trace": [
+      {
+        "name": "guard_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "combat",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "attack_or_close",
+        "type": "selector",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "melee",
+        "type": "sequence",
+        "depth": 3,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "in_range",
+        "type": "condition",
+        "depth": 4,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "in_range",
+        "type": "condition",
+        "depth": 4,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "melee_attack",
+        "type": "action",
+        "depth": 4,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "melee_attack",
+        "type": "action",
+        "depth": 4,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "melee",
+        "type": "sequence",
+        "depth": 3,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "attack_or_close",
+        "type": "selector",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "combat",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "guard_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "template": "sample:guard",
+    "policy": "failure",
+    "result": "failure",
+    "trace": [
+      {
+        "name": "guard_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "combat",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "combat",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "patrol",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "move_to_waypoint",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "patrol",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "guard_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "failure"
+      }
+    ]
+  },
+  {
+    "template": "sample:guard",
+    "policy": "running",
+    "result": "running",
+    "trace": [
+      {
+        "name": "guard_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "combat",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "combat",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "guard_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  },
+  {
+    "template": "sample:guard",
+    "policy": "cycle",
+    "result": "running",
+    "trace": [
+      {
+        "name": "guard_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "combat",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "attack_or_close",
+        "type": "selector",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "melee",
+        "type": "sequence",
+        "depth": 3,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "in_range",
+        "type": "condition",
+        "depth": 4,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "in_range",
+        "type": "condition",
+        "depth": 4,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "melee",
+        "type": "sequence",
+        "depth": 3,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "chase_target",
+        "type": "action",
+        "depth": 3,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "chase_target",
+        "type": "action",
+        "depth": 3,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "attack_or_close",
+        "type": "selector",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "combat",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "guard_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  },
+  {
+    "template": "sample:coward",
+    "policy": "success",
+    "result": "success",
+    "trace": [
+      {
+        "name": "coward_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "flee",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "run_to_cover",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "run_to_cover",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "flee",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "coward_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "template": "sample:coward",
+    "policy": "failure",
+    "result": "failure",
+    "trace": [
+      {
+        "name": "coward_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "flee",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "flee",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "recover",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "heal",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "heal",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "recover",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "coward_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "failure"
+      }
+    ]
+  },
+  {
+    "template": "sample:coward",
+    "policy": "running",
+    "result": "running",
+    "trace": [
+      {
+        "name": "coward_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "flee",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "flee",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "coward_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  },
+  {
+    "template": "sample:coward",
+    "policy": "cycle",
+    "result": "running",
+    "trace": [
+      {
+        "name": "coward_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "flee",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "run_to_cover",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "run_to_cover",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "flee",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "recover",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "heal",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "heal",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "recover",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "coward_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  },
+  {
+    "template": "sample:boss",
+    "policy": "success",
+    "result": "success",
+    "trace": [
+      {
+        "name": "boss_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "desperate_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "health_is_low",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "health_is_low",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "retreat_to_cover",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "retreat_to_cover",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "heal_self",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "heal_self",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "desperate_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "boss_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "template": "sample:boss",
+    "policy": "failure",
+    "result": "failure",
+    "trace": [
+      {
+        "name": "boss_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "desperate_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "health_is_low",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "health_is_low",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "desperate_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "melee_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "target_in_range",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "target_in_range",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "melee_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "ranged_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "ranged_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "look_around",
+        "type": "action",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "look_around",
+        "type": "action",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "boss_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "failure"
+      }
+    ]
+  },
+  {
+    "template": "sample:boss",
+    "policy": "running",
+    "result": "running",
+    "trace": [
+      {
+        "name": "boss_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "desperate_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "health_is_low",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "health_is_low",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "desperate_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "boss_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  },
+  {
+    "template": "sample:boss",
+    "policy": "cycle",
+    "result": "running",
+    "trace": [
+      {
+        "name": "boss_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "desperate_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "health_is_low",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "health_is_low",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "retreat_to_cover",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "retreat_to_cover",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "desperate_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "melee_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "target_in_range",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "target_in_range",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "melee_phase",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "boss_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  },
+  {
+    "template": "sample:companion",
+    "policy": "success",
+    "result": "success",
+    "trace": [
+      {
+        "name": "companion_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "defend_owner",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "engage",
+        "type": "selector",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "strike",
+        "type": "sequence",
+        "depth": 3,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "target_in_range",
+        "type": "condition",
+        "depth": 4,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "target_in_range",
+        "type": "condition",
+        "depth": 4,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "melee_attack",
+        "type": "action",
+        "depth": 4,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "melee_attack",
+        "type": "action",
+        "depth": 4,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "strike",
+        "type": "sequence",
+        "depth": 3,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "engage",
+        "type": "selector",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "defend_owner",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "companion_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "template": "sample:companion",
+    "policy": "failure",
+    "result": "failure",
+    "trace": [
+      {
+        "name": "companion_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "defend_owner",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "defend_owner",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "idle_near_owner",
+        "type": "action",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "idle_near_owner",
+        "type": "action",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "companion_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "failure"
+      }
+    ]
+  },
+  {
+    "template": "sample:companion",
+    "policy": "running",
+    "result": "running",
+    "trace": [
+      {
+        "name": "companion_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "defend_owner",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "defend_owner",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "companion_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  },
+  {
+    "template": "sample:companion",
+    "policy": "cycle",
+    "result": "running",
+    "trace": [
+      {
+        "name": "companion_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "defend_owner",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "engage",
+        "type": "selector",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "strike",
+        "type": "sequence",
+        "depth": 3,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "target_in_range",
+        "type": "condition",
+        "depth": 4,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "target_in_range",
+        "type": "condition",
+        "depth": 4,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "strike",
+        "type": "sequence",
+        "depth": 3,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "chase_target",
+        "type": "action",
+        "depth": 3,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "chase_target",
+        "type": "action",
+        "depth": 3,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "engage",
+        "type": "selector",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "defend_owner",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "companion_ai",
+        "type": "selector",
+        "depth": 0,
+        "event": "resolve",
+        "status": "running"
+      }
+    ]
+  }
+]

@@ -433,6 +433,12 @@ pre.code {
 .node[data-status='failure'] .dot {
   background: var(--err);
 }
+.node.visited {
+  border-left: 3px solid var(--accent, currentColor);
+}
+.node.waiting {
+  outline: 2px solid var(--warn);
+}
 .node[data-status='running'] .dot {
   background: var(--warn);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 30%, transparent);
