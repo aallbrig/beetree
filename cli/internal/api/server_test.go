@@ -415,3 +415,24 @@ func TestOpenAPIIsValidOpenAPI3(t *testing.T) {
 		}
 	}
 }
+
+func TestOpenAPIDocumentsRateLimitAndSizeResponses(t *testing.T) {
+	var doc struct {
+		Paths map[string]map[string]any `yaml:"paths"`
+	}
+	require.NoError(t, yaml.Unmarshal(openapiYAML, &doc))
+	for path, ops := range doc.Paths {
+		for method, raw := range ops {
+			if method == "parameters" {
+				continue
+			}
+			op, ok := raw.(map[string]any)
+			require.True(t, ok, "%s %s", method, path)
+			responses, _ := op["responses"].(map[string]any)
+			assert.Contains(t, responses, "429", "%s %s must document 429", strings.ToUpper(method), path)
+			if _, hasBody := op["requestBody"]; hasBody {
+				assert.Contains(t, responses, "413", "%s %s takes a body and must document 413", strings.ToUpper(method), path)
+			}
+		}
+	}
+}
