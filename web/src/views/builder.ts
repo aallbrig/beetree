@@ -9,6 +9,11 @@ import { pathId } from '../engine/bt';
 import { SAMPLES, sampleById, sampleBySlug, type Sample } from '../samples';
 import { World, type Agent } from '../scene/world';
 import {
+  addVar,
+  getBlackboard,
+  parseDefault,
+  removeVar,
+  updateVar,
   addChild,
   countNodes,
   DECORATORS,
@@ -212,6 +217,20 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     propsHost,
   );
   addTab('design', 'Design', design);
+  const varsHost = h('div', { class: 'stack' });
+  const addVarBtn = h('button', { class: 'btn small', type: 'button' }, '+ Add variable');
+  const varsPanel = h(
+    'div',
+    { class: 'stack' },
+    h(
+      'p',
+      { class: 'muted', style: 'font-size:.85rem;margin:.25rem 0' },
+      'Blackboard variables are typed values shared by every node. Types are free text, for example int, float, bool, string, Vector3.',
+    ),
+    addVarBtn,
+    varsHost,
+  );
+  addTab('vars', 'Variables', varsPanel);
   addTab(
     'yaml',
     'YAML',
@@ -401,8 +420,55 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
 
   const history = new History(stringifySpec(spec));
 
+  function renderVars(): void {
+    clear(varsHost);
+    for (const v of getBlackboard(spec)) {
+      const field = (label: string, value: string, apply: (val: string) => void): HTMLElement => {
+        const input = h('input', { type: 'text', value, 'aria-label': `${label} of ${v.name}` });
+        input.addEventListener('change', () => {
+          apply(input.value);
+          refresh();
+        });
+        return h('div', { style: 'flex:1' }, h('label', {}, label), input);
+      };
+      const rm = h('button', { class: 'btn small danger', type: 'button' }, 'Remove');
+      rm.addEventListener('click', () => {
+        removeVar(spec, v.name);
+        refresh();
+      });
+      varsHost.append(
+        h(
+          'div',
+          { class: 'row' },
+          field('Name', v.name, (x) => {
+            if (!updateVar(spec, v.name, { name: x })) toast('That name is empty or taken.', 'err');
+          }),
+          field('Type', v.type, (x) => updateVar(spec, v.name, { type: x })),
+          field(
+            'Default',
+            v.default === undefined
+              ? ''
+              : typeof v.default === 'string'
+                ? v.default
+                : JSON.stringify(v.default),
+            (x) => updateVar(spec, v.name, { default: parseDefault(v.type, x) }),
+          ),
+          field('Description', v.description ?? '', (x) =>
+            updateVar(spec, v.name, { description: x }),
+          ),
+          rm,
+        ),
+      );
+    }
+  }
+  addVarBtn.addEventListener('click', () => {
+    addVar(spec);
+    refresh();
+  });
+
   function refresh(): void {
     syncMeta();
+    renderVars();
     history.record(stringifySpec(spec));
     undoBtn.disabled = !history.canUndo;
     redoBtn.disabled = !history.canRedo;

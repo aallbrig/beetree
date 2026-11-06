@@ -362,3 +362,92 @@ export function findProblems(root: NodeSpec): Problem[] {
   }
   return out;
 }
+
+/** One blackboard variable: a typed value shared by all nodes. */
+export interface BlackboardVar {
+  name: string;
+  type: string;
+  default?: unknown;
+  description?: string;
+}
+
+/** The blackboard variables of a spec; entries that are not well-formed are skipped. */
+export function getBlackboard(spec: TreeSpec): BlackboardVar[] {
+  if (!Array.isArray(spec.blackboard)) return [];
+  const out: BlackboardVar[] = [];
+  for (const v of spec.blackboard as unknown[]) {
+    if (isRecord(v) && typeof v.name === 'string' && typeof v.type === 'string') {
+      const item: BlackboardVar = { ...v, name: v.name, type: v.type };
+      out.push(item);
+    }
+  }
+  return out;
+}
+
+function setBlackboard(spec: TreeSpec, vars: BlackboardVar[]): void {
+  if (vars.length === 0) delete spec.blackboard;
+  else spec.blackboard = vars;
+}
+
+/** Add a variable with a unique name (name, name_2, ...); returns the name used. */
+export function addVar(spec: TreeSpec, name = 'new_var', type = 'string'): string {
+  const vars = getBlackboard(spec);
+  const taken = new Set(vars.map((v) => v.name));
+  let unique = name;
+  for (let i = 2; taken.has(unique); i++) unique = `${name}_${i}`;
+  setBlackboard(spec, [...vars, { name: unique, type }]);
+  return unique;
+}
+
+/** Change fields of a variable; an empty default or description removes the key. Returns false if the name is unknown or a rename would collide. */
+export function updateVar(
+  spec: TreeSpec,
+  name: string,
+  patch: { name?: string; type?: string; default?: unknown; description?: string },
+): boolean {
+  const vars = getBlackboard(spec);
+  const idx = vars.findIndex((v) => v.name === name);
+  const cur = vars[idx];
+  if (!cur) return false;
+  const next: BlackboardVar = { ...cur };
+  if (patch.name !== undefined) {
+    const n = patch.name.trim();
+    if (n === '' || (n !== name && vars.some((v) => v.name === n))) return false;
+    next.name = n;
+  }
+  if (patch.type !== undefined && patch.type.trim() !== '') next.type = patch.type.trim();
+  if ('default' in patch) {
+    if (patch.default === undefined || patch.default === '') delete next.default;
+    else next.default = patch.default;
+  }
+  if (patch.description !== undefined) {
+    if (patch.description === '') delete next.description;
+    else next.description = patch.description;
+  }
+  vars[idx] = next;
+  setBlackboard(spec, vars);
+  return true;
+}
+
+export function removeVar(spec: TreeSpec, name: string): boolean {
+  const vars = getBlackboard(spec);
+  const rest = vars.filter((v) => v.name !== name);
+  if (rest.length === vars.length) return false;
+  setBlackboard(spec, rest);
+  return true;
+}
+
+/** Read a typed default from the text box: numbers and booleans by declared type, else a string. */
+export function parseDefault(type: string, text: string): unknown {
+  const t = text.trim();
+  if (t === '') return undefined;
+  if (type === 'int' || type === 'float') {
+    const n = Number(t);
+    return Number.isFinite(n) ? n : t;
+  }
+  if (type === 'bool' || type === 'boolean') {
+    if (t === 'true') return true;
+    if (t === 'false') return false;
+  }
+  return t;
+}
