@@ -238,7 +238,7 @@ export async function scenesView(ctx: Ctx): Promise<Cleanup | undefined> {
     }
     agents.push({
       name: `Agent ${agents.length + 1}`,
-      treeId: 'sample:patrol',
+      treeId: 'sample:guard',
       model: CHARACTERS[agents.length % CHARACTERS.length] ?? 'character-a',
       x: (agents.length % 5) * 4 - 8,
       z: Math.floor(agents.length / 5) * 4 - 4,

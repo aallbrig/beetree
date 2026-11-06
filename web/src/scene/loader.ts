@@ -41,7 +41,7 @@ export async function populate(world: World, agents: SceneAgent[]): Promise<Load
 }
 
 export const DEMO_SCENE: SceneAgent[] = [
-  { name: 'Patroller', treeId: 'sample:patrol', model: 'character-b', x: -7, z: -3 },
+  { name: 'Patroller', treeId: 'sample:guard', model: 'character-b', x: -7, z: -3 },
   { name: 'Guard', treeId: 'sample:guard', model: 'character-d', x: 6, z: -4 },
   { name: 'Coward', treeId: 'sample:coward', model: 'character-f', x: -1, z: -6 },
 ];
