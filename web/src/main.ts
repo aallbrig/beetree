@@ -28,6 +28,8 @@ const app = document.getElementById('app');
 if (!app) throw new Error('missing #app');
 
 let menuOpen = false;
+let openGroup = '';
+const narrow = window.matchMedia('(max-width: 800px)');
 const nav = h('nav', { class: 'nav', 'aria-label': 'Main' });
 const main = h('main', { id: 'main' });
 const version = h('small', { class: 'ver' });
@@ -77,6 +79,8 @@ void fetch('/version.json')
   .catch(() => undefined);
 
 function renderNav(): void {
+  const scrolled = nav.scrollTop;
+  document.body.classList.toggle('menu-open', menuOpen);
   clear(nav);
   const here = location.hash.replace(/^#/, '').split('?')[0] ?? '';
   const l = (href: string, text: string): HTMLAnchorElement =>
@@ -86,8 +90,22 @@ function renderNav(): void {
   const group = (label: string, items: HTMLAnchorElement[]): HTMLDivElement =>
     h(
       'div',
-      { class: 'grp' },
-      h('button', { class: 'grp-label', type: 'button', 'aria-haspopup': 'true' }, label),
+      { class: `grp${openGroup === label ? ' open' : ''}` },
+      h(
+        'button',
+        {
+          class: 'grp-label',
+          type: 'button',
+          'aria-haspopup': 'true',
+          'aria-expanded': String(openGroup === label),
+          onClick: () => {
+            if (!narrow.matches) return;
+            openGroup = openGroup === label ? '' : label;
+            renderNav();
+          },
+        },
+        label,
+      ),
       h('div', { class: 'grp-menu' }, ...items),
     );
   const menuBtn = h('button', {
@@ -146,6 +164,7 @@ function renderNav(): void {
         ]),
   );
   nav.append(h('a', { class: 'brand', href: '/' }, 'BeeTreeCraft'), menuBtn, links);
+  nav.scrollTop = scrolled;
 }
 
 setGuard((path) => (isSignedIn() ? undefined : `/signin?next=${encodeURIComponent(path)}`));
@@ -171,6 +190,12 @@ route('/profile', profileView, { private: true });
 onAuthChange(() => {
   renderNav();
   void render();
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && menuOpen) {
+    menuOpen = false;
+    renderNav();
+  }
 });
 window.addEventListener('hashchange', () => {
   menuOpen = false;
