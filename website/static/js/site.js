@@ -3,7 +3,13 @@
   var root = document.documentElement;
   function saved() {
     try {
-      return localStorage.getItem(KEY) === 'dark' ? 'dark' : 'light';
+      var v = localStorage.getItem(KEY);
+      if (v === 'dark' || v === 'light') return v;
+    } catch (e) {
+      /* storage blocked: use the OS preference */
+    }
+    try {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     } catch (e) {
       return 'light';
     }
