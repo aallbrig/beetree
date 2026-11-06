@@ -3,6 +3,11 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import {
   addChild,
+  addVar,
+  getBlackboard,
+  parseDefault,
+  removeVar,
+  updateVar,
   countNodes,
   duplicateAt,
   indent,
@@ -228,5 +233,38 @@ describe('parallel policies', () => {
     expect(setPolicy(n, [], 'success_policy', 'bogus')).toMatch(/must be one of/);
     const seq = makeNode(newSpec().tree, 'sequence');
     expect(setPolicy(seq, [], 'success_policy', 'require_all')).toMatch(/only parallel/);
+  });
+});
+
+describe('blackboard editing', () => {
+  it('adds, renames and removes a variable and exports it', () => {
+    const spec = newSpec('bb');
+    expect(addVar(spec, 'health', 'int')).toBe('health');
+    expect(addVar(spec, 'health')).toBe('health_2');
+    expect(
+      updateVar(spec, 'health', { default: parseDefault('int', '100'), description: 'hp' }),
+    ).toBe(true);
+    expect(updateVar(spec, 'health', { name: 'hp' })).toBe(true);
+    expect(updateVar(spec, 'hp', { name: 'health_2' })).toBe(false);
+    let back = parseSpec(stringifySpec(spec));
+    expect(getBlackboard(back)).toEqual([
+      { name: 'hp', type: 'int', default: 100, description: 'hp' },
+      { name: 'health_2', type: 'string' },
+    ]);
+    expect(removeVar(back, 'hp')).toBe(true);
+    expect(removeVar(back, 'hp')).toBe(false);
+    expect(removeVar(back, 'health_2')).toBe(true);
+    back = parseSpec(stringifySpec(back));
+    expect(back.blackboard).toBeUndefined();
+  });
+
+  it('clears an empty default and parses typed defaults', () => {
+    const spec = newSpec('bb');
+    addVar(spec, 'speed', 'float');
+    updateVar(spec, 'speed', { default: 2.5 });
+    updateVar(spec, 'speed', { default: parseDefault('float', '') });
+    expect(getBlackboard(spec)[0]).toEqual({ name: 'speed', type: 'float' });
+    expect(parseDefault('bool', 'true')).toBe(true);
+    expect(parseDefault('string', '12')).toBe('12');
   });
 });
