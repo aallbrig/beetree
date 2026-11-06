@@ -88,7 +88,7 @@ func validateYAML(yamlText string) (ValidateResult, *model.TreeSpec) {
 func validSpec(yamlText string) (*model.TreeSpec, error) {
 	res, s := validateYAML(yamlText)
 	if !res.Valid {
-		return nil, errors.New(strings.Join(res.Errors, "; "))
+		return nil, errors.New("invalid spec: " + strings.Join(res.Errors, "; ") + ". Fix these, confirm with validate_tree, and see beetree://schema/beetree for the format or beetree://examples/patrol for a working tree.")
 	}
 	return s, nil
 }

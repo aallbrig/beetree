@@ -348,3 +348,15 @@ func TestMCPSearchReportsTruncation(t *testing.T) {
 	_, truncated = search("filler")
 	assert.False(t, truncated, "a search that fills its limit is not truncated")
 }
+
+func TestMCPInvalidSpecErrorsSayHowToRecover(t *testing.T) {
+	h := newTestServer(t)
+	for _, tool := range []string{"render_tree", "simulate_tree", "simulate_start", "simulate_answer", "generate_code"} {
+		_, r := rpc(h, "", 1, "tools/call", map[string]any{"name": tool, "arguments": map[string]any{"spec": "not: a tree", "engine": "godot", "status": "SUCCESS"}})
+		text, isErr := toolResult(t, r)
+		assert.True(t, isErr, tool)
+		assert.Contains(t, text, "validate_tree", tool)
+		assert.Contains(t, text, "beetree://schema/beetree", tool)
+		assert.Contains(t, text, "beetree://examples/patrol", tool)
+	}
+}
