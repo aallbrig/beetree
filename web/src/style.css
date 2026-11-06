@@ -809,3 +809,16 @@ input[type='date'] {
 .counter.near {
   color: var(--err);
 }
+
+/* profile: documentation links sit in their own tidy row */
+.doclinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.keylist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
