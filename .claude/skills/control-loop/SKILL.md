@@ -13,10 +13,10 @@ The loop is `scripts/agent-loop.sh`: one headless Claude run per iteration, in i
 | Pause | `task agent:loop:pause` | the current iteration finishes, then the loop waits |
 | Resume | `task agent:loop:resume` | continues |
 | Stop gracefully | `task agent:loop:finish` | the current iteration finishes, then the loop exits |
-| Stop now | `task agent:loop:stop` | kills the loop's tmux session; an iteration in flight is abandoned and its half-done branch stays in `../beetree-loop` |
-| Start | `task agent:loop:start` | detached tmux session `beetreecraft-loop` (or run the `loop` window of `task dev`) |
+| Stop now | `task agent:loop:stop` | kills the `beetree` tmux session, loop included; an iteration in flight is abandoned and its half-done branch stays in `../beetree-loop` |
+| Start | `task agent:loop:start` | starts the `beetree` tmux session detached; its `loop` window runs the driver (`task dev` attaches to the same session) |
 
-`task agent:loop:start` also holds a sleep inhibitor (tmux session `beetreecraft-awake`) so the machine does not suspend while the loop runs; `task agent:loop:stop` releases it.
+There is one tmux definition, `.tmuxinator/beetree.yml`. Its `loop` window runs the supervised driver, a status pane and a sleep inhibitor, so the machine does not suspend while the loop runs; stopping the session releases it.
 
 Only one loop runs at a time (a lock enforces it).
 
