@@ -10,6 +10,13 @@ import { SAMPLES, sampleById, sampleBySlug, type Sample } from '../samples';
 import { World, type Agent } from '../scene/world';
 import {
   addVar,
+  addCustomNode,
+  formatParams,
+  getCustomNodes,
+  parseList,
+  parseParams,
+  removeCustomNode,
+  updateCustomNode,
   getBlackboard,
   parseDefault,
   removeVar,
@@ -231,6 +238,23 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     varsHost,
   );
   addTab('vars', 'Variables', varsPanel);
+  const nodesHost = h('div', { class: 'stack' });
+  const addNodeBtn = h('button', { class: 'btn small', type: 'button' }, '+ Add custom node');
+  addTab(
+    'nodes',
+    'Custom nodes',
+    h(
+      'div',
+      { class: 'stack' },
+      h(
+        'p',
+        { class: 'muted', style: 'font-size:.85rem;margin:.25rem 0' },
+        'Define your own action or condition once, with typed parameters. Parameters read like speed:float=1.5, clip:string. Blackboard lists are comma separated keys.',
+      ),
+      addNodeBtn,
+      nodesHost,
+    ),
+  );
   addTab(
     'yaml',
     'YAML',
@@ -466,9 +490,70 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     refresh();
   });
 
+  function renderCustomNodes(): void {
+    clear(nodesHost);
+    for (const d of getCustomNodes(spec)) {
+      const field = (label: string, value: string, apply: (val: string) => void): HTMLElement => {
+        const input = h('input', { type: 'text', value, 'aria-label': `${label} of ${d.name}` });
+        input.addEventListener('change', () => {
+          apply(input.value);
+          refresh();
+        });
+        return h('div', { style: 'flex:1' }, h('label', {}, label), input);
+      };
+      const typeSel = h(
+        'select',
+        { 'aria-label': `Type of ${d.name}` },
+        h('option', { value: 'action' }, 'action'),
+        h('option', { value: 'condition' }, 'condition'),
+      );
+      typeSel.value = d.type;
+      typeSel.addEventListener('change', () => {
+        updateCustomNode(spec, d.name, {
+          type: typeSel.value === 'condition' ? 'condition' : 'action',
+        });
+        refresh();
+      });
+      const rm = h('button', { class: 'btn small danger', type: 'button' }, 'Remove');
+      rm.addEventListener('click', () => {
+        removeCustomNode(spec, d.name);
+        refresh();
+      });
+      nodesHost.append(
+        h(
+          'div',
+          { class: 'row' },
+          field('Name', d.name, (x) => {
+            if (!updateCustomNode(spec, d.name, { name: x }))
+              toast('That name is empty or taken.', 'err');
+          }),
+          h('div', {}, h('label', {}, 'Type'), typeSel),
+          field('Description', d.description ?? '', (x) =>
+            updateCustomNode(spec, d.name, { description: x }),
+          ),
+          field('Parameters', formatParams(d.parameters), (x) =>
+            updateCustomNode(spec, d.name, { parameters: parseParams(x) }),
+          ),
+          field('Reads', (d.blackboard_reads ?? []).join(', '), (x) =>
+            updateCustomNode(spec, d.name, { blackboard_reads: parseList(x) }),
+          ),
+          field('Writes', (d.blackboard_writes ?? []).join(', '), (x) =>
+            updateCustomNode(spec, d.name, { blackboard_writes: parseList(x) }),
+          ),
+          rm,
+        ),
+      );
+    }
+  }
+  addNodeBtn.addEventListener('click', () => {
+    addCustomNode(spec);
+    refresh();
+  });
+
   function refresh(): void {
     syncMeta();
     renderVars();
+    renderCustomNodes();
     history.record(stringifySpec(spec));
     undoBtn.disabled = !history.canUndo;
     redoBtn.disabled = !history.canRedo;
