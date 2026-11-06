@@ -426,3 +426,31 @@ func TestMCPDiffTrees(t *testing.T) {
 	assert.True(t, isErr)
 	assert.Contains(t, text, "other")
 }
+
+func TestMCPGetTemplateTool(t *testing.T) {
+	h := newTestServer(t)
+	call := func(args map[string]any) (string, bool) {
+		_, r := rpc(h, "", 1, "tools/call", map[string]any{"name": "get_template", "arguments": args})
+		return toolResult(t, r)
+	}
+	list, isErr := call(nil)
+	require.False(t, isErr)
+	var out struct {
+		Templates []string `json:"templates"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(list), &out))
+	require.NotEmpty(t, out.Templates)
+	for _, n := range out.Templates {
+		body, isErr := call(map[string]any{"name": n})
+		require.False(t, isErr, n)
+		v, isErr := toolResult(t, func() map[string]any {
+			_, r := rpc(h, "", 1, "tools/call", map[string]any{"name": "validate_tree", "arguments": map[string]any{"spec": body}})
+			return r
+		}())
+		require.False(t, isErr, n)
+		assert.Contains(t, v, `"valid":true`, n)
+	}
+	msg, isErr := call(map[string]any{"name": "../x"})
+	assert.True(t, isErr)
+	assert.Contains(t, msg, "without a name")
+}

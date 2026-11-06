@@ -70,6 +70,7 @@ func mcpTools() []mcpTool {
 	spec := strProp("Behavior tree specification as .beetree.yaml text")
 	tools := []mcpTool{
 		{Name: "list_node_types", Description: "List the node types, decorators, render formats and code generation engines BeeTree supports.", InputSchema: objSchema(nil, map[string]any{})},
+		{Name: "get_template", Description: "Get a starter template as .beetree.yaml text by name, or call without a name to list the available template names. Use this when your client cannot read resources.", InputSchema: objSchema(nil, map[string]any{"name": strProp("template name; omit to list names")})},
 		{Name: "validate_tree", Description: "Validate a .beetree.yaml spec. Returns whether it is valid and every error found.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec})},
 		{Name: "render_tree", Description: "Render a spec as ascii, sigil, mermaid or dot.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "format": strProp("ascii | sigil | mermaid | dot (default ascii)")})},
 		{Name: "simulate_tree", Description: "Dry-run a spec and return the execution trace. Overrides force named nodes to SUCCESS, FAILURE or RUNNING.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "overrides": map[string]any{"type": "object", "description": "node name -> SUCCESS|FAILURE|RUNNING", "additionalProperties": map[string]any{"type": "string"}}})},
@@ -299,6 +300,21 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 			out = append(out, map[string]string{"type": string(c.Type), "path": c.Path, "old": c.Old, "new": c.New})
 		}
 		return toolJSON(map[string]any{"identical": len(changes) == 0, "changes": out})
+	case "get_template":
+		if a.Name == "" {
+			var names []string
+			for _, r := range mcpResources() {
+				if n, ok := strings.CutPrefix(r.URI, templateURIPrefix); ok {
+					names = append(names, n)
+				}
+			}
+			return toolJSON(map[string]any{"templates": names})
+		}
+		body, _, ok := readMCPResource(templateURIPrefix + a.Name)
+		if !ok {
+			return fail(fmt.Errorf("no template named %q; call get_template without a name to list them", a.Name))
+		}
+		return toolText(body, false)
 	case "generate_code":
 		files, err := generateYAML(a.Spec, a.Engine)
 		if err != nil {
