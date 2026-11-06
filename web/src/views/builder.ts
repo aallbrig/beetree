@@ -5,6 +5,7 @@ import { clear, h, toast } from '../dom';
 import { copyText, downloadText, fileName } from '../exporter';
 import { History } from '../history';
 import { isSignedIn } from '../auth';
+import { publishBlockReason } from '../remix';
 import { navigate, type Cleanup, type Ctx } from '../router';
 import { pathId } from '../engine/bt';
 import { SAMPLES, sampleById, sampleBySlug, type Sample } from '../samples';
@@ -61,6 +62,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   let spec: TreeSpec = newSpec();
   let visibility: 'public' | 'private' = 'private';
   let selected: Path = [];
+  let originalYaml: string | undefined;
 
   const forkId = ctx.query.get('fork');
   // Set when a scene sent us here to author a tree for one of its agents.
@@ -70,8 +72,16 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     const t = await api.getTree((treeId ?? forkId) as string);
     if (!t.spec) throw new Error('That tree has no spec.');
     spec = parseSpec(t.spec);
-    if (treeId) visibility = t.visibility;
-    else spec.metadata.name = `${t.name}-fork`;
+    if (treeId) {
+      visibility = t.visibility;
+      if (t.remixedFrom?.state === 'public') {
+        // the publish gate compares against the live original; only a public one is readable
+        originalYaml = await api
+          .getTree(t.remixedFrom.id)
+          .then((o) => (o.spec ? stringifySpec(parseSpec(o.spec)) : undefined))
+          .catch(() => undefined);
+      }
+    } else spec.metadata.name = `${t.name}-fork`;
   } else if (sampleBySlug(ctx.query.get('template'))) {
     // a home-page template card: start from that template, not from the old draft
     spec = parseSpec((sampleBySlug(ctx.query.get('template')) as Sample).yaml);
@@ -131,6 +141,18 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     h('option', { value: 'public' }, 'Public (shared)'),
   );
   visIn.value = visibility;
+  const publicOpt = visIn.querySelector<HTMLOptionElement>('option[value="public"]');
+  const gateNote = h('div', { class: 'small muted', role: 'status' });
+  /** A remix identical to its original cannot be published; say why instead of failing on save. */
+  const updateGate = (): void => {
+    const reason = publishBlockReason(
+      originalYaml !== undefined && stringifySpec(spec) === originalYaml,
+    );
+    if (publicOpt) publicOpt.disabled = reason !== undefined;
+    if (reason !== undefined && visIn.value === 'public') visIn.value = 'private';
+    gateNote.textContent = reason ?? '';
+  };
+  updateGate();
 
   const status = h('div', { class: 'small', role: 'status' });
   const outlineHost = h('div');
@@ -424,7 +446,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
       'div',
       { class: 'row' },
       h('div', { style: 'flex:1' }, h('label', {}, 'Tags'), tagsIn),
-      h('div', { style: 'flex:1' }, h('label', {}, 'Visibility'), visIn),
+      h('div', { style: 'flex:1' }, h('label', {}, 'Visibility'), visIn, gateNote),
     ),
     h('div', { class: 'row' }, saveBtn, validateBtn),
     status,
@@ -627,6 +649,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
 
   function refresh(): void {
     syncMeta();
+    updateGate();
     renderVars();
     renderCustomNodes();
     history.record(stringifySpec(spec));

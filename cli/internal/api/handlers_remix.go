@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"reflect"
 	"time"
 )
 
@@ -96,4 +97,22 @@ func (s *Server) remixFor(r *http.Request, c Claims, id string) (Tree, error) {
 	}
 	t.RemixedFrom = s.withLineageState(r, t.RemixedFrom)
 	return t, nil
+}
+
+const unchangedRemixMsg = "This remix is identical to the original. Change the tree before sharing it."
+
+// unchangedRemix reports whether t is a remix whose spec matches its live
+// original. Specs are compared parsed, so whitespace and comment edits do not
+// count as a change. A missing original (private or deleted) cannot be compared.
+func (s *Server) unchangedRemix(r *http.Request, t Tree) bool {
+	if t.RemixedFrom == nil {
+		return false
+	}
+	orig, err := s.Store.GetTree(r.Context(), t.RemixedFrom.ID)
+	if err != nil {
+		return false
+	}
+	a, errA := validSpec(orig.Spec)
+	b, errB := validSpec(t.Spec)
+	return errA == nil && errB == nil && reflect.DeepEqual(a, b)
 }

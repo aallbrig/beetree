@@ -249,6 +249,7 @@ paths:
         '429': {$ref: '#/components/responses/Error'}
     put:
       summary: Replace a tree you own
+      description: A remix whose spec is identical to its public original cannot be made public; the API answers 422 with code unchanged_remix.
       operationId: updateTree
       tags: [Trees]
       security: [{bearerAuth: []}, {apiKeyAuth: []}]
