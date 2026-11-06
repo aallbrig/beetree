@@ -118,8 +118,10 @@ curl -s -X DELETE https://api.beetreecraft.com/v1/keys/<id> -H "Authorization: B
 ```bash
 curl -s https://api.beetreecraft.com/v1/trees \
   -H "X-API-Key: $BEETREE_API_KEY" -H 'content-type: application/json' \
-  -d '{"name":"My guard","visibility":"public","tags":["enemy"],"spec":"..."}'
+  -d '{"name":"My guard","visibility":"public","tags":["enemy"],"spec":"version: \"1.0\"\nmetadata:\n  name: guard\ntree:\n  type: sequence\n  name: root\n  children:\n    - type: condition\n      name: sees_player\n    - type: action\n      name: attack\n"}'
 ```
+
+The response is `201` with the saved tree, including its `id`.
 
 Trees are **private by default**. A private tree is invisible, even by id, to everyone but its owner.
 
@@ -144,6 +146,7 @@ Errors are JSON: `{"error": {"code": "invalid_spec", "message": "..."}}`.
 | 404 | Not found, or private and not yours |
 | 413 | Request body too large (512 KB limit) |
 | 422 | The spec is invalid; the message lists why |
+| 429 | Too many requests; wait a few seconds and retry with backoff |
 
 ## Limits
 
