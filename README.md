@@ -126,6 +126,10 @@ go build -o beetree .      # Build the binary
 
 Documentation hosted at [beetreecraft.com](https://beetreecraft.com) via GitHub Pages.
 
+## Security
+
+Report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
+
 ## Documentation
 
 - [DESIGN.md](DESIGN.md) — Full specification and architecture
