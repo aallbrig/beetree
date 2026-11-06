@@ -148,15 +148,29 @@ func (s *Server) remixScene(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	orig, err := s.Store.GetScene(r.Context(), r.PathValue("id"))
-	if err != nil || orig.Visibility != VisibilityPublic {
-		writeErr(w, http.StatusNotFound, "not_found", "not found")
+	out, err := s.remixSceneFor(r, c, r.PathValue("id"))
+	if err != nil {
+		if re, ok := err.(*remixError); ok {
+			if re.wait > 0 {
+				w.Header().Set("Retry-After", retryAfter(re.wait))
+			}
+			writeErr(w, re.status, re.code, re.msg)
+			return
+		}
+		s.storeErr(w, err)
 		return
 	}
+	writeJSON(w, http.StatusCreated, out)
+}
+
+// remixSceneFor makes the copy for the REST route and the MCP remix_scene tool.
+func (s *Server) remixSceneFor(r *http.Request, c Claims, id string) (sceneRemix, error) {
+	orig, err := s.Store.GetScene(r.Context(), id)
+	if err != nil || orig.Visibility != VisibilityPublic {
+		return sceneRemix{}, &remixError{status: http.StatusNotFound, code: "not_found", msg: "not found"}
+	}
 	if ok, wait := s.remixLimiter.allow(c.Sub, s.Now(), RemixLimit, RemixWindow); !ok {
-		w.Header().Set("Retry-After", retryAfter(wait))
-		writeErr(w, http.StatusTooManyRequests, "rate_limited", "remix limit reached; try again later")
-		return
+		return sceneRemix{}, &remixError{status: http.StatusTooManyRequests, code: "rate_limited", msg: "remix limit reached; try again later", wait: wait}
 	}
 	now := s.stamp()
 	owner := s.ownerName(r, c)
@@ -188,8 +202,7 @@ func (s *Server) remixScene(w http.ResponseWriter, r *http.Request) {
 		}
 		cp := s.copyTree(t, c.Sub, owner, now)
 		if err := s.Store.PutTree(r.Context(), cp); err != nil {
-			s.storeErr(w, err)
-			return
+			return sceneRemix{}, err
 		}
 		cp.RemixedFrom = s.withLineageState(r, cp.RemixedFrom)
 		copies[a.TreeID] = cp.ID
@@ -203,11 +216,10 @@ func (s *Server) remixScene(w http.ResponseWriter, r *http.Request) {
 		RemixedFrom: &Lineage{LineageRef: ref, Ancestors: ancestorsOf(orig.RemixedFrom)},
 	}
 	if err := s.Store.PutScene(r.Context(), sc); err != nil {
-		s.storeErr(w, err)
-		return
+		return sceneRemix{}, err
 	}
 	sc.RemixedFrom = s.withLineageState(r, sc.RemixedFrom)
-	writeJSON(w, http.StatusCreated, sceneRemix{Scene: sc, Trees: trees})
+	return sceneRemix{Scene: sc, Trees: trees}, nil
 }
 
 // reportTree files a report against a public tree, for example an unchanged

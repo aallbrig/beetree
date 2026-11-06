@@ -84,13 +84,14 @@ func mcpTools() []mcpTool {
 		{Name: "update_tree", Description: "Replace the spec of a tree you own. Omitted name, description, visibility and tags keep their current values. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id", "spec"}, map[string]any{"id": strProp("id of the tree to update"), "spec": spec, "name": strProp("new display name"), "description": strProp("new short description"), "visibility": strProp("public | private"), "tags": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})},
 		{Name: "delete_tree", Description: "Permanently delete a tree you own. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("id of the tree to delete")})},
 		{Name: "remix_tree", Description: "Copy a public tree into the signed-in user's account as a new private tree named '<title> (Remix)'. The copy keeps credit to the original author in remixedFrom. Edit it with update_tree. Limit 20 per day. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("id of the public tree to remix; search_trees gives ids")})},
+		{Name: "remix_scene", Description: "Copy a public Explore scene into the signed-in user's account as a new private scene named '<title> (Remix)', together with private copies of the public trees its agents use. Every copy keeps credit to the original author. Counts as one of the 20 daily remixes. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("id of the public scene to remix")})},
 		{Name: "get_scene", Description: "Fetch an Explore scene, including its layout and agents, by id. Private scenes need the owner's token; list_my_scenes gives ids.", InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("scene id")})},
 		{Name: "list_my_scenes", Description: "List the signed-in user's Explore scenes. Requires a bearer token.", needsAuth: true, InputSchema: objSchema(nil, map[string]any{})},
 		{Name: "list_my_trees", Description: "List the signed-in user's trees. Requires a bearer token.", needsAuth: true, InputSchema: objSchema(nil, map[string]any{})},
 	}
 	for i := range tools {
 		n := tools[i].Name
-		tools[i].Annotations = mcpAnnotations{ReadOnlyHint: n != "create_tree" && n != "update_tree" && n != "delete_tree" && n != "remix_tree", DestructiveHint: n == "update_tree" || n == "delete_tree"}
+		tools[i].Annotations = mcpAnnotations{ReadOnlyHint: n != "create_tree" && n != "update_tree" && n != "delete_tree" && n != "remix_tree" && n != "remix_scene", DestructiveHint: n == "update_tree" || n == "delete_tree"}
 	}
 	return tools
 }
@@ -382,6 +383,17 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 			return fail(fmt.Errorf("save failed"))
 		}
 		return toolJSON(t)
+	case "remix_scene":
+		out, err := s.remixSceneFor(r, claims, a.ID)
+		if re, ok := err.(*remixError); ok {
+			if re.status == http.StatusNotFound {
+				return fail(fmt.Errorf("public scene not found (private scenes cannot be remixed)"))
+			}
+			return fail(fmt.Errorf("%s", re.msg))
+		} else if err != nil {
+			return fail(fmt.Errorf("save failed"))
+		}
+		return toolJSON(out)
 	case "update_tree":
 		old, err := s.Store.GetTree(ctx, a.ID)
 		if err != nil || old.OwnerID != claims.Sub {

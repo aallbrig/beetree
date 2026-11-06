@@ -85,11 +85,11 @@ func TestMCPToolsList(t *testing.T) {
 		assert.NotEmpty(t, m["description"])
 		ann, ok := m["annotations"].(map[string]any)
 		require.True(t, ok, "%s needs annotations", m["name"])
-		assert.Equal(t, m["name"] != "create_tree" && m["name"] != "update_tree" && m["name"] != "delete_tree" && m["name"] != "remix_tree", ann["readOnlyHint"], m["name"])
+		assert.Equal(t, m["name"] != "create_tree" && m["name"] != "update_tree" && m["name"] != "delete_tree" && m["name"] != "remix_tree" && m["name"] != "remix_scene", ann["readOnlyHint"], m["name"])
 		assert.Equal(t, m["name"] == "update_tree" || m["name"] == "delete_tree", ann["destructiveHint"], m["name"])
 		assert.Equal(t, "object", m["inputSchema"].(map[string]any)["type"])
 	}
-	for _, want := range []string{"validate_tree", "render_tree", "simulate_tree", "generate_code", "search_trees", "get_tree", "create_tree", "update_tree", "remix_tree", "list_my_trees", "list_node_types"} {
+	for _, want := range []string{"validate_tree", "render_tree", "simulate_tree", "generate_code", "search_trees", "get_tree", "create_tree", "update_tree", "remix_tree", "remix_scene", "get_scene", "list_my_trees", "list_node_types"} {
 		assert.True(t, names[want], want)
 	}
 }
@@ -235,6 +235,42 @@ func TestMCPRemixTree(t *testing.T) {
 	assert.Equal(t, "bob", cp.OwnerID)
 	require.NotNil(t, cp.RemixedFrom)
 	assert.Equal(t, pub.ID, cp.RemixedFrom.ID)
+}
+
+func TestMCPRemixScene(t *testing.T) {
+	h := newTestServer(t)
+	call := func(user, name string, args map[string]any) (string, bool) {
+		_, r := rpc(h, user, 1, "tools/call", map[string]any{"name": name, "arguments": args})
+		return toolResult(t, r)
+	}
+	treeText, _ := call("alice", "create_tree", map[string]any{"spec": goodSpec, "name": "Guard", "visibility": "public"})
+	var tr Tree
+	require.NoError(t, json.Unmarshal([]byte(treeText), &tr))
+	mk := func(name, vis string) Scene {
+		r := do(h, "POST", "/v1/scenes", "alice", map[string]any{"name": name, "visibility": vis, "agents": []any{map[string]any{"treeId": tr.ID}}})
+		require.Equal(t, 201, r.Code, string(r.Body))
+		var sc Scene
+		require.NoError(t, json.Unmarshal(r.Body, &sc))
+		return sc
+	}
+	pub := mk("Camp", VisibilityPublic)
+	priv := mk("Secret", VisibilityPrivate)
+
+	_, isErr := call("", "remix_scene", map[string]any{"id": pub.ID})
+	assert.True(t, isErr, "anonymous callers are refused")
+	text, isErr := call("bob", "remix_scene", map[string]any{"id": priv.ID})
+	assert.True(t, isErr, "private scenes cannot be remixed")
+	assert.Contains(t, text, "public scene not found")
+
+	text, isErr = call("bob", "remix_scene", map[string]any{"id": pub.ID})
+	require.False(t, isErr, text)
+	var out sceneRemix
+	require.NoError(t, json.Unmarshal([]byte(text), &out))
+	assert.Equal(t, "Camp (Remix)", out.Name)
+	assert.Equal(t, "bob", out.OwnerID)
+	require.Len(t, out.Trees, 1)
+	assert.Equal(t, out.Trees[0].ID, out.Agents[0].TreeID)
+	assert.Equal(t, "Guard (Remix)", out.Trees[0].Name)
 }
 
 func TestMCPBadCalls(t *testing.T) {
