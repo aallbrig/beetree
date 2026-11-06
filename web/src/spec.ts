@@ -179,6 +179,69 @@ export function moveSibling(root: NodeSpec, path: Path, delta: -1 | 1): Path {
   return [...path.slice(0, -1), to];
 }
 
+/** Deep-copy n, renaming nodes that collide with taken (which accumulates). */
+function cloneUnique(n: NodeSpec, taken: Set<string>): NodeSpec {
+  let name = n.name;
+  if (taken.has(name)) {
+    let i = 2;
+    while (taken.has(`${n.name}_${i}`)) i++;
+    name = `${n.name}_${i}`;
+  }
+  taken.add(name);
+  const copy: NodeSpec = { ...n, name };
+  if (n.children) copy.children = n.children.map((c) => cloneUnique(c, taken));
+  return copy;
+}
+
+/** Duplicate the node (and its subtree) right after itself. Returns the copy's path or an error. */
+export function duplicateAt(root: NodeSpec, path: Path): Path | string {
+  if (path.length === 0) return 'the root cannot be duplicated';
+  const parent = getNode(root, path.slice(0, -1));
+  const idx = path[path.length - 1];
+  const node = getNode(root, path);
+  if (!parent?.children || idx === undefined || !node) return 'node not found';
+  if (parent.type === 'decorator') return 'a decorator has exactly one child';
+  const copy = cloneUnique(node, allNames(root));
+  parent.children.splice(idx + 1, 0, copy);
+  return [...path.slice(0, -1), idx + 1];
+}
+
+/** Move a node out to become its parent's next sibling. Returns the new path or an error. */
+export function outdent(root: NodeSpec, path: Path): Path | string {
+  if (path.length < 2) return 'already directly under the root';
+  const parentPath = path.slice(0, -1);
+  const grand = getNode(root, parentPath.slice(0, -1));
+  const parent = getNode(root, parentPath);
+  const idx = path[path.length - 1];
+  const pidx = parentPath[parentPath.length - 1];
+  if (!grand?.children || !parent?.children || idx === undefined || pidx === undefined)
+    return 'node not found';
+  if (grand.type === 'decorator') return 'a decorator has exactly one child';
+  const [node] = parent.children.splice(idx, 1);
+  if (!node) return 'node not found';
+  grand.children.splice(pidx + 1, 0, node);
+  return [...parentPath.slice(0, -1), pidx + 1];
+}
+
+/** Move a node into the sibling just above it. Returns the new path or an error. */
+export function indent(root: NodeSpec, path: Path): Path | string {
+  const idx = path[path.length - 1];
+  const parent = getNode(root, path.slice(0, -1));
+  if (path.length === 0 || !parent?.children || idx === undefined)
+    return 'the root cannot be moved';
+  const prev = parent.children[idx - 1];
+  const node = parent.children[idx];
+  if (!prev || !node) return 'no sibling above to move into';
+  const prevPath = [...path.slice(0, -1), idx - 1];
+  parent.children.splice(idx, 1);
+  const res = addChild(root, prevPath, node);
+  if (typeof res === 'string') {
+    parent.children.splice(idx, 0, node);
+    return res;
+  }
+  return res;
+}
+
 /** Rename a node, keeping names unique. Returns an error message or undefined. */
 export function rename(root: NodeSpec, path: Path, name: string): string | undefined {
   const clean = name.trim();

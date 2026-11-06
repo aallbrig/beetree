@@ -17,6 +17,9 @@ import {
   NODE_TYPES,
   parseSpec,
   removeAt,
+  duplicateAt,
+  indent,
+  outdent,
   rename,
   findProblems,
   stringifySpec,
@@ -158,6 +161,17 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     { class: 'btn small', type: 'button', 'aria-label': 'Move down' },
     '↓',
   );
+  const dupBtn = h('button', { class: 'btn small', type: 'button' }, 'Duplicate');
+  const outBtn = h(
+    'button',
+    { class: 'btn small', type: 'button', title: 'Move out of its parent' },
+    'Outdent',
+  );
+  const inBtn = h(
+    'button',
+    { class: 'btn small', type: 'button', title: 'Move into the sibling above' },
+    'Indent',
+  );
   const undoBtn = h(
     'button',
     { class: 'btn small', type: 'button', 'aria-label': 'Undo', title: 'Undo (Ctrl+Z)' },
@@ -171,7 +185,20 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   const design = h(
     'div',
     { class: 'stack' },
-    h('div', { class: 'row' }, typeSel, addBtn, rmBtn, upBtn, downBtn, undoBtn, redoBtn),
+    h(
+      'div',
+      { class: 'row' },
+      typeSel,
+      addBtn,
+      rmBtn,
+      dupBtn,
+      upBtn,
+      downBtn,
+      outBtn,
+      inBtn,
+      undoBtn,
+      redoBtn,
+    ),
     outlineHost,
     propsHost,
   );
@@ -555,6 +582,23 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     }
     selected = selected.slice(0, -1);
     refresh();
+  });
+  const applyMove = (res: Path | string): void => {
+    if (typeof res === 'string') {
+      toast(res, 'err');
+      return;
+    }
+    selected = res;
+    refresh();
+  };
+  dupBtn.addEventListener('click', () => {
+    applyMove(duplicateAt(spec.tree, selected));
+  });
+  outBtn.addEventListener('click', () => {
+    applyMove(outdent(spec.tree, selected));
+  });
+  inBtn.addEventListener('click', () => {
+    applyMove(indent(spec.tree, selected));
   });
   upBtn.addEventListener('click', () => {
     selected = moveSibling(spec.tree, selected, -1);
