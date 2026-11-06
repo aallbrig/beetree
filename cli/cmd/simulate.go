@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	"github.com/aallbrig/beetree-cli/internal/model"
 	"github.com/aallbrig/beetree-cli/internal/simulator"
 	"github.com/spf13/cobra"
 )
@@ -45,6 +47,10 @@ Example:
 			return err
 		}
 
+		if err := checkOverrideNames(&tree.Tree, overrides); err != nil {
+			return err
+		}
+
 		result := simulator.Simulate(tree, overrides)
 		cmd.Print(simulator.FormatTrace(result))
 		return nil
@@ -70,6 +76,36 @@ func parseOverrides(raw []string) (map[string]simulator.Status, error) {
 		}
 	}
 	return overrides, nil
+}
+
+// checkOverrideNames fails when an override names a node that is not in the
+// tree, so a typo cannot silently run the unmodified simulation.
+func checkOverrideNames(root *model.NodeSpec, overrides map[string]simulator.Status) error {
+	names := map[string]bool{}
+	var walk func(n *model.NodeSpec)
+	walk = func(n *model.NodeSpec) {
+		names[n.Name] = true
+		for i := range n.Children {
+			walk(&n.Children[i])
+		}
+	}
+	walk(root)
+	var unknown []string
+	for name := range overrides {
+		if !names[name] {
+			unknown = append(unknown, name)
+		}
+	}
+	if len(unknown) == 0 {
+		return nil
+	}
+	sort.Strings(unknown)
+	valid := make([]string, 0, len(names))
+	for n := range names {
+		valid = append(valid, n)
+	}
+	sort.Strings(valid)
+	return fmt.Errorf("--override names unknown node %q; nodes in this tree: %s", unknown[0], strings.Join(valid, ", "))
 }
 
 func init() {

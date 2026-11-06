@@ -682,6 +682,26 @@ tree:
 	assert.Contains(t, output, "FAILURE")
 }
 
+func TestSimulateCommand_OverrideUnknownNode(t *testing.T) {
+	specFile := filepath.Join(t.TempDir(), "test.beetree.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
+metadata:
+  name: test
+tree:
+  type: sequence
+  name: root
+  children:
+    - type: condition
+      name: check
+      node: Check
+`), 0644))
+
+	_, err := executeCommand("simulate", specFile, "--override", "nosuch=SUCCESS")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "nosuch")
+	assert.Contains(t, err.Error(), "check")
+}
+
 func TestSimulateCommand_Step(t *testing.T) {
 	tmpDir := t.TempDir()
 	specFile := filepath.Join(tmpDir, "test.beetree.yaml")
