@@ -15,6 +15,7 @@ type MemStore struct {
 	profiles map[string]Profile
 	threads  map[string]Thread
 	posts    map[string][]Post
+	reports  map[string][]Report
 	scenes   map[string]Scene
 	keys     map[string]APIKey // by hash
 }
@@ -28,6 +29,7 @@ func NewMemStore() *MemStore {
 		profiles: map[string]Profile{},
 		threads:  map[string]Thread{},
 		posts:    map[string][]Post{},
+		reports:  map[string][]Report{},
 		scenes:   map[string]Scene{},
 		keys:     map[string]APIKey{},
 	}
@@ -226,6 +228,27 @@ func (m *MemStore) AddPost(_ context.Context, p Post) error {
 	t.LastActivity = p.CreatedAt
 	m.threads[p.ThreadID] = t
 	return nil
+}
+
+func (m *MemStore) AddReport(_ context.Context, r Report) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.threads[r.ThreadID]; !ok {
+		return ErrNotFound
+	}
+	for _, old := range m.reports[r.ThreadID] {
+		if old.PostID == r.PostID && old.ReporterID == r.ReporterID {
+			return nil
+		}
+	}
+	m.reports[r.ThreadID] = append(m.reports[r.ThreadID], r)
+	return nil
+}
+
+func (m *MemStore) ListReports(_ context.Context, threadID string) ([]Report, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return append([]Report(nil), m.reports[threadID]...), nil
 }
 
 func (m *MemStore) ListPosts(_ context.Context, threadID string) ([]Post, error) {

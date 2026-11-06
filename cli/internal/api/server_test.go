@@ -318,6 +318,13 @@ func TestForum(t *testing.T) {
 	assert.Equal(t, 201, do(h, "POST", "/v1/forum/threads/"+id+"/posts", "bob", map[string]string{"body": "Priority order."}).Code)
 	assert.Equal(t, 404, do(h, "POST", "/v1/forum/threads/nope/posts", "bob", map[string]string{"body": "x"}).Code)
 
+	rp := map[string]string{"reason": "spam"}
+	assert.Equal(t, 401, do(h, "POST", "/v1/forum/threads/"+id+"/report", "", rp).Code)
+	assert.Equal(t, 400, do(h, "POST", "/v1/forum/threads/"+id+"/report", "bob", map[string]string{}).Code)
+	assert.Equal(t, 404, do(h, "POST", "/v1/forum/threads/nope/report", "bob", rp).Code)
+	assert.Equal(t, 404, do(h, "POST", "/v1/forum/threads/"+id+"/report", "bob", map[string]string{"reason": "x", "postId": "nope"}).Code)
+	assert.Equal(t, 201, do(h, "POST", "/v1/forum/threads/"+id+"/report", "bob", rp).Code)
+
 	got := do(h, "GET", "/v1/forum/threads/"+id, "", nil).JSON(t)
 	assert.Len(t, got["posts"], 1)
 	assert.Equal(t, float64(1), got["thread"].(map[string]any)["postCount"])

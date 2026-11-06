@@ -161,6 +161,49 @@ func (s *Server) getThread(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"thread": t, "posts": listOf(posts)["items"]})
 }
 
+// reportThread files a report against a thread, or against one of its posts
+// when postId is given. Reporting twice is accepted and counted once.
+func (s *Server) reportThread(w http.ResponseWriter, r *http.Request) {
+	c, ok := requireAuth(w, r)
+	if !ok {
+		return
+	}
+	var req struct {
+		PostID string `json:"postId"`
+		Reason string `json:"reason"`
+	}
+	if !readJSON(w, r, &req) {
+		return
+	}
+	reason := clip(req.Reason, 500)
+	if reason == "" {
+		writeErr(w, http.StatusBadRequest, "invalid_request", "reason is required")
+		return
+	}
+	id := r.PathValue("id")
+	if req.PostID != "" {
+		posts, err := s.Store.ListPosts(r.Context(), id)
+		if err != nil {
+			s.storeErr(w, err)
+			return
+		}
+		found := false
+		for _, p := range posts {
+			found = found || p.ID == req.PostID
+		}
+		if !found {
+			writeErr(w, http.StatusNotFound, "not_found", "post not found")
+			return
+		}
+	}
+	rep := Report{ID: s.NewID(), ThreadID: id, PostID: req.PostID, ReporterID: c.Sub, Reason: reason, CreatedAt: s.stamp()}
+	if err := s.Store.AddReport(r.Context(), rep); err != nil {
+		s.storeErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, rep)
+}
+
 func (s *Server) addPost(w http.ResponseWriter, r *http.Request) {
 	c, ok := requireAuth(w, r)
 	if !ok {
