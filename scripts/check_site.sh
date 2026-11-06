@@ -65,6 +65,9 @@ for c in copy-yaml download-yaml copy-code download-code; do
   grep -rqF "$c" "$PUBLIC/app/assets" || { echo "builder is missing the $c control" >&2; exit 1; }
 done
 
+# the builder offers a template picker for new trees
+grep -rqF "template-picker" "$PUBLIC/app/assets" || { echo "builder is missing the template picker" >&2; exit 1; }
+
 # the dashboard ships tree search, sort and rename
 for c in tree-search tree-sort 'Renamed.'; do
   grep -rqF "$c" "$PUBLIC/app/assets" || { echo "dashboard is missing the $c control" >&2; exit 1; }

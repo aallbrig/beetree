@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { classify } from './scene/behaviors';
 import { SAMPLES, sampleById } from './samples';
-import { isLeaf, parseSpec, walk } from './spec';
+import { findProblems, isLeaf, parseSpec, walk } from './spec';
 
 describe('built-in templates', () => {
   it('ships four to five templates with unique ids', () => {
@@ -19,6 +19,7 @@ describe('built-in templates', () => {
   for (const sample of SAMPLES) {
     it(`${sample.title} parses, has unique node names and runs in 3D`, () => {
       const spec = parseSpec(sample.yaml);
+      expect(findProblems(spec.tree), 'builder problems').toEqual([]);
       const names = new Set<string>();
       for (const [node] of walk(spec.tree)) {
         expect(names.has(node.name), `duplicate node name ${node.name}`).toBe(false);
