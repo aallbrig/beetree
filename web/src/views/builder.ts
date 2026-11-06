@@ -1,6 +1,7 @@
 import { api, ApiError } from '../api';
 import { outline, type Outline } from '../components/outline';
 import { clear, h, toast } from '../dom';
+import { copyText, downloadText, fileName } from '../exporter';
 import { History } from '../history';
 import { navigate, type Cleanup, type Ctx } from '../router';
 import { pathId } from '../engine/bt';
@@ -211,9 +212,38 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
       { class: 'stack' },
       yamlArea,
       yamlErr,
-      h('button', { class: 'btn small', type: 'button', onClick: applyYaml }, 'Apply YAML'),
+      h(
+        'div',
+        { class: 'row' },
+        h('button', { class: 'btn small', type: 'button', onClick: applyYaml }, 'Apply YAML'),
+        h(
+          'button',
+          {
+            class: 'btn small',
+            type: 'button',
+            'data-export': 'copy-yaml',
+            onClick: () => void copyOut(yamlArea.value),
+          },
+          'Copy YAML',
+        ),
+        h(
+          'button',
+          {
+            class: 'btn small',
+            type: 'button',
+            'data-export': 'download-yaml',
+            onClick: () => {
+              downloadText(fileName(spec.metadata.name, 'beetree.yaml'), yamlArea.value);
+            },
+          },
+          'Download YAML',
+        ),
+      ),
     ),
   );
+  const copyOut = async (text: string): Promise<void> => {
+    toast((await copyText(text)) ? 'Copied to the clipboard.' : 'Could not copy.', 'ok');
+  };
   const genBtn = h('button', { class: 'btn small', type: 'button' }, 'Generate');
   addTab(
     'code',
@@ -680,6 +710,32 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
               'details',
               {},
               h('summary', {}, `${f.path}${f.isStub ? ' (your stub)' : ''}`),
+              h(
+                'div',
+                { class: 'row' },
+                h(
+                  'button',
+                  {
+                    class: 'btn small',
+                    type: 'button',
+                    'data-export': 'copy-code',
+                    onClick: () => void copyOut(f.content),
+                  },
+                  'Copy code',
+                ),
+                h(
+                  'button',
+                  {
+                    class: 'btn small',
+                    type: 'button',
+                    'data-export': 'download-code',
+                    onClick: () => {
+                      downloadText(f.path.split('/').pop() ?? 'code.txt', f.content);
+                    },
+                  },
+                  'Download code',
+                ),
+              ),
               h('pre', { class: 'code' }, f.content),
             ),
           );
