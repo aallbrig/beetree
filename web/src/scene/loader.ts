@@ -35,6 +35,7 @@ export async function populate(world: World, agents: SceneAgent[]): Promise<Load
       name: a.name,
       faction: a.faction,
       role: a.role,
+      slot: a.slot,
       model: a.model,
       x: a.x,
       z: a.z,

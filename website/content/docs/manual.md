@@ -37,6 +37,8 @@ The scene selector on Explore lists the built-in scenes. Each scene declares its
 
 **Demo scene 2** is a combat scene: four allied Troopers against an enemy Commander, two Skirmishers and a Shieldbearer. These are generic stand-ins with their own trees, not characters from any game. Controls: a **damage timer**.
 
+**Demo scene 3** shows one tree driving three agents. A Leader, a Flanker and a Support all run the same [squad tree](https://github.com/aallbrig/beetreecraft/blob/main/examples/squad.beetree.yaml): the leader holds, the flanker closes in on the intruder, the support follows the leader. Each agent's label shows its slot. Controls: the clickable **intruder**. See [One tree, several agents](/docs/trees/#one-tree-several-agents) for the format.
+
 - Toggle the timer on or off.
 - **Period** sets seconds between ticks, from 1 to 20 (default 5).
 - **Damage** is taken per tick (default 10).

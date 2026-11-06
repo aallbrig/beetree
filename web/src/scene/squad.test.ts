@@ -71,3 +71,31 @@ describe('squad slots', () => {
     expect(l.anim).toBe('sprint');
   });
 });
+
+describe('Explore Demo scene 3', () => {
+  it('is listed, its agents share one tree, and each fills a distinct slot', async () => {
+    const { sceneDefById, SCENES } = await import('./registry');
+    const scene = sceneDefById('squad');
+    expect(scene?.title).toBe('Demo scene 3');
+    expect(SCENES.map((s) => s.title)).toContain('Demo scene 3');
+    const agents = scene?.agents ?? [];
+    expect(new Set(agents.map((a) => a.treeId)).size).toBe(1);
+    expect(agents.map((a) => a.slot)).toEqual(['leader', 'flanker', 'support']);
+  });
+
+  it('the squad example tree is valid and gives three agents three different actions', async () => {
+    const { COMBAT_TREES } = await import('./combat');
+    const { classify } = await import('./behaviors');
+    const { findProblems, isLeaf, walk } = await import('../spec');
+    const root = parseSpec(COMBAT_TREES['example:squad'] ?? '').tree;
+    expect(findProblems(root)).toEqual([]);
+    for (const [node] of walk(root)) {
+      if (isLeaf(node.type)) expect(classify(node), node.name).not.toBe('generic');
+    }
+    const [l, f, s] = [body(), body(), body()];
+    s.leader = { x: 3, z: 0 };
+    const squad = new Squad(root, { leader: l, flanker: f, support: s });
+    for (let i = 0; i < 5; i++) squad.tick(0.1);
+    expect([l.anim, f.anim, s.anim]).toEqual(['idle', 'sprint', 'walk']);
+  });
+});

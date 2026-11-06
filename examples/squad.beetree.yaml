@@ -1,0 +1,35 @@
+# BeeTree Example: Squad
+# One tree for three agents: the leader holds, the flanker closes in, the support follows the leader.
+# Used by Explore Demo scene 3. Each leaf names the agent it acts on with parameters.slot.
+
+version: "1.0"
+metadata:
+  name: squad
+  description: "One tree, three roles: leader holds, flanker closes in, support follows the leader"
+  author: beetree-examples
+  tags:
+    - squad
+    - explore-scene
+
+tree:
+  type: parallel
+  name: squad_root
+  children:
+    - type: action
+      name: hold_position
+      node: HoldPosition
+      description: "Leader stays put and watches"
+      parameters:
+        slot: leader
+    - type: action
+      name: chase_flank
+      node: ChaseFlank
+      description: "Flanker closes in on the target"
+      parameters:
+        slot: flanker
+    - type: action
+      name: follow_leader_close
+      node: FollowLeaderClose
+      description: "Support stays near the leader"
+      parameters:
+        slot: support
