@@ -29,12 +29,29 @@ export interface NodeSpec {
   description?: string;
   decorator?: string;
   parameters?: Record<string, unknown>;
+  success_policy?: string;
+  failure_policy?: string;
+  ref?: string;
+  file?: string;
   children?: NodeSpec[];
 }
 
+/** Top-level sections the builder has no editor for yet; kept so import then export loses nothing. */
+export const PASSTHROUGH_KEYS = ['blackboard', 'custom_nodes', 'notation', 'subtrees'] as const;
+
 export interface TreeSpec {
   version: string;
-  metadata: { name: string; description?: string; author?: string; tags?: string[] };
+  metadata: {
+    name: string;
+    description?: string;
+    author?: string;
+    license?: string;
+    tags?: string[];
+  };
+  blackboard?: unknown;
+  custom_nodes?: unknown;
+  notation?: unknown;
+  subtrees?: unknown;
   tree: NodeSpec;
 }
 
@@ -63,6 +80,10 @@ function toNode(v: unknown, where: string): NodeSpec {
   if (typeof v.description === 'string') node.description = v.description;
   if (typeof v.decorator === 'string') node.decorator = v.decorator;
   if (isRecord(v.parameters)) node.parameters = v.parameters;
+  if (typeof v.success_policy === 'string') node.success_policy = v.success_policy;
+  if (typeof v.failure_policy === 'string') node.failure_policy = v.failure_policy;
+  if (typeof v.ref === 'string') node.ref = v.ref;
+  if (typeof v.file === 'string') node.file = v.file;
   if (Array.isArray(v.children)) {
     node.children = v.children.map((c: unknown, i) => toNode(c, `${where}.children[${i}]`));
   }
@@ -77,17 +98,26 @@ export function parseSpec(text: string): TreeSpec {
   const metadata: TreeSpec['metadata'] = { name: typeof meta.name === 'string' ? meta.name : '' };
   if (typeof meta.description === 'string') metadata.description = meta.description;
   if (typeof meta.author === 'string') metadata.author = meta.author;
+  if (typeof meta.license === 'string') metadata.license = meta.license;
   if (Array.isArray(meta.tags))
     metadata.tags = meta.tags.filter((t): t is string => typeof t === 'string');
-  return {
+  const spec: TreeSpec = {
     version: typeof doc.version === 'string' ? doc.version : '1.0',
     metadata,
     tree: toNode(doc.tree, 'tree'),
   };
+  for (const k of PASSTHROUGH_KEYS) if (doc[k] !== undefined) spec[k] = doc[k];
+  return spec;
 }
 
 export function stringifySpec(spec: TreeSpec): string {
-  return stringify(spec, { lineWidth: 0 });
+  // Canonical section order: version, metadata, blackboard..., tree, subtrees
+  const ordered: Record<string, unknown> = { version: spec.version, metadata: spec.metadata };
+  for (const k of PASSTHROUGH_KEYS)
+    if (k !== 'subtrees' && spec[k] !== undefined) ordered[k] = spec[k];
+  ordered.tree = spec.tree;
+  if (spec.subtrees !== undefined) ordered.subtrees = spec.subtrees;
+  return stringify(ordered, { lineWidth: 0 });
 }
 
 export function newSpec(name = 'my-tree'): TreeSpec {
