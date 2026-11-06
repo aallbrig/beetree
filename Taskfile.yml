@@ -34,6 +34,7 @@ tasks:
       - task: docs:check
       - task: site:check
       - task: loop:check
+      - task: downloads:check
 
   # ---- lint / format -------------------------------------------------------
   lint:
@@ -292,6 +293,11 @@ tasks:
     desc: "Run the unattended improvement loop in this terminal (see scripts/agent-loop.sh)"
     cmds:
       - scripts/agent-loop.sh
+
+  downloads:check:
+    desc: Check the /downloads layout (stable names, latest.json, checksums)
+    cmds:
+      - scripts/check_downloads.sh
 
   loop:check:
     desc: "Check the loop's prompt-injection defenses"

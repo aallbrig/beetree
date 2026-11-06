@@ -6,6 +6,8 @@ package smoke
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -251,4 +253,34 @@ func purge(t *testing.T, table string, pks ...string) {
 			_ = exec.Command("aws", "dynamodb", "delete-item", "--table-name", table, "--region", "us-east-1", "--key", string(key)).Run()
 		}
 	}
+}
+
+// TestDownloads fetches the published latest.json and verifies one archive against its checksum.
+func TestDownloads(t *testing.T) {
+	base := "https://beetreecraft.com"
+	resp, err := http.Get(base + "/downloads/latest/latest.json")
+	require.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
+	require.Equal(t, 200, resp.StatusCode)
+	var latest struct {
+		Version string `json:"version"`
+		Files   []struct {
+			Name   string `json:"name"`
+			SHA256 string `json:"sha256"`
+			URL    string `json:"url"`
+		} `json:"files"`
+	}
+	require.NoError(t, json.NewDecoder(resp.Body).Decode(&latest))
+	require.NotEmpty(t, latest.Version)
+	require.NotEmpty(t, latest.Files)
+
+	f := latest.Files[0]
+	ar, err := http.Get(base + f.URL)
+	require.NoError(t, err)
+	defer func() { _ = ar.Body.Close() }()
+	require.Equal(t, 200, ar.StatusCode)
+	h := sha256.New()
+	_, err = io.Copy(h, ar.Body)
+	require.NoError(t, err)
+	assert.Equal(t, f.SHA256, hex.EncodeToString(h.Sum(nil)), f.Name)
 }
