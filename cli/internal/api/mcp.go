@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/aallbrig/beetree-cli/internal/differ"
 	"net/http"
 	"strings"
 )
@@ -74,6 +75,7 @@ func mcpTools() []mcpTool {
 		{Name: "simulate_tree", Description: "Dry-run a spec and return the execution trace. Overrides force named nodes to SUCCESS, FAILURE or RUNNING.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "overrides": map[string]any{"type": "object", "description": "node name -> SUCCESS|FAILURE|RUNNING", "additionalProperties": map[string]any{"type": "string"}}})},
 		{Name: "simulate_start", Description: "Begin a step-through simulation. Returns the first pending leaf; answer it with simulate_answer.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec})},
 		{Name: "simulate_answer", Description: "Answer the pending leaf of a step-through simulation with SUCCESS, FAILURE or RUNNING. Pass the same spec and every earlier answer in order (the server keeps no state). Returns the next pending leaf, or the final status and trace.", InputSchema: objSchema([]string{"spec", "status"}, map[string]any{"spec": spec, "status": strProp("SUCCESS | FAILURE | RUNNING for the pending leaf"), "answers": map[string]any{"type": "array", "description": "earlier answers, oldest first (empty after simulate_start)", "items": map[string]any{"type": "string"}}})},
+		{Name: "diff_trees", Description: "Compare two specs and list what was added, removed or modified, by node path. Use after editing a tree to confirm only the intended change happened.", InputSchema: objSchema([]string{"spec", "other"}, map[string]any{"spec": strProp("the earlier .beetree.yaml text"), "other": strProp("the later .beetree.yaml text")})},
 		{Name: "generate_code", Description: "Generate engine code (unity, unreal or godot) from a spec.", InputSchema: objSchema([]string{"spec", "engine"}, map[string]any{"spec": spec, "engine": strProp("unity | unreal | godot")})},
 		{Name: "search_trees", Description: "Search public behavior trees shared by the community.", InputSchema: objSchema(nil, map[string]any{"query": strProp("text to match against name, description and tags"), "tag": strProp("exact tag"), "limit": map[string]any{"type": "integer"}})},
 		{Name: "get_tree", Description: "Fetch a tree, including its spec, by id. Private trees need the owner's token.", InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("tree id")})},
@@ -190,6 +192,7 @@ type callParams struct {
 
 type toolArgs struct {
 	Spec        string            `json:"spec"`
+	Other       string            `json:"other"`
 	Format      string            `json:"format"`
 	Engine      string            `json:"engine"`
 	Overrides   map[string]string `json:"overrides"`
@@ -271,6 +274,21 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 			return fail(err)
 		}
 		return toolJSON(res)
+	case "diff_trees":
+		a1, err := validSpec(a.Spec)
+		if err != nil {
+			return fail(fmt.Errorf("spec: %w", err))
+		}
+		b1, err := validSpec(a.Other)
+		if err != nil {
+			return fail(fmt.Errorf("other: %w", err))
+		}
+		changes := differ.Diff(a1, b1)
+		out := make([]map[string]string, 0, len(changes))
+		for _, c := range changes {
+			out = append(out, map[string]string{"type": string(c.Type), "path": c.Path, "old": c.Old, "new": c.New})
+		}
+		return toolJSON(map[string]any{"identical": len(changes) == 0, "changes": out})
 	case "generate_code":
 		files, err := generateYAML(a.Spec, a.Engine)
 		if err != nil {
