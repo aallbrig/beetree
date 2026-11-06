@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -435,4 +436,30 @@ func TestOpenAPIDocumentsRateLimitAndSizeResponses(t *testing.T) {
 			}
 		}
 	}
+}
+
+// TestListTreesSearchSeesOldTrees guards against a fixed scan window: with
+// more than 200 public trees the oldest one must still be findable by query,
+// tag and popularity.
+func TestListTreesSearchSeesOldTrees(t *testing.T) {
+	st := NewMemStore()
+	s := &Server{Store: st, Auth: fakeAuth{}, Version: "test", AllowAnonymous: true}
+	h := s.Handler()
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	for i := 0; i < 205; i++ {
+		tr := Tree{ID: fmt.Sprintf("t%03d", i), OwnerID: "u1", Name: fmt.Sprintf("filler %d", i),
+			Visibility: VisibilityPublic, CreatedAt: base.Add(time.Duration(i) * time.Minute).Format(time.RFC3339)}
+		if i == 0 {
+			tr.Name, tr.Tags, tr.LikeCount = "ancient guard", []string{"relic"}, 99
+		}
+		require.NoError(t, st.PutTree(context.Background(), tr))
+	}
+	first := func(q string) string {
+		items := do(h, "GET", "/v1/trees?"+q, "", nil).JSON(t)["items"].([]any)
+		require.NotEmpty(t, items, q)
+		return items[0].(map[string]any)["id"].(string)
+	}
+	assert.Equal(t, "t000", first("q=ancient"))
+	assert.Equal(t, "t000", first("tag=relic"))
+	assert.Equal(t, "t000", first("sort=popular"))
 }

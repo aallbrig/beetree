@@ -61,13 +61,19 @@ func (s *Server) listTrees(w http.ResponseWriter, r *http.Request) {
 	if n, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && n > 0 && n <= 100 {
 		limit = n
 	}
-	ts, err := s.Store.ListPublicTrees(r.Context(), 200)
+	q := strings.ToLower(r.URL.Query().Get("q"))
+	tag := strings.ToLower(r.URL.Query().Get("tag"))
+	// Filtering and popularity sorting must see every public tree, or older
+	// trees are unfindable. A plain listing only needs the newest page.
+	fetch := limit
+	if q != "" || tag != "" || r.URL.Query().Get("sort") == "popular" {
+		fetch = 0 // 0 means all
+	}
+	ts, err := s.Store.ListPublicTrees(r.Context(), fetch)
 	if err != nil {
 		s.storeErr(w, err)
 		return
 	}
-	q := strings.ToLower(r.URL.Query().Get("q"))
-	tag := strings.ToLower(r.URL.Query().Get("tag"))
 	var out []Tree
 	for _, t := range ts {
 		if q != "" && !strings.Contains(strings.ToLower(t.Name+" "+t.Description+" "+strings.Join(t.Tags, " ")), q) {
