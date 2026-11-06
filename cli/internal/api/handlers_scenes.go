@@ -14,6 +14,65 @@ type sceneRequest struct {
 	Name       string       `json:"name"`
 	Visibility string       `json:"visibility"`
 	Agents     []SceneAgent `json:"agents"`
+	// Confirm accepts publishing the caller's private trees that a public scene uses.
+	Confirm bool `json:"confirm,omitempty"`
+}
+
+// privateTreesToShare returns the caller's private trees that the agents of a
+// public scene use. Other people's trees and samples are skipped.
+func (s *Server) privateTreesToShare(r *http.Request, owner string, sc Scene) []Tree {
+	if sc.Visibility != VisibilityPublic {
+		return nil
+	}
+	seen := map[string]bool{}
+	var out []Tree
+	for _, a := range sc.Agents {
+		if a.TreeID == "" || seen[a.TreeID] {
+			continue
+		}
+		seen[a.TreeID] = true
+		t, err := s.Store.GetTree(r.Context(), a.TreeID)
+		if err == nil && t.OwnerID == owner && t.Visibility != VisibilityPublic {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// shareSceneTrees handles the publish step of saving a public scene. Without
+// confirm it answers 409 listing the trees that would change and returns false;
+// with confirm it publishes them all.
+func (s *Server) shareSceneTrees(w http.ResponseWriter, r *http.Request, owner string, sc Scene, confirm bool) bool {
+	trees := s.privateTreesToShare(r, owner, sc)
+	if len(trees) == 0 {
+		return true
+	}
+	if !confirm {
+		type item struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		}
+		items := make([]item, len(trees))
+		for i, t := range trees {
+			items[i] = item{t.ID, t.Name}
+		}
+		var b errBody
+		b.Error.Code, b.Error.Message = "confirmation_required", "making this scene public also publishes its private trees; resend with confirm true to accept"
+		writeJSON(w, http.StatusConflict, struct {
+			errBody
+			Trees []item `json:"trees"`
+		}{b, items})
+		return false
+	}
+	for _, t := range trees {
+		t.Visibility = VisibilityPublic
+		t.UpdatedAt = s.stamp()
+		if err := s.Store.PutTree(r.Context(), t); err != nil {
+			s.storeErr(w, err)
+			return false
+		}
+	}
+	return true
 }
 
 func (s *Server) buildScene(w http.ResponseWriter, req sceneRequest, base Scene) (Scene, bool) {
@@ -69,6 +128,9 @@ func (s *Server) createScene(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	if !s.shareSceneTrees(w, r, c.Sub, sc, req.Confirm) {
+		return
+	}
 	sc.ID, sc.OwnerID = s.NewID(), c.Sub
 	sc.CreatedAt = s.stamp()
 	sc.UpdatedAt = sc.CreatedAt
@@ -116,6 +178,9 @@ func (s *Server) updateScene(w http.ResponseWriter, r *http.Request) {
 	}
 	sc, ok := s.buildScene(w, req, old)
 	if !ok {
+		return
+	}
+	if !s.shareSceneTrees(w, r, old.OwnerID, sc, req.Confirm) {
 		return
 	}
 	sc.UpdatedAt = s.stamp()
