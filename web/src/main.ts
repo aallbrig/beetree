@@ -31,6 +31,17 @@ let menuOpen = false;
 const nav = h('nav', { class: 'nav', 'aria-label': 'Main' });
 const main = h('main', { id: 'main' });
 const version = h('small', { class: 'ver' });
+const themeBtn = h('button', { class: 'linklike', type: 'button' });
+function paintTheme(): void {
+  const dark = currentTheme() === 'dark';
+  themeBtn.textContent = dark ? 'Light mode' : 'Dark mode';
+  themeBtn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+}
+themeBtn.addEventListener('click', () => {
+  toggleTheme();
+  paintTheme();
+});
+paintTheme();
 const foot = h(
   'footer',
   { class: 'foot' },
@@ -45,6 +56,8 @@ const foot = h(
     h('a', { href: '/sitemap.xml' }, 'Sitemap'),
     ' ',
     version,
+    ' · ',
+    themeBtn,
   ),
 );
 app.append(nav, main, foot);
@@ -77,18 +90,6 @@ function renderNav(): void {
       h('button', { class: 'grp-label', type: 'button', 'aria-haspopup': 'true' }, label),
       h('div', { class: 'grp-menu' }, ...items),
     );
-  const themeBtn = h('button', {
-    class: 'btn small theme-toggle',
-    type: 'button',
-    onClick: () => {
-      toggleTheme();
-      renderNav();
-    },
-  });
-  const dark = currentTheme() === 'dark';
-  themeBtn.textContent = dark ? 'Light mode' : 'Dark mode';
-  themeBtn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
-
   const menuBtn = h('button', {
     class: 'btn small menu-toggle',
     type: 'button',
@@ -107,12 +108,6 @@ function renderNav(): void {
     { class: `links${menuOpen ? ' open' : ''}`, id: 'nav-links' },
     l('/build', 'Build'),
     l('/explore', 'Explore'),
-    group('Learn', [
-      doc('/learn/behavior-trees/', 'Behavior trees & history'),
-      doc('/learn/building-blocks/', 'Building blocks'),
-      doc('/resources/', 'Resources'),
-      doc('/references/', 'References and credits'),
-    ]),
     group('Docs', [
       doc('/docs/', 'Overview'),
       doc('/docs/manual/', 'Website manual'),
@@ -121,11 +116,14 @@ function renderNav(): void {
       doc('/docs/api/', 'REST API'),
       doc('/docs/api/reference/', 'API explorer (Swagger)'),
       doc('/docs/mcp/', 'MCP server'),
+      doc('/learn/behavior-trees/', 'Behavior trees & history'),
+      doc('/learn/building-blocks/', 'Building blocks'),
+      doc('/resources/', 'Resources'),
+      doc('/references/', 'References and credits'),
     ]),
     group('Community', [l('/community', 'Community trees'), l('/forum', 'Forum')]),
     ...(isSignedIn() ? [l('/dashboard', 'My trees')] : []),
     h('span', { class: 'spacer' }),
-    themeBtn,
     ...(isSignedIn()
       ? [
           l('/profile', currentUsername() || 'Profile'),
