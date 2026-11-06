@@ -1,5 +1,5 @@
 import './style.css';
-import { applyTheme, currentTheme, toggleTheme } from './theme';
+import { currentTheme, showTheme, toggleTheme } from './theme';
 import { currentUsername, isSignedIn, onAuthChange, signOut } from './auth';
 import { clear, h } from './dom';
 import { navigate, render, route, setGuard, start } from './router';
@@ -21,7 +21,7 @@ window.addEventListener('error', (e: ErrorEvent) => {
   console.error('uncaught', e.message);
 });
 
-applyTheme(currentTheme());
+showTheme(currentTheme());
 
 const app = document.getElementById('app');
 if (!app) throw new Error('missing #app');

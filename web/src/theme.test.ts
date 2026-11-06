@@ -24,6 +24,13 @@ describe('theme', () => {
     expect(currentTheme()).toBe('light');
   });
 
+  it('follows the OS dark preference until a choice is saved', () => {
+    vi.stubGlobal('window', { matchMedia: () => ({ matches: true }) });
+    expect(currentTheme()).toBe('dark');
+    store['beetreecraft-theme'] = 'light';
+    expect(currentTheme()).toBe('light');
+  });
+
   it('applies and remembers the choice', () => {
     applyTheme('dark');
     expect(root.dataset.theme).toBe('dark');
