@@ -33,6 +33,7 @@ tasks:
       - task: dev:check
       - task: docs:check
       - task: site:check
+      - task: loop:check
 
   # ---- lint / format -------------------------------------------------------
   lint:
@@ -285,6 +286,11 @@ tasks:
     desc: "Run the unattended improvement loop in this terminal (see scripts/agent-loop.sh)"
     cmds:
       - scripts/agent-loop.sh
+
+  loop:check:
+    desc: "Check the loop's prompt-injection defenses"
+    cmds:
+      - scripts/check_loop.sh
 
   agent:loop:start:
     desc: "Start the loop in a detached tmux session (beetreecraft-loop)"
