@@ -49,8 +49,8 @@ type mcpTool struct {
 	needsAuth bool
 }
 
-// mcpAnnotations are the MCP tool hints. Only create_tree writes, and it only
-// adds: nothing is overwritten or deleted.
+// mcpAnnotations are the MCP tool hints. Only create_tree and update_tree
+// write; update_tree overwrites the caller's own tree, so it is marked destructive.
 type mcpAnnotations struct {
 	ReadOnlyHint    bool `json:"readOnlyHint"`
 	DestructiveHint bool `json:"destructiveHint"`
@@ -80,10 +80,12 @@ func mcpTools() []mcpTool {
 		{Name: "search_trees", Description: "Search public behavior trees shared by the community.", InputSchema: objSchema(nil, map[string]any{"query": strProp("text to match against name, description and tags"), "tag": strProp("exact tag"), "limit": map[string]any{"type": "integer"}})},
 		{Name: "get_tree", Description: "Fetch a tree, including its spec, by id. Private trees need the owner's token.", InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("tree id")})},
 		{Name: "create_tree", Description: "Save a new tree to the signed-in user's account. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "name": strProp("display name (defaults to spec metadata.name)"), "description": strProp("short description"), "visibility": strProp("public | private (default private)"), "tags": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})},
+		{Name: "update_tree", Description: "Replace the spec of a tree you own. Omitted name, description, visibility and tags keep their current values. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id", "spec"}, map[string]any{"id": strProp("id of the tree to update"), "spec": spec, "name": strProp("new display name"), "description": strProp("new short description"), "visibility": strProp("public | private"), "tags": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})},
 		{Name: "list_my_trees", Description: "List the signed-in user's trees. Requires a bearer token.", needsAuth: true, InputSchema: objSchema(nil, map[string]any{})},
 	}
 	for i := range tools {
-		tools[i].Annotations = mcpAnnotations{ReadOnlyHint: tools[i].Name != "create_tree"}
+		n := tools[i].Name
+		tools[i].Annotations = mcpAnnotations{ReadOnlyHint: n != "create_tree" && n != "update_tree", DestructiveHint: n == "update_tree"}
 	}
 	return tools
 }
@@ -336,6 +338,33 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 		t, err := s.createTreeFor(r, claims, treeRequest{Name: a.Name, Description: a.Description, Visibility: a.Visibility, Tags: a.Tags, Spec: a.Spec})
 		if err != nil {
 			return fail(err)
+		}
+		return toolJSON(t)
+	case "update_tree":
+		old, err := s.Store.GetTree(ctx, a.ID)
+		if err != nil || old.OwnerID != claims.Sub {
+			return fail(fmt.Errorf("tree not found among your trees; use list_my_trees for ids"))
+		}
+		req := treeRequest{Name: a.Name, Description: a.Description, Visibility: a.Visibility, Tags: a.Tags, Spec: a.Spec}
+		if req.Name == "" {
+			req.Name = old.Name
+		}
+		if req.Description == "" {
+			req.Description = old.Description
+		}
+		if req.Visibility == "" {
+			req.Visibility = old.Visibility
+		}
+		if len(req.Tags) == 0 {
+			req.Tags = old.Tags
+		}
+		t, err := s.buildTree(req, old)
+		if err != nil {
+			return fail(err)
+		}
+		t.UpdatedAt = s.stamp()
+		if err := s.Store.PutTree(ctx, t); err != nil {
+			return fail(fmt.Errorf("save failed"))
 		}
 		return toolJSON(t)
 	case "list_my_trees":
