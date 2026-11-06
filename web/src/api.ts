@@ -1,6 +1,6 @@
 import { getToken } from './auth';
 import { loadConfig } from './config';
-import type { ReportBody } from './report';
+import type { ReportBody, ReportItem } from './report';
 import type {
   Comment,
   Items,
@@ -105,6 +105,7 @@ export const api = {
     request<Thread>('POST', '/v1/forum/threads', { title, body }),
   reportThread: (id: string, body: ReportBody) =>
     request<undefined>('POST', `/v1/forum/threads/${id}/report`, body),
+  recentReports: () => request<Items<ReportItem>>('GET', '/v1/forum/reports'),
   addPost: (id: string, body: string) =>
     request<Post>('POST', `/v1/forum/threads/${id}/posts`, { body }),
   scenes: () => request<Items<Scene>>('GET', '/v1/scenes'),
