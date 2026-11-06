@@ -138,6 +138,9 @@ func TestLiveStack(t *testing.T) {
 		code, _ = anon.do("GET", p, nil)
 		assert.Equal(t, 401, code, "anonymous %s must be rejected", p)
 	}
+	code, snap := anon.do("GET", "/v1/public/trees", nil)
+	assert.Equal(t, 200, code, "the visitor showcase is public")
+	assert.NotContains(t, fmt.Sprint(snap), "spec:", "showcase carries no tree specs")
 	code, _ = anon.do("POST", "/mcp", map[string]any{"jsonrpc": "2.0", "id": 1, "method": "ping"})
 	assert.Equal(t, 401, code, "MCP needs credentials")
 	code, _ = client{t: t, base: apiURL, key: "btc_notarealkey"}.do("GET", "/v1/trees", nil)

@@ -143,7 +143,7 @@ setGuard((path) => (isSignedIn() ? undefined : `/signin?next=${encodeURIComponen
 
 route('/build', buildView);
 route('/explore', exploreView, { wide: true });
-route('/community', communityView, { private: true });
+route('/community', communityView);
 route('/tree/([\\w-]+)', treeView, { private: true });
 route('/forum', forumView, { private: true });
 route('/forum/([\\w-]+)', threadView, { private: true });

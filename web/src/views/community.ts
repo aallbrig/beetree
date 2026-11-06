@@ -1,9 +1,11 @@
 import { api } from '../api';
+import { isSignedIn } from '../auth';
 import { treeCard } from '../components/cards';
 import { clear, h } from '../dom';
 import type { Ctx } from '../router';
 
 export function communityView(ctx: Ctx): void {
+  const signedIn = isSignedIn();
   const q = h('input', {
     type: 'search',
     placeholder: 'Search trees, tags, ideas…',
@@ -19,7 +21,8 @@ export function communityView(ctx: Ctx): void {
   const note = h('p', { class: 'muted', role: 'status' });
   const load = (): void => {
     note.textContent = 'Loading…';
-    api.listTrees(q.value.trim(), sort.value).then(
+    const source = signedIn ? api.listTrees : api.publicTrees;
+    source(q.value.trim(), sort.value).then(
       (r) => {
         clear(results);
         note.textContent = r.items.length ? '' : 'No trees yet. Be the first to share one!';
@@ -38,6 +41,19 @@ export function communityView(ctx: Ctx): void {
   sort.addEventListener('change', load);
   ctx.root.append(
     h('h1', {}, 'Community trees'),
+    ...(signedIn
+      ? []
+      : [
+          h(
+            'div',
+            { class: 'note', role: 'note' },
+            'You are viewing the daily community snapshot. ',
+            h('a', { href: '#/signup' }, 'Create a free account'),
+            ' or ',
+            h('a', { href: '#/signin?next=%2Fcommunity' }, 'sign in'),
+            ' for live results, likes, comments and forking.',
+          ),
+        ]),
     h(
       'p',
       { class: 'muted' },

@@ -33,7 +33,7 @@ curl -s https://api.beetreecraft.com/v1/me -H "X-API-Key: $BEETREE_API_KEY"
 curl -s https://api.beetreecraft.com/v1/me -H "Authorization: Bearer $BEETREE_API_KEY"
 ```
 
-`GET /v1/health` and the OpenAPI document need no key.
+`GET /v1/health` and the OpenAPI document need no key. So does `GET /v1/public/trees`, a snapshot of public trees (no spec bodies) refreshed once a day, which powers the community page for visitors who have not signed in. Signed-in users and API clients should use `GET /v1/trees` for live results.
 
 ## Quick start
 

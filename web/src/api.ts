@@ -83,6 +83,11 @@ export const api = {
     request<Comment>('POST', `/v1/trees/${id}/comments`, { body }),
   deleteComment: (id: string, cid: string) =>
     request<undefined>('DELETE', `/v1/trees/${id}/comments/${cid}`),
+  publicTrees: (q: string, sort: string) =>
+    request<Items<Tree> & { generatedAt: string }>(
+      'GET',
+      `/v1/public/trees?q=${encodeURIComponent(q)}&sort=${sort}`,
+    ),
   listKeys: () => request<Items<ApiKeyInfo>>('GET', '/v1/keys'),
   createKey: (name: string) => request<ApiKeyInfo & { key: string }>('POST', '/v1/keys', { name }),
   deleteKey: (id: string) => request<undefined>('DELETE', `/v1/keys/${id}`),

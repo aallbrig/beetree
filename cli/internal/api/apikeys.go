@@ -78,7 +78,9 @@ func requireSession(w http.ResponseWriter, r *http.Request) (Claims, bool) {
 }
 
 // publicPath lists the routes that need no credentials.
-func publicPath(p string) bool { return p == "/v1/health" || p == "/v1/openapi.json" }
+func publicPath(p string) bool {
+	return p == "/v1/health" || p == "/v1/openapi.json" || p == "/v1/public/trees"
+}
 
 // credential extracts the caller's token from Authorization: Bearer or X-API-Key.
 func credential(r *http.Request) string {
