@@ -128,7 +128,8 @@ export const api = {
   ) => request<Profile>('PUT', '/v1/me', { displayName, bio, ...more }),
   myTrees: () => request<Items<Tree>>('GET', '/v1/me/trees'),
   myStats: () => request<Stats>('GET', '/v1/me/stats'),
-  user: (id: string) => request<{ profile: Profile; trees: Tree[] }>('GET', `/v1/users/${id}`),
+  user: (id: string) =>
+    request<{ profile: Profile; trees: Tree[]; scenes?: Scene[] }>('GET', `/v1/users/${id}`),
   threads: () => request<Items<Thread>>('GET', '/v1/forum/threads'),
   thread: (id: string) =>
     request<{ thread: Thread; posts: Post[] }>('GET', `/v1/forum/threads/${id}`),

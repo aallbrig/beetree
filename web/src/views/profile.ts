@@ -232,7 +232,7 @@ export async function profileView(ctx: Ctx): Promise<void> {
 }
 
 export async function userView(ctx: Ctx): Promise<void> {
-  const { profile, trees } = await api.user(ctx.params[0] ?? '');
+  const { profile, trees, scenes = [] } = await api.user(ctx.params[0] ?? '');
   ctx.root.append(
     h('img', {
       class: 'avatar big',
@@ -247,5 +247,15 @@ export async function userView(ctx: Ctx): Promise<void> {
     trees.length
       ? h('div', { class: 'grid' }, ...trees.map(treeCard))
       : h('p', { class: 'muted' }, 'Nothing shared yet.'),
+    h('h2', {}, 'Shared scenes'),
+    scenes.length
+      ? h(
+          'ul',
+          {},
+          ...scenes.map((s) =>
+            h('li', {}, `${s.name} (${s.agents.length} agents, ${formatDate(s.createdAt)})`),
+          ),
+        )
+      : h('p', { class: 'muted' }, 'No scenes shared yet.'),
   );
 }
