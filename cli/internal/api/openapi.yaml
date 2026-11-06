@@ -794,6 +794,7 @@ components:
         displayName: {type: string}
         bio: {type: string}
         email: {type: string}
+        moderator: {type: boolean, description: 'Present and true on GET /v1/me when the caller may review reports'}
         createdAt: {type: string, format: date-time}
     Stats:
       type: object

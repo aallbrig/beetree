@@ -288,6 +288,9 @@ func TestProfileAndStats(t *testing.T) {
 	me := do(h, "GET", "/v1/me", "alice", nil).JSON(t)
 	assert.Equal(t, "alice", me["displayName"])
 	assert.Equal(t, "alice@example.com", me["email"])
+	assert.NotContains(t, me, "moderator", "non-moderators get no moderator flag")
+	mod := do(h, "GET", "/v1/me", "mod", nil).JSON(t)
+	assert.Equal(t, true, mod["moderator"])
 
 	assert.Equal(t, 400, do(h, "PUT", "/v1/me", "alice", map[string]string{"displayName": "x"}).Code)
 	assert.Equal(t, 400, do(h, "PUT", "/v1/me", "alice", map[string]string{"displayName": "<script>alert(1)</script>"}).Code)
