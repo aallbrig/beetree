@@ -28,4 +28,5 @@ windows:
           - clear
         - while true; do scripts/agent-loop.sh; [ $? -eq 75 ] && break; echo "loop exited or already running; retrying in 5 min"; sleep 300; done
         - watch -n 30 task agent:loop:status
+        - scripts/loop-remote.sh
         - systemd-inhibit --what=sleep --who=beetreecraft-loop --why="overnight dev loop" sleep infinity

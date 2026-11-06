@@ -303,6 +303,12 @@ tasks:
     cmds:
       - scripts/dev_session.sh start
 
+  agent:loop:remote:
+    desc: "Run the Remote Control console named 'beetree.com loop' in this terminal"
+    interactive: true
+    cmds:
+      - scripts/loop-remote.sh
+
   agent:loop:status:
     desc: "Show the loop's heartbeat, recent log and latest release"
     cmds:
