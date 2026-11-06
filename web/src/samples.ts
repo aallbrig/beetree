@@ -2,6 +2,8 @@
 export interface Sample {
   id: string;
   title: string;
+  /** What a beginner learns by reading this tree. */
+  lesson: string;
   yaml: string;
 }
 
@@ -9,6 +11,8 @@ export const SAMPLES: Sample[] = [
   {
     id: 'sample:shopkeeper',
     title: "Shopkeeper's daily routine",
+    lesson:
+      'A selector tries the urgent branch first (serve a customer) and falls back to routine chores, so priority is just child order.',
     yaml: `version: "1.0"
 metadata:
   name: shopkeeper
@@ -35,6 +39,8 @@ tree:
   {
     id: 'sample:guard',
     title: 'Guard (chase and fight)',
+    lesson:
+      'Nested selectors give a fallback inside a branch: melee when in range, otherwise chase, and patrol only when nothing is seen.',
     yaml: `version: "1.0"
 metadata:
   name: guard
@@ -67,6 +73,8 @@ tree:
   {
     id: 'sample:coward',
     title: 'Coward (flee when hurt)',
+    lesson:
+      'A sequence guarded by a condition acts only when the condition holds, so the coward flees when it sees danger and otherwise recovers.',
     yaml: `version: "1.0"
 metadata:
   name: coward
@@ -90,6 +98,8 @@ tree:
   {
     id: 'sample:boss',
     title: 'Boss with phases',
+    lesson:
+      'Phases are selector children ordered from most to least urgent: the first sequence whose condition passes wins, with a plain fallback last.',
     yaml: `version: "1.0"
 metadata:
   name: boss
@@ -120,6 +130,8 @@ tree:
   {
     id: 'sample:companion',
     title: 'Loyal companion',
+    lesson:
+      'Defending is the first branch and staying close is the fallback, and a nested selector inside it picks strike or chase.',
     yaml: `version: "1.0"
 metadata:
   name: companion
