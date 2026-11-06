@@ -195,6 +195,9 @@ func (ev *EditorView) handleNavigateKey(event *tcell.EventKey) *tcell.EventKey {
 		case 's':
 			ev.doSave()
 			return nil
+		case 'S':
+			ev.openSaveAsModal()
+			return nil
 		case 'u':
 			ev.doUndo()
 			return nil
