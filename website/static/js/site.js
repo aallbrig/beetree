@@ -97,3 +97,16 @@
     }
   });
 })();
+
+// Copy buttons: <button data-copy="#selector"> copies that element's text.
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest && e.target.closest('[data-copy]');
+  if (!btn) return;
+  var src = document.querySelector(btn.getAttribute('data-copy'));
+  if (!src || !navigator.clipboard) return;
+  navigator.clipboard.writeText(src.textContent.trim()).then(function () {
+    var old = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(function () { btn.textContent = old; }, 1500);
+  });
+});

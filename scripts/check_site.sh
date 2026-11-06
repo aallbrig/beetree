@@ -77,6 +77,11 @@ hero=$(tr -d '\n' < "$PUBLIC/index.html" | grep -oE '<section class="?hero[" >].
 [ -n "$hero" ] || { echo "home hero not found" >&2; exit 1; }
 printf '%s' "$hero" | grep -q '<h1>Build and simulate game AI behavior trees</h1>' || { echo "hero headline must state the job" >&2; exit 1; }
 if printf '%s' "$hero" | grep -q '#/signup'; then echo "hero must not link to sign-up" >&2; exit 1; fi
+# hero carries a copyable install command, and the clone URL is the one the CLI docs use
+printf '%s' "$hero" | grep -Eq 'data-copy="?#home-install-cmd' || { echo "hero needs an install copy button" >&2; exit 1; }
+printf '%s' "$hero" | grep -q 'make install' || { echo "hero install command must end in make install" >&2; exit 1; }
+grep -q 'data-copy' website/static/js/site.js || { echo "site.js must handle data-copy buttons" >&2; exit 1; }
+grep -q 'git clone https://github.com/aallbrig/beetreecraft' website/content/docs/cli.md || { echo "hero install command drifted from docs/cli" >&2; exit 1; }
 
 # the builder bundle ships the copy and download controls
 for c in copy-yaml download-yaml copy-code download-code; do
