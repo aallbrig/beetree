@@ -1,3 +1,13 @@
+/** Frozen credit for a remix. state is derived by the API from the live original. */
+export interface Lineage {
+  kind: string;
+  id: string;
+  title: string;
+  ownerId: string;
+  ownerName: string;
+  at: string;
+  state?: 'public' | 'private' | 'deleted';
+}
 export interface Tree {
   id: string;
   ownerId: string;
@@ -12,6 +22,7 @@ export interface Tree {
   likedByMe?: boolean;
   createdAt: string;
   updatedAt: string;
+  remixedFrom?: Lineage;
 }
 export interface Comment {
   id: string;

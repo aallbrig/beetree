@@ -2,6 +2,7 @@ import { api, ApiError } from '../api';
 import { currentUsername, isSignedIn } from '../auth';
 import { outline, type Outline } from '../components/outline';
 import { clear, formatDate, h, toast } from '../dom';
+import { historyLine } from '../remix';
 import { navigate, type Cleanup, type Ctx } from '../router';
 import { World } from '../scene/world';
 import { parseSpec } from '../spec';
@@ -38,6 +39,25 @@ export async function treeView(ctx: Ctx): Promise<Cleanup | undefined> {
       },
       () => {
         toast('Could not update your like.', 'err');
+      },
+    );
+  });
+
+  const remixBtn = h('button', { class: 'btn', type: 'button' }, 'Remix');
+  remixBtn.addEventListener('click', () => {
+    if (!isSignedIn()) {
+      navigate(`/signin?next=${encodeURIComponent(`/tree/${id}`)}`);
+      return;
+    }
+    remixBtn.disabled = true;
+    api.remixTree(id).then(
+      (t) => {
+        toast('Remixed into your private trees.');
+        navigate(`/builder/${t.id}`);
+      },
+      (e: unknown) => {
+        remixBtn.disabled = false;
+        toast(e instanceof ApiError ? e.message : 'Could not remix.', 'err');
       },
     );
   });
@@ -137,6 +157,7 @@ export async function treeView(ctx: Ctx): Promise<Cleanup | undefined> {
             h('a', { href: `#/user/${tree.ownerId}` }, tree.ownerName),
             ` · ${formatDate(tree.createdAt)}${tree.visibility === 'private' ? ' · private' : ''}`,
           ),
+          tree.remixedFrom ? historyLine(tree.remixedFrom) : null,
           h('p', {}, tree.description),
           h('div', {}, ...tree.tags.map((x) => h('span', { class: 'tag' }, x))),
           h(
@@ -150,6 +171,7 @@ export async function treeView(ctx: Ctx): Promise<Cleanup | undefined> {
                   mine ? 'Edit' : 'Fork in builder',
                 )
               : h('a', { class: 'btn', href: '#/signup' }, 'Sign up to fork'),
+            tree.visibility === 'public' ? remixBtn : null,
           ),
         ),
         h('div', { class: 'card' }, h('h2', {}, 'Structure'), outlineHost),

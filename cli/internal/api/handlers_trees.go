@@ -268,6 +268,10 @@ func (s *Server) updateTree(w http.ResponseWriter, r *http.Request) {
 		s.storeErr(w, err)
 		return
 	}
+	if t.Visibility == VisibilityPublic && s.unchangedRemix(r, t) {
+		writeErr(w, http.StatusUnprocessableEntity, "unchanged_remix", unchangedRemixMsg)
+		return
+	}
 	t.UpdatedAt = s.stamp()
 	if err := s.Store.PutTree(r.Context(), t); err != nil {
 		s.storeErr(w, err)

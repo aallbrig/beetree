@@ -1,4 +1,5 @@
 import { h, formatDate } from '../dom';
+import { historyLine } from '../remix';
 import type { Tree } from '../types';
 
 export function treeCard(t: Tree): HTMLElement {
@@ -13,6 +14,7 @@ export function treeCard(t: Tree): HTMLElement {
       h('a', { href: `#/user/${t.ownerId}` }, t.ownerName),
       ` · ${formatDate(t.createdAt)}`,
     ),
+    t.remixedFrom ? historyLine(t.remixedFrom) : null,
     h('p', { class: 'small' }, t.description || 'No description.'),
     h('div', {}, ...t.tags.map((x) => h('span', { class: 'tag' }, x))),
     h(

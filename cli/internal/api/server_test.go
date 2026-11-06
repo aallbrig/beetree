@@ -678,7 +678,7 @@ func TestRemixTree(t *testing.T) {
 	assert.Equal(t, "public", state())
 
 	// remix of a remix records the chain
-	do(h, "PUT", "/v1/trees/"+cpID, "bob", map[string]any{"spec": goodSpec, "name": "Mine", "visibility": "public"})
+	do(h, "PUT", "/v1/trees/"+cpID, "bob", map[string]any{"spec": strings.Replace(goodSpec, "name: ", "name: x", 1), "name": "Mine", "visibility": "public"})
 	r2 := do(h, "POST", "/v1/trees/"+cpID+"/remix", "carol", nil).JSON(t)["remixedFrom"].(map[string]any)
 	assert.Equal(t, "Mine", r2["title"])
 	require.Len(t, r2["ancestors"], 1)
@@ -698,4 +698,21 @@ func TestRemixRateLimit(t *testing.T) {
 	}
 	assert.Equal(t, 429, do(h, "POST", "/v1/trees/"+id+"/remix", "bob", nil).Code)
 	assert.Equal(t, 201, do(h, "POST", "/v1/trees/"+id+"/remix", "carol", nil).Code, "limit is per user")
+}
+
+func TestPublishUnchangedRemixBlocked(t *testing.T) {
+	h := newTestServer(t)
+	id := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec, "name": "Patrol", "visibility": "public"}).JSON(t)["id"].(string)
+	cp := do(h, "POST", "/v1/trees/"+id+"/remix", "bob", nil).JSON(t)
+	cpID := cp["id"].(string)
+	put := func(spec, vis string) int {
+		return do(h, "PUT", "/v1/trees/"+cpID, "bob", map[string]any{"spec": spec, "name": "Mine", "visibility": vis}).Code
+	}
+	assert.Equal(t, 200, put(goodSpec, "private"), "private copy may stay identical")
+	r := do(h, "PUT", "/v1/trees/"+cpID, "bob", map[string]any{"spec": goodSpec, "name": "Mine", "visibility": "public"})
+	assert.Equal(t, 422, r.Code)
+	assert.Contains(t, string(r.Body), "unchanged_remix")
+	assert.Equal(t, 422, put("\n"+goodSpec+"\n\n", "public"), "whitespace-only edits do not count")
+	changed := strings.Replace(goodSpec, "name: ", "name: x", 1)
+	assert.Equal(t, 200, put(changed, "public"), "a real change publishes")
 }

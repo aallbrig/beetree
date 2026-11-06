@@ -95,6 +95,7 @@ export const api = {
       `/v1/trees?${new URLSearchParams({ q, sort, limit: '60' }).toString()}`,
     ),
   getTree: (id: string) => request<Tree>('GET', `/v1/trees/${id}`),
+  remixTree: (id: string) => request<Tree>('POST', `/v1/trees/${id}/remix`),
   createTree: (t: TreeInput) => request<Tree>('POST', '/v1/trees', t),
   updateTree: (id: string, t: TreeInput) => request<Tree>('PUT', `/v1/trees/${id}`, t),
   deleteTree: (id: string) => request<undefined>('DELETE', `/v1/trees/${id}`),
