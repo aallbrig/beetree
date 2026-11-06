@@ -92,9 +92,13 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 	case "initialize":
 		writeRPC(w, rpcResponse{ID: req.ID, Result: jsonRaw(map[string]any{
 			"protocolVersion": mcpProtocolVersion,
-			"capabilities":    map[string]any{"tools": map[string]any{"listChanged": false}},
-			"serverInfo":      map[string]string{"name": "beetreecraft", "version": s.Version},
-			"instructions":    "BeeTree authors engine-agnostic behavior trees. Pass specs as .beetree.yaml text. Tools that touch an account need an Authorization: Bearer token.",
+			"capabilities": map[string]any{
+				"tools":     map[string]any{"listChanged": false},
+				"resources": map[string]any{"listChanged": false},
+				"prompts":   map[string]any{"listChanged": false},
+			},
+			"serverInfo":   map[string]string{"name": "beetreecraft", "version": s.Version},
+			"instructions": "BeeTree authors engine-agnostic behavior trees. Pass specs as .beetree.yaml text. Tools that touch an account need an Authorization: Bearer token.",
 		})})
 	case "ping":
 		writeRPC(w, rpcResponse{ID: req.ID, Result: jsonRaw(map[string]any{})})
@@ -102,6 +106,33 @@ func (s *Server) mcp(w http.ResponseWriter, r *http.Request) {
 		writeRPC(w, rpcResponse{ID: req.ID, Result: jsonRaw(map[string]any{"tools": mcpTools()})})
 	case "tools/call":
 		s.mcpCall(w, r, req)
+	case "resources/list":
+		writeRPC(w, rpcResponse{ID: req.ID, Result: jsonRaw(map[string]any{"resources": mcpResources()})})
+	case "resources/read":
+		var p struct {
+			URI string `json:"uri"`
+		}
+		_ = json.Unmarshal(req.Params, &p)
+		text, mime, ok := readMCPResource(p.URI)
+		if !ok {
+			writeRPC(w, rpcResponse{ID: req.ID, Error: &rpcError{rpcInvalidParams, "unknown resource: " + p.URI}})
+			return
+		}
+		writeRPC(w, rpcResponse{ID: req.ID, Result: jsonRaw(map[string]any{"contents": []map[string]string{{"uri": p.URI, "mimeType": mime, "text": text}}})})
+	case "prompts/list":
+		writeRPC(w, rpcResponse{ID: req.ID, Result: jsonRaw(map[string]any{"prompts": mcpPrompts()})})
+	case "prompts/get":
+		var p struct {
+			Name      string            `json:"name"`
+			Arguments map[string]string `json:"arguments"`
+		}
+		_ = json.Unmarshal(req.Params, &p)
+		text, err := promptText(p.Name, p.Arguments)
+		if err != nil {
+			writeRPC(w, rpcResponse{ID: req.ID, Error: &rpcError{rpcInvalidParams, err.Error()}})
+			return
+		}
+		writeRPC(w, rpcResponse{ID: req.ID, Result: jsonRaw(map[string]any{"messages": []map[string]any{{"role": "user", "content": map[string]string{"type": "text", "text": text}}}})})
 	default:
 		writeRPC(w, rpcResponse{ID: req.ID, Error: &rpcError{rpcMethodNotFound, "method not found: " + req.Method}})
 	}

@@ -58,6 +58,17 @@ Every tool needs a valid API key. Tools marked (account) also act on your accoun
 
 Errors from a tool come back inside the result with `isError: true`, so the model can read them and try again.
 
+## Resources and prompts
+
+Resources (`resources/list`, `resources/read`):
+
+| URI | Contents |
+|---|---|
+| `beetree://node-types` | Node types, decorators, render formats and engines as JSON |
+| `beetree://examples/patrol` | A small valid `.beetree.yaml` to copy the format from |
+
+Prompt `design_behavior_tree` (`prompts/get`) takes `character` and an optional `engine`. It walks a model through reading the resources, writing a spec, validating, simulating, rendering and generating code.
+
 ## Try it with curl
 
 ```bash
