@@ -360,3 +360,23 @@ func TestMCPInvalidSpecErrorsSayHowToRecover(t *testing.T) {
 		assert.Contains(t, text, "beetree://examples/patrol", tool)
 	}
 }
+
+func TestMCPDiffTrees(t *testing.T) {
+	h := newTestServer(t)
+	call := func(a, b string) (string, bool) {
+		_, r := rpc(h, "", 1, "tools/call", map[string]any{"name": "diff_trees", "arguments": map[string]any{"spec": a, "other": b}})
+		return toolResult(t, r)
+	}
+	text, isErr := call(goodSpec, goodSpec)
+	require.False(t, isErr)
+	assert.Contains(t, text, `"identical":true`)
+
+	changed := strings.Replace(goodSpec, "name: ", "name: x", 1)
+	text, isErr = call(goodSpec, changed)
+	require.False(t, isErr)
+	assert.Contains(t, text, `"identical":false`)
+
+	text, isErr = call(goodSpec, "not: a tree")
+	assert.True(t, isErr)
+	assert.Contains(t, text, "other")
+}

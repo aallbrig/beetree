@@ -49,6 +49,7 @@ Every tool needs a valid API key. Tools marked (account) also act on your accoun
 | `validate_tree` | Validate a `.beetree.yaml` spec and list every problem |
 | `render_tree` | Render as `ascii`, `sigil`, `mermaid` or `dot` |
 | `simulate_start`, `simulate_answer` | Step through a simulation: start returns the first pending leaf; answer submits `SUCCESS`, `FAILURE` or `RUNNING` and returns the next leaf or the final trace |
+| `diff_trees` | Compare two specs (`spec`, `other`) and list added, removed and modified nodes by path |
 | `simulate_tree` | Dry-run with optional per-node `overrides` and return the trace |
 | `generate_code` | Generate `unity`, `unreal` or `godot` code |
 | `search_trees` | Search the community's public trees. Returns `{trees, truncated}`; `truncated: true` means only the newest 2000 public trees were scanned, so narrow the query or tag |
