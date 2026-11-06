@@ -270,7 +270,11 @@ export interface Problem {
 /** Structural problems the validator would reject, each tied to the offending node. */
 export function findProblems(root: NodeSpec): Problem[] {
   const out: Problem[] = [];
+  const seen = new Set<string>();
   for (const [n, path] of walk(root)) {
+    if (seen.has(n.name))
+      out.push({ path, message: `${n.name}: name is used more than once; rename one of them` });
+    seen.add(n.name);
     const kids = n.children?.length ?? 0;
     if (isComposite(n.type) && kids === 0)
       out.push({ path, message: `${n.name}: a ${n.type} needs at least one child` });
