@@ -79,11 +79,11 @@ tree:
 
 A slot with no agent in the scene makes its leaf fail.
 
-Explore's Demo scene 3 runs this pattern; its tree is [`examples/squad.beetree.yaml`](https://github.com/aallbrig/beetreecraft/blob/main/examples/squad.beetree.yaml).
+Explore's Demo scene 3 runs this pattern; its tree is {{< repolink path="blob/main/examples/squad.beetree.yaml" >}}`examples/squad.beetree.yaml`{{< /repolink >}}.
 
 ## Blackboard and custom nodes
 
-Optional top-level `blackboard` (typed shared variables) and `custom_nodes` (your own node types with typed parameters) generate richer engine code. See `examples/full-enemy-ai.beetree.yaml` in the [repository](https://github.com/aallbrig/beetreecraft/tree/main/examples) for a complete example.
+Optional top-level `blackboard` (typed shared variables) and `custom_nodes` (your own node types with typed parameters) generate richer engine code. See `examples/full-enemy-ai.beetree.yaml` in the {{< repolink path="tree/main/examples" >}}repository{{< /repolink >}} for a complete example.
 
 ## JSON Schema
 

@@ -32,4 +32,4 @@ Requests to the API pass through AWS, which keeps standard access and error logs
 
 ## Deleting your data
 
-Delete a tree, comment or post in the app to remove it. To have your account and its data removed, [open an issue](https://github.com/aallbrig/beetreecraft/issues/new) asking for deletion without including personal details, and the maintainer will arrange a private way to confirm it is you.
+Delete a tree, comment or post in the app to remove it. To have your account and its data removed, {{< repolink path="issues/new" >}}open an issue{{< /repolink >}} asking for deletion without including personal details, and the maintainer will arrange a private way to confirm it is you.

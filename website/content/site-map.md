@@ -40,4 +40,4 @@ Every part of BeeTreeCraft, grouped the way the top navigation groups it. Machin
 
 - [About](/about/): who runs the project and how to reach them
 - [Privacy](/privacy/): what the site stores
-- [Changelog](https://github.com/aallbrig/beetreecraft/releases)
+- {{< repolink path="releases" >}}Changelog{{< /repolink >}}

@@ -49,7 +49,7 @@ What to watch for:
 - A Shieldbearer faces the nearest threat and advances.
 - The Commander charges, then retreats to recharge when its health is low.
 
-Drain the enemy faction with the timer and watch the Skirmishers' trees react. Each tree stays under 25 nodes. Here is the Trooper's shape, trimmed to its core (the full file is [`examples/trooper.beetree.yaml`](https://github.com/aallbrig/beetreecraft/blob/main/examples/trooper.beetree.yaml)):
+Drain the enemy faction with the timer and watch the Skirmishers' trees react. Each tree stays under 25 nodes. Here is the Trooper's shape, trimmed to its core (the full file is {{< repolink path="blob/main/examples/trooper.beetree.yaml" >}}`examples/trooper.beetree.yaml`{{< /repolink >}}):
 
 ```yaml
 version: "1.0"
@@ -80,7 +80,7 @@ Scene 2 is inspired by a beach-landing style firefight; see the [credit on Refer
 
 A squad tree ticks once per frame, and each leaf names the agent it acts on with a **slot**: `leader`, `flanker` or `support`. The scene gives each of its three agents one slot, so a single tree drives all of them. A leaf with no slot acts on the leader.
 
-A Leader, a Flanker and a Support all run the same [squad tree](https://github.com/aallbrig/beetreecraft/blob/main/examples/squad.beetree.yaml): the leader holds, the flanker closes in on the intruder, the support follows the leader. Each agent's label shows its slot. Controls: the clickable **intruder**. See [One tree, several agents](/docs/trees/#one-tree-several-agents) for the format.
+A Leader, a Flanker and a Support all run the same {{< repolink path="blob/main/examples/squad.beetree.yaml" >}}squad tree{{< /repolink >}}: the leader holds, the flanker closes in on the intruder, the support follows the leader. Each agent's label shows its slot. Controls: the clickable **intruder**. See [One tree, several agents](/docs/trees/#one-tree-several-agents) for the format.
 
 ## 3. Build a tree
 

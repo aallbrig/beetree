@@ -1,0 +1,3 @@
+{{- /* Link into the repository, or plain text when params.repoUrl is empty. */ -}}
+{{- $text := .Inner | markdownify -}}
+{{- with site.Params.repoUrl -}}<a href="{{ . }}{{ with $.Get "path" }}/{{ . }}{{ end }}">{{ $text }}</a>{{- else -}}{{ $text }}{{- end -}}

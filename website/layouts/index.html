@@ -7,10 +7,12 @@
     <p class="cta">
       <a class="btn primary big" href="/app/#/explore">Watch agents think →</a>
     </p>
+{{ with site.Params.repoUrl }}
     <div class="install" id="home-install">
-      <code id="home-install-cmd">git clone https://github.com/aallbrig/beetreecraft &amp;&amp; cd beetreecraft &amp;&amp; make install</code>
+      <code id="home-install-cmd">git clone {{ . }} &amp;&amp; cd {{ path.Base . }} &amp;&amp; make install</code>
       <button type="button" class="btn" data-copy="#home-install-cmd" aria-label="Copy the install command">Copy</button>
     </div>
+{{ end }}
     <p class="muted install-note">Install the CLI, or <a href="/app/#/explore">try Explore</a> and the <a href="/app/#/builder">builder</a> now: no account needed to build. Saving asks you to sign in.</p>
     <a href="/app/#/explore" class="shot" aria-label="Open the live 3D demo">
       <span class="shot-live" aria-hidden="true">Live demo: click to run</span>

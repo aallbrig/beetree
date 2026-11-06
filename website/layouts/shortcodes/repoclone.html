@@ -1,0 +1,4 @@
+{{- with site.Params.repoUrl -}}
+<pre><code class="language-bash">git clone {{ . }}
+cd {{ path.Base . }} &amp;&amp; make install</code></pre>
+{{- end -}}

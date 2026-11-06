@@ -6,6 +6,8 @@ disableKinds = ['taxonomy', 'term', 'RSS']
 
 [params]
   description = 'Design, simulate and share behavior trees for Unity, Unreal and Godot. Watch agents run them in 3D.'
+  # The one place the repository URL is set. Empty hides every repository link.
+  repoUrl = 'https://github.com/aallbrig/beetreecraft'
   appUrl = '/app/'
   apiUrl = 'https://api.beetreecraft.com'
 

@@ -1,0 +1,2 @@
+{{- /* ": <repo link>" after a sentence, or nothing when params.repoUrl is empty. */ -}}
+{{- with site.Params.repoUrl -}}: <a href="{{ . }}">{{ strings.TrimPrefix "https://" . }}</a>{{- end -}}

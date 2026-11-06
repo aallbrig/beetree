@@ -15,6 +15,7 @@ import { profileView, userView } from './views/profile';
 import { buildView } from './views/build';
 import { scenesView } from './views/scenes';
 import { treeView } from './views/tree';
+import { REPO_URL, repoHref } from './repo';
 
 window.addEventListener('unhandledrejection', (e: PromiseRejectionEvent) => {
   console.error('unhandled rejection', e.reason);
@@ -52,8 +53,9 @@ const foot = h(
     'p',
     {},
     'BeeTreeCraft · ',
-    h('a', { href: 'https://github.com/aallbrig/beetreecraft' }, 'Source on GitHub'),
-    ' · ',
+    ...(repoHref(REPO_URL)
+      ? [h('a', { href: repoHref(REPO_URL) ?? '' }, 'Source on GitHub'), ' · ']
+      : []),
     h('a', { href: '/references/' }, 'References and credits'),
     ' · ',
     h('a', { href: '/sitemap.xml' }, 'Sitemap'),
@@ -69,13 +71,8 @@ void fetch('/version.json')
   .then((v) => {
     if (!v.version) return;
     version.textContent = '· ';
-    version.append(
-      h(
-        'a',
-        { href: `https://github.com/aallbrig/beetreecraft/releases/tag/${v.version}` },
-        v.version,
-      ),
-    );
+    const tag = repoHref(REPO_URL, `releases/tag/${v.version}`);
+    version.append(tag ? h('a', { href: tag }, v.version) : v.version);
   })
   .catch(() => undefined);
 
