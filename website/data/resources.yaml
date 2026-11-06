@@ -165,3 +165,17 @@ items:
     author: "Oliver Biggar, Mohammad Zamani and Iman Shames"
     summary: "A formal look at why behavior trees work, built on two principles: reactiveness and modularity. It tests them against hard use cases from the literature and proposes generalised trees (k-BTs) that handle those cases while keeping the principles. Dense in places, but it explains why a tree stays easy to compose and reuse as it grows."
     score: 13
+  - title: "BTGenBot: Behavior Tree Generation for Robotic Tasks with Lightweight LLMs"
+    url: "https://arxiv.org/abs/2403.12761"
+    kind: Paper
+    year: "2024"
+    author: "Riccardo Andrea Izzo, Gianluca Bardaro and Matteo Matteucci"
+    summary: "Fine-tunes language models of up to 7 billion parameters to write behavior trees from a task description, using a dataset built from existing trees. It checks the output with syntax checks, a validator, a simulator and a real robot across nine tasks. Useful for seeing what machine-written trees get wrong and how validation catches it."
+    score: 12
+  - title: "LLM-as-BT-Planner: Leveraging LLMs for Behavior Tree Generation in Robot Task Planning"
+    url: "https://arxiv.org/abs/2409.10444"
+    kind: Paper
+    year: "2024"
+    author: "Jicong Ao, Fan Wu, Yansong Wu, Abdalla Swikir and Sami Haddadin"
+    summary: "Prompts language models to produce long-horizon assembly plans directly in behavior tree format, comparing four in-context learning methods and fine-tuned smaller models in simulation and on a real robot. It shows which prompting choices raise the success rate of generated trees. Accepted at ICRA 2025."
+    score: 13
