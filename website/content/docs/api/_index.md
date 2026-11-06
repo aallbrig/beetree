@@ -146,7 +146,7 @@ Errors are JSON: `{"error": {"code": "invalid_spec", "message": "..."}}`.
 | 404 | Not found, or private and not yours |
 | 413 | Request body too large (512 KB limit) |
 | 422 | The spec is invalid; the message lists why |
-| 429 | Too many requests; wait a few seconds and retry with backoff |
+| 429 | Too many writes (60 POST, PUT or DELETE requests per minute per user); wait the `Retry-After` seconds |
 
 ## Limits
 
