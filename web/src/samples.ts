@@ -7,23 +7,29 @@ export interface Sample {
 
 export const SAMPLES: Sample[] = [
   {
-    id: 'sample:patrol',
-    title: 'Patrol loop',
+    id: 'sample:shopkeeper',
+    title: "Shopkeeper's daily routine",
     yaml: `version: "1.0"
 metadata:
-  name: patrol
-  description: Walk the waypoints forever
+  name: shopkeeper
+  description: Greet customers, otherwise restock the shelves, mind the counter and take tea
 tree:
-  type: decorator
-  name: patrol_forever
-  decorator: repeat
+  type: selector
+  name: shopkeeper_ai
   children:
     - type: sequence
-      name: patrol_cycle
+      name: serve_customer
       children:
-        - {type: action, name: move_to_waypoint}
-        - {type: action, name: wait_at_waypoint}
-        - {type: action, name: next_waypoint}
+        - {type: condition, name: can_see_target}
+        - {type: action, name: face_customer}
+        - {type: action, name: animate_greeting}
+    - type: sequence
+      name: daily_routine
+      children:
+        - {type: action, name: wander_to_shelf}
+        - {type: action, name: animate_restock}
+        - {type: action, name: wait_at_counter}
+        - {type: action, name: drink_tea}
 `,
   },
   {
