@@ -4,19 +4,9 @@
 BeeTree is a CLI/TUI for authoring, simulating, and exporting engine-agnostic behavior trees for video games. Target engines: Unity (C#), Unreal (C++), Godot (GDScript).
 
 ## Build & Test
-```bash
-make build          # Build binary to ./bin/beetree
-make test           # Run all tests
-make install        # Install to $GOPATH/bin
-```
+`task --list` is the source of truth. The gate is `task ci`; run `task format:check` before committing, since the pre-commit hooks take minutes and reject unformatted files.
 
-All Go code lives under `cli/`. Run commands from the repo root (Makefile handles `cd cli`).
-
-```bash
-cd cli && go test -race ./...          # Tests with race detector
-cd cli && go vet ./...                 # Lint
-cd cli && go build -o ../bin/beetree . # Manual build
-```
+All Go code lives under `cli/`; web app under `web/`; Hugo site under `website/`.
 
 ## Project Structure
 - `cli/cmd/` — Cobra CLI commands
