@@ -46,6 +46,9 @@ type mcpTool struct {
 	needsAuth bool
 }
 
+// mcpSearchWindow is how many of the newest public trees search_trees scans.
+const mcpSearchWindow = 2000
+
 func objSchema(required []string, props map[string]any) map[string]any {
 	return map[string]any{"type": "object", "properties": props, "required": required}
 }
@@ -265,7 +268,7 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 		}
 		return toolText(sb.String(), false)
 	case "search_trees":
-		ts, err := s.Store.ListPublicTrees(ctx, 200)
+		ts, err := s.Store.ListPublicTrees(ctx, mcpSearchWindow)
 		if err != nil {
 			return fail(fmt.Errorf("search failed"))
 		}
