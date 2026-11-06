@@ -4,6 +4,7 @@ import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { Runtime, type Status } from '../engine/bt';
 import type { NodeSpec } from '../spec';
+import { DamageTimer } from './timer';
 import { AgentBehaviors, type Anim, type Body, type Vec2 } from './behaviors';
 
 export const CHARACTERS = [
@@ -104,9 +105,40 @@ function makeLabel(): { sprite: THREE.Sprite; set: (text: string, color: string)
   };
 }
 
+const BAR_WIDTH = 1.6;
+
+/** A flat bar above the agent: grey track with a fill that shrinks and shifts from green to red. */
+function makeHealthBar(): {
+  back: THREE.Sprite;
+  fill: THREE.Sprite;
+  set: (health: number) => void;
+} {
+  const mk = (color: string): THREE.Sprite => {
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ color, depthTest: false }));
+    sprite.center.set(0, 0.5);
+    sprite.position.set(-BAR_WIDTH / 2, 3.7, 0);
+    sprite.scale.set(BAR_WIDTH, 0.18, 1);
+    sprite.renderOrder = 10;
+    return sprite;
+  };
+  const back = mk('#1f2937');
+  const fill = mk('#22c55e');
+  fill.renderOrder = 11;
+  return {
+    back,
+    fill,
+    set(health) {
+      const k = Math.min(1, Math.max(0, health / 100));
+      fill.scale.x = Math.max(0.0001, BAR_WIDTH * k);
+      fill.material.color.set(k > 0.5 ? '#22c55e' : k > 0.3 ? '#f59e0b' : '#ef4444');
+    },
+  };
+}
+
 export interface AgentOptions {
   id: string;
   name: string;
+  faction?: string | undefined;
   model: string;
   x: number;
   z: number;
@@ -119,6 +151,12 @@ export class Agent implements Body {
     return this.group.position;
   }
   health = 100;
+  get id(): string {
+    return this.opts.id;
+  }
+  get faction(): string | undefined {
+    return this.opts.faction;
+  }
   alert = 0;
   waypoint: Vec2;
   runtime: Runtime;
@@ -134,6 +172,7 @@ export class Agent implements Body {
   private wpIndex = 0;
   private readonly label = makeLabel();
   private readonly ring: THREE.Mesh;
+  private readonly bar = makeHealthBar();
   private dead = false;
 
   constructor(
@@ -173,6 +212,7 @@ export class Agent implements Body {
     this.group.add(this.ring);
     this.label.sprite.position.y = 4.2;
     this.group.add(this.label.sprite);
+    this.group.add(this.bar.back, this.bar.fill);
 
     this.behaviors = new AgentBehaviors(this);
     this.runtime = new Runtime(opts.spec, this.behaviors);
@@ -205,6 +245,7 @@ export class Agent implements Body {
     this.wantAnim = 'idle';
     this.rootStatus = this.runtime.tick(dt);
     const color = STATUS_COLOR[this.rootStatus];
+    this.bar.set(this.health);
     this.label.set(`${this.opts.name}: ${this.said || '…'}`, color);
     this.said = '';
     this.applyAnim();
@@ -460,7 +501,11 @@ export class World {
     loop();
   }
 
+  /** Scene-declared damage timer; off until a scene control turns it on. */
+  readonly timer = new DamageTimer();
+
   private frame(dt: number): void {
+    this.timer.update(dt, this.agents.values());
     for (const a of this.agents.values()) a.update(dt);
     this.separate();
     for (let i = this.flashes.length - 1; i >= 0; i--) {

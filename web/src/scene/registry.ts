@@ -22,6 +22,10 @@ export const SCENES: SceneDef[] = [
   },
 ];
 
+export function sceneHasControl(scene: SceneDef | undefined, control: string): boolean {
+  return scene?.controls.includes(control) ?? false;
+}
+
 export const DEFAULT_SCENE_ID = 'demo';
 
 export function sceneDefById(id: string): SceneDef | undefined {
