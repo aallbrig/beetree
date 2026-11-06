@@ -98,7 +98,7 @@ func TestMCPStatelessTools(t *testing.T) {
 
 	text, isErr := call("validate_tree", map[string]any{"spec": goodSpec})
 	assert.False(t, isErr)
-	assert.Contains(t, text, `"valid": true`)
+	assert.Contains(t, text, `"valid":true`)
 
 	text, isErr = call("render_tree", map[string]any{"spec": goodSpec, "format": "mermaid"})
 	assert.False(t, isErr)
@@ -302,5 +302,17 @@ func TestMCPDocsMatchServer(t *testing.T) {
 		for _, m := range cell.FindAllStringSubmatch(first, -1) {
 			assert.True(t, known[m[1]], "mcp.md documents %q but the server has no such tool or prompt", m[1])
 		}
+	}
+}
+
+func TestMCPToolsCompactJSON(t *testing.T) {
+	h := newTestServer(t)
+	for _, name := range []string{"validate_tree", "list_node_types"} {
+		args := map[string]any{"spec": goodSpec}
+		_, r := rpc(h, "", 1, "tools/call", map[string]any{"name": name, "arguments": args})
+		text, isErr := toolResult(t, r)
+		require.False(t, isErr, name)
+		assert.NotContains(t, text, "\n", "%s result must be compact JSON to save tokens", name)
+		assert.True(t, json.Valid([]byte(text)), name)
 	}
 }
