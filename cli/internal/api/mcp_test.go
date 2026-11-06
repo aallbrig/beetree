@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -198,4 +200,22 @@ func TestMCPSchemaMatchesPublished(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, string(published), schemaJSON, "copy website/static/schemas/beetree.schema.json to cli/internal/api/beetree.schema.json")
 	assert.True(t, json.Valid([]byte(schemaJSON)))
+}
+
+func TestMCPSearchFindsOlderTrees(t *testing.T) {
+	store := NewMemStore()
+	s := &Server{Store: store, Auth: fakeAuth{}, Version: "test", AllowAnonymous: true}
+	h := s.Handler()
+	for i := 0; i < 250; i++ {
+		name := "filler"
+		created := "2026-02-01T00:00:00Z"
+		if i == 0 {
+			name, created = "ancient-patrol", "2025-01-01T00:00:00Z"
+		}
+		require.NoError(t, store.PutTree(context.Background(), Tree{ID: fmt.Sprintf("t%03d", i), Name: name, Visibility: VisibilityPublic, CreatedAt: created}))
+	}
+	_, r := rpc(h, "", 1, "tools/call", map[string]any{"name": "search_trees", "arguments": map[string]any{"query": "ancient-patrol"}})
+	text, isErr := toolResult(t, r)
+	require.False(t, isErr, text)
+	assert.Contains(t, text, "ancient-patrol", "search must reach beyond the newest 200 public trees")
 }
