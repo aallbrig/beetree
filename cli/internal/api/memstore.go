@@ -233,7 +233,7 @@ func (m *MemStore) AddPost(_ context.Context, p Post) error {
 func (m *MemStore) AddReport(_ context.Context, r Report) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if _, ok := m.threads[r.ThreadID]; !ok {
+	if _, ok := m.threads[r.ThreadID]; !ok && r.Kind != "tree" {
 		return ErrNotFound
 	}
 	for _, old := range m.reports[r.ThreadID] {

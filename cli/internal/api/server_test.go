@@ -773,3 +773,26 @@ func TestRemixSceneCountsOnce(t *testing.T) {
 	}
 	assert.Equal(t, 429, do(h, "POST", "/v1/scenes/"+sc+"/remix", "bob", nil).Code)
 }
+
+func TestReportTreeAndUnchangedLabel(t *testing.T) {
+	h := newTestServer(t)
+	id := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec, "name": "Patrol", "visibility": "public"}).JSON(t)["id"].(string)
+	cpID := do(h, "POST", "/v1/trees/"+id+"/remix", "bob", nil).JSON(t)["id"].(string)
+	label := func() any { return do(h, "GET", "/v1/trees/"+cpID, "bob", nil).JSON(t)["unchangedCopy"] }
+
+	assert.Nil(t, label(), "private copy is not labelled")
+	do(h, "PUT", "/v1/trees/"+cpID, "bob", map[string]any{"spec": strings.Replace(goodSpec, "name: ", "name: x", 1), "name": "Mine", "visibility": "public"})
+	assert.Nil(t, label(), "a changed public remix is not labelled")
+	assert.Nil(t, do(h, "GET", "/v1/trees/"+id, "", nil).JSON(t)["unchangedCopy"], "originals are not labelled")
+
+	// The original later adopts the remix's spec: the public copy now reads as unchanged.
+	do(h, "PUT", "/v1/trees/"+id, "alice", map[string]any{"spec": strings.Replace(goodSpec, "name: ", "name: x", 1), "name": "Patrol", "visibility": "public"})
+	assert.Equal(t, true, label())
+
+	assert.Equal(t, 401, do(h, "POST", "/v1/trees/"+cpID+"/report", "", map[string]any{"reason": "copy"}).Code)
+	assert.Equal(t, 400, do(h, "POST", "/v1/trees/"+cpID+"/report", "carol", map[string]any{}).Code)
+	assert.Equal(t, 201, do(h, "POST", "/v1/trees/"+cpID+"/report", "carol", map[string]any{"reason": "exact copy"}).Code)
+	assert.Equal(t, 201, do(h, "POST", "/v1/trees/"+cpID+"/report", "carol", map[string]any{"reason": "again"}).Code)
+	priv := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec}).JSON(t)["id"].(string)
+	assert.Equal(t, 404, do(h, "POST", "/v1/trees/"+priv+"/report", "carol", map[string]any{"reason": "x"}).Code)
+}
