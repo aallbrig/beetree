@@ -316,6 +316,48 @@ export function* walk(n: NodeSpec, path: Path = []): Generator<[NodeSpec, Path]>
   }
 }
 
+/** Paths of nodes whose name, implementation or description contains the query (case-insensitive), in tree order. */
+export function findNodes(root: NodeSpec, query: string): Path[] {
+  const q = query.trim().toLowerCase();
+  if (q === '') return [];
+  const out: Path[] = [];
+  for (const [n, path] of walk(root)) {
+    const hay = `${n.name} ${n.node ?? ''} ${n.description ?? ''}`.toLowerCase();
+    if (hay.includes(q)) out.push(path);
+  }
+  return out;
+}
+
+/** Ids (see pathId) of every branch node, so "collapse all" is one call. */
+export function branchIds(root: NodeSpec, idOf: (p: Path) => string): Set<string> {
+  const ids = new Set<string>();
+  for (const [n, path] of walk(root)) if ((n.children ?? []).length > 0) ids.add(idOf(path));
+  return ids;
+}
+
+/** Removes the ids of every ancestor of path from collapsed, so the node at path is visible. */
+export function revealPath(collapsed: Set<string>, path: Path, idOf: (p: Path) => string): void {
+  for (let i = 0; i < path.length; i++) collapsed.delete(idOf(path.slice(0, i)));
+}
+
+/** Paths a collapsed outline still shows: a collapsed node is shown, its descendants are not. */
+export function visiblePaths(
+  root: NodeSpec,
+  collapsed: ReadonlySet<string>,
+  idOf: (p: Path) => string,
+): Path[] {
+  const out: Path[] = [];
+  const go = (n: NodeSpec, path: Path): void => {
+    out.push(path);
+    if (collapsed.has(idOf(path))) return;
+    (n.children ?? []).forEach((c, i) => {
+      go(c, [...path, i]);
+    });
+  };
+  go(root, []);
+  return out;
+}
+
 /**
  * Splits a server validator error such as `tree.children[1].children[0]: name is required`
  * into the node path it names and the message. Errors that name no node get a null path.

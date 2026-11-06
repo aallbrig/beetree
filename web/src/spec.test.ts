@@ -16,6 +16,11 @@ import {
   removeVar,
   updateVar,
   countNodes,
+  type NodeSpec,
+  findNodes,
+  branchIds,
+  revealPath,
+  visiblePaths,
   duplicateAt,
   indent,
   outdent,
@@ -330,5 +335,53 @@ describe('custom node editing', () => {
     const defs = getCustomNodes(spec);
     expect(defs.length).toBeGreaterThan(0);
     expect(getCustomNodes(parseSpec(stringifySpec(spec)))).toEqual(defs);
+  });
+});
+
+describe('collapse and find in large trees', () => {
+  const idOf = (p: readonly number[]): string => (p.length === 0 ? 'r' : `r.${p.join('.')}`);
+  const big = (): NodeSpec => ({
+    type: 'selector',
+    name: 'root',
+    children: Array.from({ length: 20 }, (_, i) => ({
+      type: 'sequence' as const,
+      name: `branch-${i}`,
+      children: Array.from({ length: 20 }, (_, j) => ({
+        type: j % 2 ? ('condition' as const) : ('action' as const),
+        name: `leaf-${i}-${j}`,
+      })),
+    })),
+  });
+
+  it('finds a node by name anywhere in 400+ nodes, case-insensitively', () => {
+    const root = big();
+    expect(countNodes(root)).toBe(421);
+    expect(findNodes(root, 'LEAF-13-7')).toEqual([[13, 7]]);
+    expect(findNodes(root, 'branch-1')).toHaveLength(11);
+    expect(findNodes(root, '  ')).toEqual([]);
+    expect(findNodes(root, 'nope')).toEqual([]);
+  });
+
+  it('collapsing a subtree hides its descendants and keeps the node', () => {
+    const root = big();
+    const all = visiblePaths(root, new Set(), idOf);
+    expect(all).toHaveLength(421);
+    const collapsed = new Set(['r.3']);
+    const vis = visiblePaths(root, collapsed, idOf);
+    expect(vis).toHaveLength(421 - 20);
+    expect(vis.some((p) => p.join() === '3')).toBe(true);
+    expect(vis.some((p) => p.join() === '3,5')).toBe(false);
+  });
+
+  it('collapse all folds the root, and revealing a match reopens only its ancestors', () => {
+    const root = big();
+    const collapsed = branchIds(root, idOf);
+    expect(visiblePaths(root, collapsed, idOf)).toHaveLength(1);
+    const [hit] = findNodes(root, 'leaf-13-7');
+    expect(hit).toBeDefined();
+    revealPath(collapsed, hit ?? [], idOf);
+    const vis = visiblePaths(root, collapsed, idOf).map((p) => p.join());
+    expect(vis).toContain('13,7');
+    expect(vis).not.toContain('12,0');
   });
 });
