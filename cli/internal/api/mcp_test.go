@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -171,7 +172,7 @@ func TestMCPResourcesAndPrompts(t *testing.T) {
 
 	_, r := rpc(h, "", 1, "resources/list", nil)
 	list := r["result"].(map[string]any)["resources"].([]any)
-	require.Len(t, list, 3)
+	require.Len(t, list, 3+len(builderTemplateNames(t)))
 
 	for _, uri := range []string{"beetree://node-types", "beetree://schema/beetree", "beetree://examples/patrol"} {
 		_, r = rpc(h, "", 2, "resources/read", map[string]any{"uri": uri})
@@ -222,4 +223,34 @@ func TestMCPSearchFindsOlderTrees(t *testing.T) {
 	text, isErr := toolResult(t, r)
 	require.False(t, isErr, text)
 	assert.Contains(t, text, "ancient-patrol", "search must reach beyond the newest 200 public trees")
+}
+
+// builderTemplateNames reads the template ids from the web builder's samples.
+func builderTemplateNames(t *testing.T) []string {
+	t.Helper()
+	src, err := os.ReadFile("../../../web/src/samples.ts")
+	require.NoError(t, err)
+	var names []string
+	for _, m := range regexp.MustCompile(`id: 'sample:(\w+)'`).FindAllStringSubmatch(string(src), -1) {
+		names = append(names, m[1])
+	}
+	require.NotEmpty(t, names)
+	return names
+}
+
+func TestMCPTemplatesMatchBuilder(t *testing.T) {
+	h := newTestServer(t)
+	src, err := os.ReadFile("../../../web/src/samples.ts")
+	require.NoError(t, err)
+	for _, name := range builderTemplateNames(t) {
+		uri := "beetree://templates/" + name
+		_, r := rpc(h, "", 1, "resources/read", map[string]any{"uri": uri})
+		require.Nil(t, r["error"], uri)
+		text := r["result"].(map[string]any)["contents"].([]any)[0].(map[string]any)["text"].(string)
+		assert.Contains(t, string(src), text, "%s drifted from web/src/samples.ts", name)
+		res, _ := validateYAML(text)
+		assert.True(t, res.Valid, "%s: %v", name, res.Errors)
+	}
+	_, r := rpc(h, "", 2, "resources/read", map[string]any{"uri": "beetree://templates/../schema"})
+	assert.NotNil(t, r["error"])
 }

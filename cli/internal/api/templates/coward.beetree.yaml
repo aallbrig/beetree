@@ -1,0 +1,18 @@
+version: "1.0"
+metadata:
+  name: coward
+  description: Runs from intruders and recovers when safe
+tree:
+  type: selector
+  name: coward_ai
+  children:
+    - type: sequence
+      name: flee
+      children:
+        - {type: condition, name: can_see_target}
+        - {type: action, name: run_to_cover}
+    - type: sequence
+      name: recover
+      children:
+        - {type: action, name: heal}
+        - {type: action, name: wait_and_rest}

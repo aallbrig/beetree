@@ -1,7 +1,7 @@
 package api
 
 import (
-	_ "embed"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -39,6 +39,14 @@ tree:
 //go:embed beetree.schema.json
 var schemaJSON string
 
+// templatesFS holds the builder templates (web/src/samples.ts) as .beetree.yaml
+// files; TestMCPTemplatesMatchBuilder keeps the two in step.
+//
+//go:embed templates/*.beetree.yaml
+var templatesFS embed.FS
+
+const templateURIPrefix = "beetree://templates/"
+
 type mcpResource struct {
 	URI         string `json:"uri"`
 	Name        string `json:"name"`
@@ -47,11 +55,17 @@ type mcpResource struct {
 }
 
 func mcpResources() []mcpResource {
-	return []mcpResource{
+	list := []mcpResource{
 		{URI: "beetree://node-types", Name: "Node types", Description: "Node types, decorators, render formats and engines as JSON.", MimeType: "application/json"},
 		{URI: "beetree://schema/beetree", Name: "Tree format JSON Schema", Description: "The JSON Schema for .beetree.yaml, as published at /schemas/beetree.schema.json.", MimeType: "application/schema+json"},
 		{URI: "beetree://examples/patrol", Name: "Starter spec: patrol", Description: "A small valid .beetree.yaml to copy the format from.", MimeType: "application/yaml"},
 	}
+	entries, _ := templatesFS.ReadDir("templates")
+	for _, e := range entries {
+		name := strings.TrimSuffix(e.Name(), ".beetree.yaml")
+		list = append(list, mcpResource{URI: templateURIPrefix + name, Name: "Template: " + name, Description: "A builder template as a valid .beetree.yaml to start from.", MimeType: "application/yaml"})
+	}
+	return list
 }
 
 func readMCPResource(uri string) (string, string, bool) {
@@ -64,6 +78,11 @@ func readMCPResource(uri string) (string, string, bool) {
 		return schemaJSON, "application/schema+json", true
 	case "beetree://examples/patrol":
 		return starterSpec, "application/yaml", true
+	}
+	if name, ok := strings.CutPrefix(uri, templateURIPrefix); ok && !strings.ContainsAny(name, "/.\\") {
+		if b, err := templatesFS.ReadFile("templates/" + name + ".beetree.yaml"); err == nil {
+			return string(b), "application/yaml", true
+		}
 	}
 	return "", "", false
 }

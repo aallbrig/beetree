@@ -1,0 +1,27 @@
+version: "1.0"
+metadata:
+  name: guard
+  description: Patrol, spot intruders, chase them down and attack
+tree:
+  type: selector
+  name: guard_ai
+  children:
+    - type: sequence
+      name: combat
+      children:
+        - {type: condition, name: can_see_target}
+        - type: selector
+          name: attack_or_close
+          children:
+            - type: sequence
+              name: melee
+              children:
+                - {type: condition, name: in_range}
+                - {type: action, name: melee_attack}
+            - {type: action, name: chase_target}
+    - type: sequence
+      name: patrol
+      children:
+        - {type: action, name: move_to_waypoint}
+        - {type: action, name: wait_at_waypoint}
+        - {type: action, name: next_waypoint}
