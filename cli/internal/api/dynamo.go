@@ -493,6 +493,41 @@ func (d *DynamoStore) ListPosts(ctx context.Context, threadID string) ([]Post, e
 	return out, nil
 }
 
+func (d *DynamoStore) AddReport(ctx context.Context, r Report) error {
+	if _, err := d.GetThread(ctx, r.ThreadID); err != nil {
+		return err
+	}
+	data, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+	it := key("THREAD#"+r.ThreadID, "REPORT#"+r.PostID+"#"+r.ReporterID)
+	it["data"] = s(string(data))
+	_, err = d.DB.PutItem(ctx, &dynamodb.PutItemInput{TableName: &d.Table, Item: it,
+		ConditionExpression: aws.String("attribute_not_exists(pk)")})
+	var dup *types.ConditionalCheckFailedException
+	if errors.As(err, &dup) { // already reported by this user
+		return nil
+	}
+	return err
+}
+
+func (d *DynamoStore) ListReports(ctx context.Context, threadID string) ([]Report, error) {
+	items, err := d.listPartition(ctx, "THREAD#"+threadID, "REPORT#")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Report, 0, len(items))
+	for _, it := range items {
+		var r Report
+		if err := json.Unmarshal([]byte(str(it, "data")), &r); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
 // ---- scenes ----------------------------------------------------------------
 
 func (d *DynamoStore) PutScene(ctx context.Context, sc Scene) error {

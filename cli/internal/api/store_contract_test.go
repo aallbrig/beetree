@@ -121,6 +121,16 @@ func runStoreContract(t *testing.T, s Store) {
 		require.Len(t, threads, 1)
 
 		assert.ErrorIs(t, s.AddPost(ctx, Post{ID: "p2", ThreadID: "nope"}), ErrNotFound)
+
+		rep := Report{ID: "r1", ThreadID: "th1", PostID: "p1", ReporterID: "u1", Reason: "spam", CreatedAt: "2026-01-03T00:00:00Z"}
+		require.NoError(t, s.AddReport(ctx, rep))
+		rep.ID = "r2"
+		require.NoError(t, s.AddReport(ctx, rep)) // same reporter and target: no-op
+		require.NoError(t, s.AddReport(ctx, Report{ID: "r3", ThreadID: "th1", ReporterID: "u1", Reason: "off topic", CreatedAt: "2026-01-03T00:00:00Z"}))
+		reps, err := s.ListReports(ctx, "th1")
+		require.NoError(t, err)
+		assert.Len(t, reps, 2)
+		assert.ErrorIs(t, s.AddReport(ctx, Report{ID: "r4", ThreadID: "nope", ReporterID: "u1", Reason: "x"}), ErrNotFound)
 	})
 
 	t.Run("api keys", func(t *testing.T) { runAPIKeyContract(t, s) })

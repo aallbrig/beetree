@@ -432,6 +432,29 @@ paths:
         '201': {description: Created}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+  /v1/forum/threads/{id}/report:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    post:
+      summary: Report a thread, or one of its posts, for moderator review
+      operationId: reportThread
+      tags: [Forum]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                postId: {type: string, description: Omit to report the thread itself}
+                reason: {type: string, maxLength: 500}
+      responses:
+        '201': {description: Reported}
+        '400': {$ref: '#/components/responses/Error'}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
   /v1/scenes:
     get:
       summary: Your saved 3D scenes

@@ -75,6 +75,16 @@ type Post struct {
 	CreatedAt string `json:"createdAt"`
 }
 
+// Report flags a thread (PostID empty) or one of its posts for review.
+type Report struct {
+	ID         string `json:"id"`
+	ThreadID   string `json:"threadId"`
+	PostID     string `json:"postId,omitempty"`
+	ReporterID string `json:"reporterId"`
+	Reason     string `json:"reason"`
+	CreatedAt  string `json:"createdAt"`
+}
+
 // SceneAgent places one tree-driven agent in a 3D scene.
 type SceneAgent struct {
 	Name   string  `json:"name"`

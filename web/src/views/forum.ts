@@ -1,7 +1,47 @@
 import { api, ApiError } from '../api';
 import { isSignedIn } from '../auth';
 import { clear, formatDate, h, toast } from '../dom';
+import { reportBody, REPORT_REASONS } from '../report';
 import { navigate, type Ctx } from '../router';
+
+/** A "Report" button that opens an inline reason picker; postId omitted reports the thread. */
+function reportControl(threadId: string, postId?: string): HTMLElement {
+  const wrap = h('span', { class: 'report' });
+  const open = h('button', { class: 'btn small', type: 'button' }, 'Report');
+  open.addEventListener('click', () => {
+    if (!isSignedIn()) {
+      navigate(`/signin?next=${encodeURIComponent(`/forum/${threadId}`)}`);
+      return;
+    }
+    const pick = h(
+      'select',
+      { 'aria-label': 'Reason for report' },
+      h('option', { value: '' }, 'Choose a reason'),
+      ...REPORT_REASONS.map((r) => h('option', { value: r }, r)),
+    );
+    const send = h('button', { class: 'btn small primary', type: 'button' }, 'Send report');
+    send.addEventListener('click', () => {
+      const body = reportBody(pick.value, postId);
+      if (!body) {
+        toast('Choose a reason first.', 'err');
+        return;
+      }
+      api.reportThread(threadId, body).then(
+        () => {
+          clear(wrap);
+          wrap.append(h('span', { class: 'small muted' }, 'Reported. A moderator will review it.'));
+        },
+        (e: unknown) => {
+          toast(e instanceof ApiError ? e.message : 'Could not report.', 'err');
+        },
+      );
+    });
+    clear(wrap);
+    wrap.append(pick, ' ', send);
+  });
+  wrap.append(open);
+  return wrap;
+}
 
 export async function forumView(ctx: Ctx): Promise<void> {
   const threads = (await api.threads()).items;
@@ -82,7 +122,8 @@ export async function threadView(ctx: Ctx): Promise<void> {
             'div',
             { class: 'small muted' },
             h('a', { href: `#/user/${p.authorId}` }, p.author),
-            ` · ${formatDate(p.createdAt)}`,
+            ` · ${formatDate(p.createdAt)} · `,
+            reportControl(id, p.id),
           ),
           h('div', {}, p.body),
         ),
@@ -121,7 +162,8 @@ export async function threadView(ctx: Ctx): Promise<void> {
       h(
         'div',
         { class: 'small muted' },
-        `${data.thread.author} · ${formatDate(data.thread.createdAt)}`,
+        `${data.thread.author} · ${formatDate(data.thread.createdAt)} · `,
+        reportControl(id),
       ),
       h('p', {}, data.thread.body),
     ),

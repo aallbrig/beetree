@@ -29,6 +29,11 @@ type Store interface {
 	ListThreads(ctx context.Context, limit int) ([]Thread, error)
 	AddPost(ctx context.Context, p Post) error
 	ListPosts(ctx context.Context, threadID string) ([]Post, error)
+	// AddReport files a report. It is idempotent per reporter and target:
+	// the second report of the same thread or post by the same user is a no-op.
+	// ErrNotFound when the thread does not exist.
+	AddReport(ctx context.Context, r Report) error
+	ListReports(ctx context.Context, threadID string) ([]Report, error)
 
 	PutScene(ctx context.Context, s Scene) error
 	GetScene(ctx context.Context, id string) (Scene, error)
