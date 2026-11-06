@@ -4,6 +4,7 @@ import { outline, type Outline } from '../components/outline';
 import { clear, h, toast } from '../dom';
 import { copyText, downloadText, fileName } from '../exporter';
 import { History } from '../history';
+import { isSignedIn } from '../auth';
 import { navigate, type Cleanup, type Ctx } from '../router';
 import { pathId } from '../engine/bt';
 import { SAMPLES, sampleById, sampleBySlug, type Sample } from '../samples';
@@ -919,7 +920,22 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   });
   for (const el of [nameIn, descIn, tagsIn]) el.addEventListener('change', refresh);
 
+  /** Scratch mode: the API needs an account, so send the visitor to sign in; the draft is kept. */
+  const needSignIn = (what: string): boolean => {
+    if (isSignedIn()) return false;
+    syncMeta();
+    try {
+      localStorage.setItem(DRAFT_KEY, stringifySpec(spec));
+    } catch {
+      // storage unavailable
+    }
+    toast(`Sign in to ${what}. Your draft is kept.`);
+    navigate(`/signin?next=${encodeURIComponent('/builder')}`);
+    return true;
+  };
+
   validateBtn.addEventListener('click', () => {
+    if (needSignIn('validate')) return;
     syncMeta();
     api.validate(stringifySpec(spec)).then(
       (r) => {
@@ -966,6 +982,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   };
 
   saveBtn.addEventListener('click', () => {
+    if (needSignIn('save')) return;
     syncMeta();
     saveBtn.disabled = true;
     const body = {
@@ -998,6 +1015,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   });
 
   genBtn.addEventListener('click', () => {
+    if (needSignIn('generate code')) return;
     syncMeta();
     clear(codeOut);
     api.generate(stringifySpec(spec), engineSel.value).then(
