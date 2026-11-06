@@ -125,3 +125,17 @@ items:
     author: "Bobby Anguelov, Mika Vehkala and Ben Weber"
     summary: "A GDC 2017 talk of guidelines from working AI developers on keeping behavior trees healthy: common pitfalls, debugging practice and design habits. Free to watch on the official GDC YouTube channel."
     score: 12
+  - title: "Automatic difficulty management and testing in games using a framework based on behavior trees and genetic algorithms"
+    url: "https://arxiv.org/abs/1909.04368"
+    kind: Paper
+    year: "2019"
+    author: "Ciprian Paduraru and Miruna Paduraru"
+    summary: "An ICECCS 2019 paper that evolves populations of behavior trees with a genetic algorithm to produce agents at different difficulty levels and to surface defects and logic exploits automatically. Uses a tank-game example with selector, sequence, parallel and decorator nodes. Read it for a concrete way to test a game with generated trees."
+    score: 12
+  - title: "Procedural Content Generation using Behavior Trees (PCGBT)"
+    url: "https://arxiv.org/abs/2107.06638"
+    kind: Paper
+    year: "2021"
+    author: "Anurag Sarkar and Seth Cooper"
+    summary: "An EXAG 2021 paper that uses behavior trees to build level generators instead of agents: small subtrees generate parts of a level and compose into larger trees. Demonstrated on Super Mario Bros., Mega Man, Metroid and dungeon layouts. A useful look at the reuse and composition strengths of trees outside NPC control."
+    score: 11
