@@ -1,5 +1,6 @@
 import { api } from '../api';
 import { sampleById } from '../samples';
+import { COMBAT_TREES } from './combat';
 import { parseSpec, type NodeSpec } from '../spec';
 import type { SceneAgent } from '../types';
 import type { World } from './world';
@@ -7,6 +8,8 @@ import type { World } from './world';
 /** Resolve a tree id (a sample or a saved tree) to its root node. */
 export async function specFor(treeId: string | undefined): Promise<NodeSpec | undefined> {
   if (!treeId) return undefined;
+  const combat = COMBAT_TREES[treeId];
+  if (combat) return parseSpec(combat).tree;
   const sample = sampleById(treeId);
   if (sample) return parseSpec(sample.yaml).tree;
   const tree = await api.getTree(treeId);
@@ -31,6 +34,7 @@ export async function populate(world: World, agents: SceneAgent[]): Promise<Load
       id,
       name: a.name,
       faction: a.faction,
+      role: a.role,
       model: a.model,
       x: a.x,
       z: a.z,

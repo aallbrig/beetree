@@ -139,6 +139,7 @@ export interface AgentOptions {
   id: string;
   name: string;
   faction?: string | undefined;
+  role?: string | undefined;
   model: string;
   x: number;
   z: number;
@@ -158,6 +159,8 @@ export class Agent implements Body {
     return this.opts.faction;
   }
   alert = 0;
+  /** Seconds since this agent last took a hit; large when never hit. */
+  sinceHit = 99;
   waypoint: Vec2;
   runtime: Runtime;
   rootStatus: Status = 'running';
@@ -218,8 +221,31 @@ export class Agent implements Body {
     this.runtime = new Runtime(opts.spec, this.behaviors);
   }
 
+  get role(): string | undefined {
+    return this.opts.role;
+  }
+  get isDead(): boolean {
+    return this.dead;
+  }
+
+  /** Factioned agents fight the nearest living agent of another faction; others chase the beacon. */
   get target(): Vec2 | undefined {
-    return this.world.beacon;
+    if (this.faction === undefined) return this.world.beacon;
+    return this.world.nearestEnemy(this)?.pos;
+  }
+  get leader(): Vec2 | undefined {
+    return this.world.commanderOf(this)?.pos;
+  }
+  get commanderAlive(): boolean {
+    return this.world.commanderOf(this) !== undefined;
+  }
+  get underFire(): boolean {
+    return this.sinceHit < 2;
+  }
+
+  hurt(amount: number): void {
+    this.health = Math.max(0, this.health - amount);
+    this.sinceHit = 0;
   }
 
   setSelected(on: boolean): void {
@@ -234,13 +260,22 @@ export class Agent implements Body {
   resetState(): void {
     this.health = 100;
     this.alert = 0;
+    this.sinceHit = 99;
     this.dead = false;
     this.runtime.reset();
   }
 
   update(dt: number): void {
-    if (this.health <= 0 && !this.dead) {
-      this.dead = true;
+    this.sinceHit += dt;
+    if (this.health <= 0 && !this.dead) this.dead = true;
+    if (this.dead) {
+      this.wantAnim = 'die';
+      this.said = 'down';
+      this.bar.set(0);
+      this.label.set(`${this.opts.name}: down`, STATUS_COLOR.failure);
+      this.applyAnim();
+      this.mixer?.update(dt);
+      return;
     }
     this.wantAnim = 'idle';
     this.rootStatus = this.runtime.tick(dt);
@@ -289,7 +324,9 @@ export class Agent implements Body {
   }
   strike(kind: 'melee' | 'ranged'): void {
     const t = this.target;
-    if (t) this.world.spawnFlash(kind === 'ranged' ? this.pos : t, t, kind === 'ranged');
+    if (!t) return;
+    this.world.spawnFlash(kind === 'ranged' ? this.pos : t, t, kind === 'ranged');
+    this.world.nearestEnemy(this)?.hurt(kind === 'ranged' ? 6 : 12);
   }
 
   private applyAnim(): void {
@@ -461,6 +498,27 @@ export class World {
   removeAgent(id: string): void {
     this.agents.get(id)?.dispose();
     this.agents.delete(id);
+  }
+
+  nearestEnemy(from: Agent): Agent | undefined {
+    let best: Agent | undefined;
+    let bestD = Infinity;
+    for (const a of this.agents.values()) {
+      if (a.isDead || a.faction === undefined || a.faction === from.faction) continue;
+      const d = Math.hypot(a.pos.x - from.pos.x, a.pos.z - from.pos.z);
+      if (d < bestD) {
+        best = a;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
+  /** The living Commander on this agent's side, if any. */
+  commanderOf(of: Agent): Agent | undefined {
+    for (const a of this.agents.values())
+      if (a.role === 'commander' && a.faction === of.faction && !a.isDead) return a;
+    return undefined;
   }
 
   setBeacon(p: Vec2 | undefined): void {
