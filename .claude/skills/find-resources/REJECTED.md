@@ -9,3 +9,5 @@ https://www.datalearner.com/academic/journal-papers/0957-4174/volumes-and-issues
 https://cppcon2023.sched.com/event/1Qtdf/behaviortreecpp-task-planning-for-robots-and-virtual-agents | unscored | Faconti CppCon 2023 talk; only the event page is readable and free video access is unconfirmed
 https://ceur-ws.org/Vol-3082/paper13.pdf | unscored | PDF text not extractable; retry via another mirror
 https://gdcvault.com/play/1012416/Behavior-Trees-Three-Ways-of | unscored | GDC 2010 "Three Ways of Cultivating Strong AI"; free video access unconfirmed, only the description is readable
+https://helpmetest.com/blog/game-ai-behavior-testing/ | unscored | could not be read (HTTP 502); retry later
+https://cgi.csc.liv.ac.uk/~xiaowei/game_materials/lecture24.pdf | unscored | PDF text not extractable; university lecture slides
