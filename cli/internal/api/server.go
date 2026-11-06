@@ -75,6 +75,7 @@ func (s *Server) Routes() []Route {
 		{"GET", "/v1/forum/threads/{id}", s.getThread},
 		{"POST", "/v1/forum/threads/{id}/posts", s.addPost},
 		{"POST", "/v1/forum/threads/{id}/report", s.reportThread},
+		{"GET", "/v1/forum/reports", s.listRecentReports},
 		{"GET", "/v1/forum/threads/{id}/reports", s.listReports},
 
 		{"GET", "/v1/scenes", s.listScenes},

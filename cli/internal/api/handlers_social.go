@@ -230,6 +230,27 @@ func (s *Server) listReports(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"items": reps})
 }
 
+// listRecentReports is the moderators-only review queue across all threads.
+func (s *Server) listRecentReports(w http.ResponseWriter, r *http.Request) {
+	c, ok := requireAuth(w, r)
+	if !ok {
+		return
+	}
+	if !c.IsModerator() {
+		writeErr(w, http.StatusForbidden, "forbidden", "moderators only")
+		return
+	}
+	reps, err := s.Store.ListRecentReports(r.Context(), 100)
+	if err != nil {
+		s.storeErr(w, err)
+		return
+	}
+	if reps == nil {
+		reps = []Report{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": reps})
+}
+
 func (s *Server) addPost(w http.ResponseWriter, r *http.Request) {
 	c, ok := requireAuth(w, r)
 	if !ok {
