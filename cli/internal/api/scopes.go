@@ -221,6 +221,7 @@ var toolScopes = map[string]string{
 	"create_tree":     "trees:write",
 	"update_tree":     "trees:write",
 	"delete_tree":     "trees:delete",
+	"remix_tree":      "trees:write",
 	"get_scene":       "scenes:read",
 	"list_my_scenes":  "scenes:read",
 	"list_my_trees":   "trees:read",

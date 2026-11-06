@@ -85,11 +85,11 @@ func TestMCPToolsList(t *testing.T) {
 		assert.NotEmpty(t, m["description"])
 		ann, ok := m["annotations"].(map[string]any)
 		require.True(t, ok, "%s needs annotations", m["name"])
-		assert.Equal(t, m["name"] != "create_tree" && m["name"] != "update_tree" && m["name"] != "delete_tree", ann["readOnlyHint"], m["name"])
+		assert.Equal(t, m["name"] != "create_tree" && m["name"] != "update_tree" && m["name"] != "delete_tree" && m["name"] != "remix_tree", ann["readOnlyHint"], m["name"])
 		assert.Equal(t, m["name"] == "update_tree" || m["name"] == "delete_tree", ann["destructiveHint"], m["name"])
 		assert.Equal(t, "object", m["inputSchema"].(map[string]any)["type"])
 	}
-	for _, want := range []string{"validate_tree", "render_tree", "simulate_tree", "generate_code", "search_trees", "get_tree", "create_tree", "update_tree", "list_my_trees", "list_node_types"} {
+	for _, want := range []string{"validate_tree", "render_tree", "simulate_tree", "generate_code", "search_trees", "get_tree", "create_tree", "update_tree", "remix_tree", "list_my_trees", "list_node_types"} {
 		assert.True(t, names[want], want)
 	}
 }
@@ -206,6 +206,35 @@ func TestMCPAccountTools(t *testing.T) {
 	require.False(t, isErr, text)
 	_, isErr = call("alice", "get_tree", map[string]any{"id": pt.ID})
 	assert.True(t, isErr, "deleted tree is gone")
+}
+
+func TestMCPRemixTree(t *testing.T) {
+	h := newTestServer(t)
+	call := func(user, name string, args map[string]any) (string, bool) {
+		_, r := rpc(h, user, 1, "tools/call", map[string]any{"name": name, "arguments": args})
+		return toolResult(t, r)
+	}
+	pubText, _ := call("alice", "create_tree", map[string]any{"spec": goodSpec, "name": "Patrol", "visibility": "public"})
+	privText, _ := call("alice", "create_tree", map[string]any{"spec": goodSpec})
+	var pub, priv Tree
+	require.NoError(t, json.Unmarshal([]byte(pubText), &pub))
+	require.NoError(t, json.Unmarshal([]byte(privText), &priv))
+
+	_, isErr := call("", "remix_tree", map[string]any{"id": pub.ID})
+	assert.True(t, isErr, "anonymous callers are refused")
+	text, isErr := call("bob", "remix_tree", map[string]any{"id": priv.ID})
+	assert.True(t, isErr, "private trees cannot be remixed")
+	assert.Contains(t, text, "search_trees")
+
+	text, isErr = call("bob", "remix_tree", map[string]any{"id": pub.ID})
+	require.False(t, isErr, text)
+	var cp Tree
+	require.NoError(t, json.Unmarshal([]byte(text), &cp))
+	assert.Equal(t, "Patrol (Remix)", cp.Name)
+	assert.Equal(t, VisibilityPrivate, cp.Visibility)
+	assert.Equal(t, "bob", cp.OwnerID)
+	require.NotNil(t, cp.RemixedFrom)
+	assert.Equal(t, pub.ID, cp.RemixedFrom.ID)
 }
 
 func TestMCPBadCalls(t *testing.T) {
