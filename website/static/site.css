@@ -71,3 +71,5 @@ body[data-lang] @media(max-width:800px){
 .menu-toggle[aria-expanded='true'] .bars::after{transform:translateY(-6px) rotate(-45deg)}
 
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important}}
+
+.linklike{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}

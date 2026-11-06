@@ -82,6 +82,15 @@ done
 grep -qF 'prefers-reduced-motion' "$PUBLIC/site.css" || { echo "site.css must honour prefers-reduced-motion" >&2; exit 1; }
 grep -rqF 'prefers-reduced-motion' "$PUBLIC/app/assets" --include=*.css || { echo "builder css must honour prefers-reduced-motion" >&2; exit 1; }
 
+# one Docs menu holds the docs and the learning pages; the theme toggle lives in the footer, not the nav
+nav="$(sed -n '/<nav /,/<\/nav>/p' "$PUBLIC/index.html")"
+if printf '%s' "$nav" | grep -q '>Learn</button>'; then echo "nav must not have a separate Learn menu" >&2; exit 1; fi
+if printf '%s' "$nav" | grep -qE 'id="?theme-toggle'; then echo "theme toggle must not sit in the nav" >&2; exit 1; fi
+for l in /docs/ /learn/behavior-trees/ /learn/building-blocks/ /resources/ /references/; do
+  printf '%s' "$nav" | grep -qE "href=\"?$l[\" >]" || { echo "Docs menu lost $l" >&2; exit 1; }
+done
+sed -n '/<footer/,/<\/footer>/p' "$PUBLIC/index.html" | grep -qE 'id="?theme-toggle' || { echo "footer must hold the theme toggle" >&2; exit 1; }
+
 # every root-relative href in the built HTML must resolve (the /app/ SPA owns its #/ routes)
 bad=0
 while IFS= read -r link; do
