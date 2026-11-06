@@ -179,7 +179,7 @@ func toolText(text string, isError bool) json.RawMessage {
 }
 
 func toolJSON(v any) json.RawMessage {
-	b, _ := json.MarshalIndent(v, "", "  ")
+	b, _ := json.Marshal(v)
 	return toolText(string(b), false)
 }
 

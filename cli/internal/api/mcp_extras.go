@@ -72,7 +72,7 @@ func readMCPResource(uri string) (string, string, bool) {
 	switch uri {
 	case "beetree://node-types":
 		types, decs := nodeTypes()
-		b, _ := json.MarshalIndent(map[string]any{"nodeTypes": types, "decorators": decs, "engines": Engines, "renderFormats": RenderFormats}, "", "  ")
+		b, _ := json.Marshal(map[string]any{"nodeTypes": types, "decorators": decs, "engines": Engines, "renderFormats": RenderFormats})
 		return string(b), "application/json", true
 	case "beetree://schema/beetree":
 		return schemaJSON, "application/schema+json", true
