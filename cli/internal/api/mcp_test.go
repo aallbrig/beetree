@@ -85,11 +85,11 @@ func TestMCPToolsList(t *testing.T) {
 		assert.NotEmpty(t, m["description"])
 		ann, ok := m["annotations"].(map[string]any)
 		require.True(t, ok, "%s needs annotations", m["name"])
-		assert.Equal(t, m["name"] != "create_tree", ann["readOnlyHint"], m["name"])
-		assert.Equal(t, false, ann["destructiveHint"], m["name"])
+		assert.Equal(t, m["name"] != "create_tree" && m["name"] != "update_tree", ann["readOnlyHint"], m["name"])
+		assert.Equal(t, m["name"] == "update_tree", ann["destructiveHint"], m["name"])
 		assert.Equal(t, "object", m["inputSchema"].(map[string]any)["type"])
 	}
-	for _, want := range []string{"validate_tree", "render_tree", "simulate_tree", "generate_code", "search_trees", "get_tree", "create_tree", "list_my_trees", "list_node_types"} {
+	for _, want := range []string{"validate_tree", "render_tree", "simulate_tree", "generate_code", "search_trees", "get_tree", "create_tree", "update_tree", "list_my_trees", "list_node_types"} {
 		assert.True(t, names[want], want)
 	}
 }
@@ -154,6 +154,21 @@ func TestMCPAccountTools(t *testing.T) {
 	text, isErr = call("", "get_tree", map[string]any{"id": tree.ID})
 	assert.False(t, isErr)
 	assert.Contains(t, text, "has_waypoint")
+
+	text, isErr = call("alice", "update_tree", map[string]any{"id": tree.ID, "spec": goodSpec, "description": "edited"})
+	require.False(t, isErr, text)
+	var upd Tree
+	require.NoError(t, json.Unmarshal([]byte(text), &upd))
+	assert.Equal(t, "From MCP", upd.Name, "omitted name is kept")
+	assert.Equal(t, VisibilityPublic, upd.Visibility, "omitted visibility is kept")
+	assert.Equal(t, "edited", upd.Description)
+	_, isErr = call("alice", "update_tree", map[string]any{"id": tree.ID, "spec": "bad: ["})
+	assert.True(t, isErr, "invalid spec is rejected")
+	text, isErr = call("bob", "update_tree", map[string]any{"id": tree.ID, "spec": goodSpec})
+	assert.True(t, isErr, "only the owner may update")
+	assert.Contains(t, text, "list_my_trees")
+	_, isErr = call("", "update_tree", map[string]any{"id": tree.ID, "spec": goodSpec})
+	assert.True(t, isErr, "anonymous callers are refused")
 
 	priv, _ := call("alice", "create_tree", map[string]any{"spec": goodSpec})
 	var pt Tree
