@@ -42,8 +42,18 @@ type mcpTool struct {
 	Name        string         `json:"name"`
 	Description string         `json:"description"`
 	InputSchema map[string]any `json:"inputSchema"`
+	// Annotations tell clients which tools are safe to auto-approve.
+	Annotations mcpAnnotations `json:"annotations"`
 	// needsAuth tools act on the caller's account.
 	needsAuth bool
+}
+
+// mcpAnnotations are the MCP tool hints. Only create_tree writes, and it only
+// adds: nothing is overwritten or deleted.
+type mcpAnnotations struct {
+	ReadOnlyHint    bool `json:"readOnlyHint"`
+	DestructiveHint bool `json:"destructiveHint"`
+	OpenWorldHint   bool `json:"openWorldHint"`
 }
 
 // mcpSearchWindow is how many of the newest public trees search_trees scans.
@@ -57,7 +67,7 @@ var strProp = func(desc string) map[string]any { return map[string]any{"type": "
 
 func mcpTools() []mcpTool {
 	spec := strProp("Behavior tree specification as .beetree.yaml text")
-	return []mcpTool{
+	tools := []mcpTool{
 		{Name: "list_node_types", Description: "List the node types, decorators, render formats and code generation engines BeeTree supports.", InputSchema: objSchema(nil, map[string]any{})},
 		{Name: "validate_tree", Description: "Validate a .beetree.yaml spec. Returns whether it is valid and every error found.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec})},
 		{Name: "render_tree", Description: "Render a spec as ascii, sigil, mermaid or dot.", InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "format": strProp("ascii | sigil | mermaid | dot (default ascii)")})},
@@ -70,6 +80,10 @@ func mcpTools() []mcpTool {
 		{Name: "create_tree", Description: "Save a new tree to the signed-in user's account. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "name": strProp("display name (defaults to spec metadata.name)"), "description": strProp("short description"), "visibility": strProp("public | private (default private)"), "tags": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})},
 		{Name: "list_my_trees", Description: "List the signed-in user's trees. Requires a bearer token.", needsAuth: true, InputSchema: objSchema(nil, map[string]any{})},
 	}
+	for i := range tools {
+		tools[i].Annotations = mcpAnnotations{ReadOnlyHint: tools[i].Name != "create_tree"}
+	}
+	return tools
 }
 
 func (s *Server) mcpGet(w http.ResponseWriter, _ *http.Request) {

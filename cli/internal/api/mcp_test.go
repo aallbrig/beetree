@@ -77,6 +77,10 @@ func TestMCPToolsList(t *testing.T) {
 		m := tl.(map[string]any)
 		names[m["name"].(string)] = true
 		assert.NotEmpty(t, m["description"])
+		ann, ok := m["annotations"].(map[string]any)
+		require.True(t, ok, "%s needs annotations", m["name"])
+		assert.Equal(t, m["name"] != "create_tree", ann["readOnlyHint"], m["name"])
+		assert.Equal(t, false, ann["destructiveHint"], m["name"])
 		assert.Equal(t, "object", m["inputSchema"].(map[string]any)["type"])
 	}
 	for _, want := range []string{"validate_tree", "render_tree", "simulate_tree", "generate_code", "search_trees", "get_tree", "create_tree", "list_my_trees", "list_node_types"} {
