@@ -61,6 +61,8 @@ export interface SceneAgent {
   treeId?: string;
   /** Side the agent fights for; scene timers can target a whole faction. */
   faction?: string;
+  /** Built-in scenes only: 'commander' lets allies of the faction know when it falls. */
+  role?: string;
   model: string;
   x: number;
   z: number;

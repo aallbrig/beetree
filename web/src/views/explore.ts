@@ -72,6 +72,12 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
     h('label', {}, 'Target'),
     targetSel,
   );
+  const credit = h(
+    'p',
+    { class: 'muted small', hidden: true },
+    'Inspired by a beach-landing style firefight. The Troopers, Skirmishers, Shieldbearer and Commander are generic stand-ins with their own trees. Turn on the damage timer and aim it at the Troopers to watch them retreat, or at the Commander to watch the Skirmishers flee. ',
+    h('a', { href: '/references/' }, 'References'),
+  );
   const treeList = h('div', { class: 'stack' });
   const panel = h(
     'div',
@@ -85,6 +91,7 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
     h('div', {}, h('label', {}, 'Scene'), sceneSelect),
     healthRow,
     timerRow,
+    credit,
     treeList,
     h(
       'p',
@@ -168,7 +175,12 @@ export async function exploreView(ctx: Ctx): Promise<Cleanup | undefined> {
     const def = sceneDefById(sceneId);
     const custom = def === undefined;
     healthRow.hidden = !custom && !sceneHasControl(def, 'health');
-    intruderBtn.hidden = !custom && !sceneHasControl(def, 'intruder');
+    const hasIntruder = custom || sceneHasControl(def, 'intruder');
+    intruderBtn.hidden = !hasIntruder;
+    if (!hasIntruder) world.setBeacon(undefined);
+    else if (!world.beacon) world.setBeacon({ x: 0, z: 2 });
+    intruderBtn.setAttribute('aria-pressed', String(world.beacon !== undefined));
+    credit.hidden = sceneId !== 'combat';
     const hasTimer = sceneHasControl(def, 'timer');
     timerRow.hidden = !hasTimer;
     world.timer.setOn(false);

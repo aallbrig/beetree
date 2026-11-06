@@ -32,6 +32,10 @@ The 3D characters and scenery in the Explore view and the scene studio are from 
 - [Blocky Characters](https://kenney.nl/assets/blocky-characters)
 - [Nature Kit](https://kenney.nl/assets/nature-kit)
 
+## Design inspiration
+
+Explore's Demo scene 2 is inspired by a beach-landing style firefight: squads of allies against several enemy roles, with morale and cover under fire. The Trooper, Skirmisher, Shieldbearer and Commander are generic stand-ins with their own trees ([trooper](https://github.com/aallbrig/beetreecraft/blob/main/examples/trooper.beetree.yaml), [skirmisher](https://github.com/aallbrig/beetreecraft/blob/main/examples/skirmisher.beetree.yaml), [shieldbearer](https://github.com/aallbrig/beetreecraft/blob/main/examples/shieldbearer.beetree.yaml), [commander](https://github.com/aallbrig/beetreecraft/blob/main/examples/commander.beetree.yaml)). No names, art or trees come from the source.
+
 ## Source code
 
 BeeTreeCraft is open source: [github.com/aallbrig/beetreecraft](https://github.com/aallbrig/beetreecraft).

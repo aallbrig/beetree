@@ -44,7 +44,11 @@ describe('scene tree references', () => {
       ...SCENES.flatMap((sc) => sc.agents.map((a) => a.treeId)),
       ...[...scenes.matchAll(/'(sample:[a-z]+)'/g)].map((m) => m[1]),
     ];
-    for (const id of ids) expect(sampleById(id ?? ''), String(id)).toBeDefined();
+    const { COMBAT_TREES } = await import('./scene/combat');
+    for (const id of ids) {
+      if (id && id in COMBAT_TREES) continue; // example trees are checked in combat.test.ts
+      expect(sampleById(id ?? ''), String(id)).toBeDefined();
+    }
   });
 });
 

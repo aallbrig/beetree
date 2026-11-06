@@ -33,6 +33,8 @@ n=$(grep -c '^  - title:' "$data")
 [ "$n" -ge 10 ] || { echo "resources.yaml has only $n entries" >&2; exit 1; }
 [ "$(grep -cE '^    url: "https?://' "$data")" = "$n" ] && [ "$(grep -c '^    summary:' "$data")" = "$n" ] || { echo "every resource needs url and summary" >&2; exit 1; }
 awk '/^    score:/ && $2 < 9 {bad=1} END {exit bad}' "$data" || { echo "a resource scores below the rubric threshold of 9" >&2; exit 1; }
+# the references page credits the inspiration for Demo scene 2
+grep -q 'beach-landing style firefight' "$PUBLIC/references/index.html" || { echo "references must credit the scene 2 inspiration" >&2; exit 1; }
 # the TUI page leads with the step-through debugger and embeds its recorded demos
 [ "$(grep -oE '<img[^>]*/img/tui-[a-z-]+\.gif' "$PUBLIC/docs/tui/index.html" | wc -l)" -ge 2 ] || { echo "docs/tui must embed its GIFs" >&2; exit 1; }
 for g in tui-step-through.gif tui-editor.gif; do [ -s "$PUBLIC/img/$g" ] || { echo "missing: img/$g" >&2; exit 1; }; done

@@ -16,6 +16,12 @@ export interface Body {
   alert: number;
   target: Vec2 | undefined;
   waypoint: Vec2;
+  /** Position of this agent's living Commander ally, when it has one. */
+  leader: Vec2 | undefined;
+  /** False once the Commander of this agent's faction has fallen. */
+  commanderAlive: boolean;
+  /** True for a moment after this agent took a hit. */
+  underFire: boolean;
   /** Move toward a point at speed (units/s); returns remaining distance. */
   moveToward(p: Vec2, speed: number, dt: number): number;
   moveAwayFrom(p: Vec2, speed: number, dt: number): void;
@@ -44,6 +50,10 @@ function labelOf(n: NodeSpec): string {
 
 type Kind =
   | 'sees'
+  | 'underFire'
+  | 'hasCover'
+  | 'commanderAlive'
+  | 'followLeader'
   | 'inRange'
   | 'lowHealth'
   | 'alerted'
@@ -64,9 +74,14 @@ type Kind =
 
 // order matters: more specific patterns first
 const PATTERNS: [RegExp, Kind][] = [
+  [/under_?fire|taking_?fire|under_?attack/, 'underFire'],
+  [/recharge/, 'heal'],
+  [/has_?cover|cover_?known/, 'hasCover'],
+  [/commander_?(is_?)?(alive|standing)|leader_?(is_?)?alive/, 'commanderAlive'],
+  [/follow_?(the_?)?(commander|leader)|stay_?near_?(commander|leader)/, 'followLeader'],
   [/in_?range|within_?range|target_in/, 'inRange'],
   [/health_?(is_?)?(low|below)|low_?health|is_?dying|is_?hurt|wounded|critical/, 'lowHealth'],
-  [/has_?target|see_?target|can_?see|visible|detect|spotted|sees_?enemy/, 'sees'],
+  [/has_?target|has_?threat|see_?target|can_?see|visible|detect|spotted|sees_?enemy/, 'sees'],
   [/alert/, 'alerted'],
   [/has_?waypoint/, 'hasWaypoint'],
   [/next_?waypoint|advance_?waypoint|cycle_?waypoint/, 'nextWaypoint'],
@@ -75,11 +90,11 @@ const PATTERNS: [RegExp, Kind][] = [
   [/flee|cover|escape|retreat|run_?away|hide/, 'flee'],
   [/shoot|ranged|fire|throw|cast/, 'shoot'],
   [/attack|strike|melee|hit|slash|punch|bite/, 'attack'],
-  [/chase|pursue|approach|move_?to_?target|follow|charge|close_?in/, 'chase'],
-  [/face|rotate|turn|look_?at|aim/, 'face'],
-  [/heal|regen|recover|drink|rest_?up/, 'heal'],
+  [/chase|pursue|approach|move_?to_?target|follow|advance|charge|close_?in/, 'chase'],
+  [/raise_?shield|face|rotate|turn|look_?at|aim/, 'face'],
+  [/heal|regen|recover|recharge|drink|rest_?up/, 'heal'],
   [/calm|clear_?alert|set_?alert|reset_?alert/, 'calm'],
-  [/wait|idle|pause|search|look_?around|stand|linger|stay/, 'wait'],
+  [/wait|idle|hold|pause|search|look_?around|stand|linger|stay/, 'wait'],
   [/emote|animation|animate|taunt|celebrate|play/, 'emote'],
 ];
 
@@ -127,6 +142,19 @@ export class AgentBehaviors implements LeafHandler {
         return ok(b.target !== undefined && dist(b.pos, b.target) <= RANGES.attack);
       case 'lowHealth':
         return ok(b.health < RANGES.lowHealth);
+      case 'underFire':
+        return ok(b.underFire);
+      case 'hasCover':
+        return 'success';
+      case 'commanderAlive':
+        return ok(b.commanderAlive);
+      case 'followLeader': {
+        if (!b.leader) return 'failure';
+        const left = b.moveToward(b.leader, 2.6, dt);
+        b.play('walk');
+        b.say(node.name);
+        return left < 3 ? 'success' : 'running';
+      }
       case 'alerted':
         return ok(
           b.alert > 0.3 || (b.target !== undefined && dist(b.pos, b.target) < RANGES.alert),
