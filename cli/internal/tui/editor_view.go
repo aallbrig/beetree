@@ -742,6 +742,10 @@ func (ev *EditorView) syncSimTraceView() {
 	ev.propsView.SetText(b.String())
 }
 
+// navigateHint leads with help and quit so a narrow terminal cuts the
+// less important keys, not the ones a newcomer needs to find their way out.
+const navigateHint = "[?]help  [q]uit  [a]dd  [e]dit  [d]elete  [c]opy  [m]ove  [p]arams  [b]board  [u]ndo  [U]redo  [r]un  [v]alidate  [/]find  [s]ave"
+
 func (ev *EditorView) syncStatusBar() {
 	dirty := ""
 	if ev.Model.IsDirty() {
@@ -751,7 +755,7 @@ func (ev *EditorView) syncStatusBar() {
 	var status string
 	switch ev.Model.Mode {
 	case ModeNavigate:
-		status = "[a]dd  [e]dit  [d]elete  [c]opy  [m]ove  [p]arams  [b]board  [u]ndo  [U]redo  [r]un  [v]alidate  [/]find  [s]ave  [q]uit  [?]help"
+		status = navigateHint
 	case ModeMove:
 		status = fmt.Sprintf("[yellow]MOVE MODE[-] — navigate to target, [m] to place, [Esc] cancel  (moving: %s)", ev.Model.CutNodeName)
 	case ModeAddNode:
