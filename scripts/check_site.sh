@@ -67,6 +67,8 @@ done
 for t in Cognito DynamoDB birthdate SHA-256 'tracking'; do
   grep -q "$t" "$PUBLIC/privacy/index.html" || { echo "privacy page must mention: $t" >&2; exit 1; }
 done
+grep -q 'remixes: when you remix' "$PUBLIC/privacy/index.html" || { echo "privacy page must describe what a remix records" >&2; exit 1; }
+tr -d '\n' < "$PUBLIC/docs/manual/index.html" | grep -q 'Press <strong>Remix</strong>' || { echo "manual must document Remix" >&2; exit 1; }
 grep -q 'Andrew Allbright' "$PUBLIC/about/index.html" || { echo "about page must name the maintainer" >&2; exit 1; }
 
 # the home page names the trope templates and links to the live preview
