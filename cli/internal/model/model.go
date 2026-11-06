@@ -97,3 +97,17 @@ type SubtreeRef struct {
 	Name string `yaml:"name" json:"name"`
 	File string `yaml:"file" json:"file"`
 }
+
+// Slots are the agent roles a leaf can name with parameters.slot when one
+// tree drives a squad. A leaf with no slot acts on the first one (leader).
+var Slots = []string{"leader", "flanker", "support"}
+
+// IsValidSlot reports whether name is a known squad slot.
+func IsValidSlot(name string) bool {
+	for _, s := range Slots {
+		if s == name {
+			return true
+		}
+	}
+	return false
+}

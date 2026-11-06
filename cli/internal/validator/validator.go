@@ -118,6 +118,15 @@ func validateNode(node *model.NodeSpec, path string) []error {
 		}
 	}
 
+	if model.IsLeafType(node.Type) {
+		if slot, ok := node.Parameters["slot"]; ok {
+			name, isStr := slot.(string)
+			if !isStr || !model.IsValidSlot(name) {
+				errs = append(errs, fmt.Errorf("%s: unknown slot %v (use one of %s)", path, slot, strings.Join(model.Slots, ", ")))
+			}
+		}
+	}
+
 	for i := range node.Children {
 		childPath := fmt.Sprintf("%s.children[%d]", path, i)
 		errs = append(errs, validateNode(&node.Children[i], childPath)...)
