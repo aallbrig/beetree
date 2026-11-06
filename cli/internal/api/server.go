@@ -28,8 +28,14 @@ type Server struct {
 	AllowAnonymous bool
 	// PublicTTL is how long the visitor showcase snapshot lives (default 24 hours).
 	PublicTTL time.Duration
+	// WriteLimit caps POST, PUT and DELETE requests per signed-in user within
+	// WriteWindow (defaults 60 per minute). Over the cap the API answers 429 with
+	// Retry-After.
+	WriteLimit  int
+	WriteWindow time.Duration
 
-	public publicCache
+	public  publicCache
+	limiter writeLimiter
 }
 
 // Route is one API operation. The route table drives both registration and the
@@ -145,8 +151,26 @@ func (s *Server) middleware(next http.Handler) http.Handler {
 			writeErr(w, http.StatusUnauthorized, "unauthenticated", "an API key or sign-in is required; see "+docsURL)
 			return
 		}
+		if c, authed := ClaimsFrom(r.Context()); authed && isWrite(r.Method) {
+			limit, span := s.WriteLimit, s.WriteWindow
+			if limit <= 0 {
+				limit = DefaultWriteLimit
+			}
+			if span <= 0 {
+				span = DefaultWriteWindow
+			}
+			if ok, wait := s.limiter.allow(c.Sub, s.Now(), limit, span); !ok {
+				w.Header().Set("Retry-After", retryAfter(wait))
+				writeErr(w, http.StatusTooManyRequests, "rate_limited", "too many writes; retry after "+retryAfter(wait)+" seconds")
+				return
+			}
+		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func isWrite(m string) bool {
+	return m == http.MethodPost || m == http.MethodPut || m == http.MethodDelete
 }
 
 // ---- helpers ---------------------------------------------------------------

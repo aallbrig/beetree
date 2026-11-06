@@ -510,3 +510,34 @@ func TestListTemplates(t *testing.T) {
 		assert.Equal(t, true, v.JSON(t)["valid"], "template %v must validate", m["name"])
 	}
 }
+
+func TestWriteRateLimitReturns429(t *testing.T) {
+	clock := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	s := &Server{
+		Store: NewMemStore(), Auth: fakeAuth{}, Version: "test", AllowAnonymous: true,
+		Now: func() time.Time { return clock }, WriteLimit: 3, WriteWindow: time.Minute,
+	}
+	h := s.Handler()
+	post := func(user string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest("POST", "/v1/trees", strings.NewReader("{}"))
+		req.Header.Set("Authorization", "Bearer token-"+user)
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		return rec
+	}
+	for i := 0; i < 3; i++ {
+		assert.NotEqual(t, 429, post("alice").Code)
+	}
+	rec := post("alice")
+	require.Equal(t, 429, rec.Code)
+	assert.Equal(t, "60", rec.Header().Get("Retry-After"))
+	assert.Contains(t, rec.Body.String(), "rate_limited")
+	assert.NotEqual(t, 429, post("bob").Code, "limits are per user")
+	get := httptest.NewRequest("GET", "/v1/health", nil)
+	get.Header.Set("Authorization", "Bearer token-alice")
+	grec := httptest.NewRecorder()
+	h.ServeHTTP(grec, get)
+	assert.Equal(t, 200, grec.Code)
+	clock = clock.Add(61 * time.Second)
+	assert.NotEqual(t, 429, post("alice").Code, "window resets")
+}
