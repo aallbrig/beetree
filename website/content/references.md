@@ -5,6 +5,8 @@ description: "The books, chapters and assets BeeTreeCraft draws on."
 
 BeeTreeCraft stands on other people's work. This page credits it and points you to the originals.
 
+The full reading list, with summaries, lives on the [Resources](/resources/) page. The sources below are the ones this site's own pages draw on.
+
 ## Behavior tree reading
 
 - [*Behavior Trees in Robotics and AI: An Introduction*](https://arxiv.org/abs/1709.00084), Michele Colledanchise and Petter Ögren (CRC Press, 2018). The node-type definitions and the state-machine comparison on the [Learn](/learn/) pages follow its Chapter 1. [Free PDF on arXiv](https://arxiv.org/pdf/1709.00084v1).

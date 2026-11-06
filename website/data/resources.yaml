@@ -1,0 +1,63 @@
+# Curated behavior tree resources. Add entries with the find-resources skill; every entry is scored
+# against .claude/skills/find-resources/RUBRIC.md (max 14, include at 9 or more).
+items:
+  - title: "Behavior Trees in Robotics and AI: An Introduction"
+    url: "https://arxiv.org/abs/1709.00084"
+    kind: Book
+    year: "2018"
+    author: "Michele Colledanchise and Petter Ögren"
+    summary: "The standard introduction: node types, formal semantics, and a comparison with state machines and decision trees. Free PDF on arXiv."
+    score: 14
+  - title: "Behavior tree (Grokipedia)"
+    url: "https://grokipedia.com/page/Behavior_tree"
+    kind: Article
+    summary: "A broad overview of behavior trees and their history in games and robotics; good for orientation before the book."
+    score: 9
+  - title: "Behavior Selection Algorithms: An Overview"
+    url: "http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter04_Behavior_Selection_Algorithms.pdf"
+    kind: Chapter
+    year: "2014"
+    summary: "Game AI Pro chapter 4. Compares ways to choose what an agent does next, including behavior trees, and when each fits."
+    score: 13
+  - title: "The Behavior Tree Starter Kit"
+    url: "http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter06_The_Behavior_Tree_Starter_Kit.pdf"
+    kind: Chapter
+    year: "2014"
+    summary: "Game AI Pro chapter 6. A practical walk through building a behavior tree runtime from scratch."
+    score: 13
+  - title: "Real-World Behavior Trees in Script"
+    url: "http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter07_Real-World_Behavior_Trees_in_Script.pdf"
+    kind: Chapter
+    year: "2014"
+    summary: "Game AI Pro chapter 7. Authoring behavior trees in a scripting language, with lessons from shipped games."
+    score: 12
+  - title: "Simulating Behavior Trees: A Behavior Tree / Planner Hybrid Approach"
+    url: "http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter08_Simulating_Behavior_Trees.pdf"
+    kind: Chapter
+    year: "2014"
+    summary: "Game AI Pro chapter 8. Combines behavior trees with planning by simulating tree execution ahead of time."
+    score: 12
+  - title: "Building Utility Decisions into Your Existing Behavior Tree"
+    url: "http://www.gameaipro.com/GameAIPro/GameAIPro_Chapter10_Building_Utility_Decisions_into_Your_Existing_Behavior_Tree.pdf"
+    kind: Chapter
+    year: "2014"
+    summary: "Game AI Pro chapter 10. Adds utility scoring to a behavior tree without throwing the tree away."
+    score: 12
+  - title: "Building a Risk-Free Environment to Enhance Prototyping: Hinted-Execution Behavior Trees"
+    url: "http://www.gameaipro.com/GameAIPro2/GameAIPro2_Chapter10_Building_a_Risk-Free_Environment_to_Enhance_Prototyping.pdf"
+    kind: Chapter
+    year: "2015"
+    summary: "Game AI Pro 2 chapter 10. Prototyping behavior safely with hinted execution."
+    score: 11
+  - title: "Overcoming Pitfalls in Behavior Tree Design"
+    url: "http://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter09_Overcoming_Pitfalls_in_Behavior_Tree_Design.pdf"
+    kind: Chapter
+    year: "2017"
+    summary: "Game AI Pro 3 chapter 9. Common design mistakes in behavior trees and how to avoid them."
+    score: 12
+  - title: "Template Tricks for Data-Driven Behavior Trees"
+    url: "http://www.gameaipro.com/GameAIProOnlineEdition2021/GameAIProOnlineEdition2021_Chapter13_Template_Tricks_for_Data-Driven_Behavior_Trees.pdf"
+    kind: Chapter
+    year: "2021"
+    summary: "Game AI Pro Online Edition 2021, chapter 13. Data-driven trees and template techniques for reuse."
+    score: 11
