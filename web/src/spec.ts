@@ -262,6 +262,17 @@ export function* walk(n: NodeSpec, path: Path = []): Generator<[NodeSpec, Path]>
   }
 }
 
+/**
+ * Splits a server validator error such as `tree.children[1].children[0]: name is required`
+ * into the node path it names and the message. Errors that name no node get a null path.
+ */
+export function parseValidatorError(err: string): { path: Path | null; message: string } {
+  const m = /^tree((?:\.children\[\d+\])*): (.*)$/s.exec(err);
+  if (!m) return { path: null, message: err };
+  const path = [...(m[1] ?? '').matchAll(/\[(\d+)\]/g)].map((x) => Number(x[1]));
+  return { path, message: m[2] ?? '' };
+}
+
 export interface Problem {
   path: Path;
   message: string;
