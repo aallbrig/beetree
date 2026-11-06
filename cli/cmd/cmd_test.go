@@ -31,6 +31,7 @@ func executeCommand(args ...string) (string, error) {
 	pushTags = nil
 	pushDesc = ""
 	simulateOverrides = nil
+	simulateStep = false
 	nodeAddType = "action"
 	nodeAddNode = ""
 	nodeAddDecorator = ""
@@ -666,6 +667,40 @@ tree:
 	output, err := executeCommand("simulate", specFile, "--override", "check=FAILURE")
 	require.NoError(t, err)
 	assert.Contains(t, output, "FAILURE")
+}
+
+func TestSimulateCommand_Step(t *testing.T) {
+	tmpDir := t.TempDir()
+	specFile := filepath.Join(tmpDir, "test.beetree.yaml")
+	require.NoError(t, os.WriteFile(specFile, []byte(`version: "1.0"
+metadata:
+  name: test
+tree:
+  type: sequence
+  name: root
+  children:
+    - type: condition
+      name: check
+      node: Check
+    - type: action
+      name: do_it
+      node: DoIt
+`), 0644))
+
+	rootCmd.SetIn(strings.NewReader("x\ns\nf\n"))
+	defer rootCmd.SetIn(nil)
+	output, err := executeCommand("simulate", specFile, "--step")
+	require.NoError(t, err)
+	assert.Contains(t, output, "check [s]uccess")
+	assert.Contains(t, output, "answer s, f or r")
+	assert.Contains(t, output, "Simulation: root -> FAILURE")
+	assert.Contains(t, output, "resolve")
+	assert.Contains(t, output, "do_it")
+
+	rootCmd.SetIn(strings.NewReader("s\n"))
+	_, err = executeCommand("simulate", specFile, "--step")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "input ended")
 }
 
 // --- Diff command tests ---

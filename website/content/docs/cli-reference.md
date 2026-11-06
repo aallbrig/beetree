@@ -314,13 +314,17 @@ beetree render <file> [flags]
 ### `beetree simulate`
 
 Walk the behavior tree and simulate execution, showing node traversal
-and resulting statuses. Use --override to force specific node outcomes.
+and resulting statuses. Use --override to force specific node outcomes, or
+--step to pause at each leaf and choose Success, Failure or Running yourself
+(answer s, f or r); composites resolve from your answers and the trace prints
+at the end. --step uses the same walker as the TUI.
 
 Example:
 
 ```
   beetree simulate trees/enemy-ai.beetree.yaml
   beetree simulate trees/enemy-ai.beetree.yaml --override check_health=FAILURE
+  beetree simulate trees/enemy-ai.beetree.yaml --step
 ```
 
 ```
@@ -331,6 +335,7 @@ beetree simulate <file> [flags]
 
 ```
 --override strings   Force node outcome: name=STATUS (can repeat)
+      --step               Pause at each leaf and choose its status interactively
 ```
 
 ### `beetree validate`
