@@ -23,6 +23,9 @@ import {
   removeVar,
   updateVar,
   addChild,
+  addSibling,
+  wrapAt,
+  retype,
   countNodes,
   DECORATORS,
   getNode,
@@ -199,6 +202,21 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     ...NODE_TYPES.map((t) => h('option', { value: t }, t)),
   );
   const addBtn = h('button', { class: 'btn small', type: 'button' }, '+ Add child');
+  const sibBtn = h(
+    'button',
+    { class: 'btn small', type: 'button', title: 'Add after the selected node' },
+    '+ Add sibling',
+  );
+  const wrapBtn = h(
+    'button',
+    { class: 'btn small', type: 'button', title: 'Wrap the selected node in the chosen type' },
+    'Wrap in',
+  );
+  const retypeBtn = h(
+    'button',
+    { class: 'btn small', type: 'button', title: 'Change the selected node to the chosen type' },
+    'Change type',
+  );
   const rmBtn = h('button', { class: 'btn small danger', type: 'button' }, 'Remove');
   const upBtn = h('button', { class: 'btn small', type: 'button', 'aria-label': 'Move up' }, '↑');
   const downBtn = h(
@@ -235,6 +253,9 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
       { class: 'row' },
       typeSel,
       addBtn,
+      sibBtn,
+      wrapBtn,
+      retypeBtn,
       rmBtn,
       dupBtn,
       upBtn,
@@ -884,6 +905,17 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     }
     selected = res;
     refresh();
+  });
+  sibBtn.addEventListener('click', () => {
+    applyMove(addSibling(spec.tree, selected, makeNode(spec.tree, typeSel.value as NodeType)));
+  });
+  wrapBtn.addEventListener('click', () => {
+    applyMove(wrapAt(spec.tree, selected, typeSel.value as NodeType));
+  });
+  retypeBtn.addEventListener('click', () => {
+    const err = retype(spec.tree, selected, typeSel.value as NodeType);
+    if (err) toast(err, 'err');
+    else refresh();
   });
   rmBtn.addEventListener('click', () => {
     if (!removeAt(spec.tree, selected)) {

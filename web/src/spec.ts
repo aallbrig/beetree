@@ -272,6 +272,64 @@ export function indent(root: NodeSpec, path: Path): Path | string {
   return res;
 }
 
+/** Wrap the node in a new composite or decorator that takes its place. Returns the node's new path or an error. */
+export function wrapAt(root: NodeSpec, path: Path, type: NodeType): Path | string {
+  if (isLeaf(type)) return 'choose a sequence, selector, parallel or decorator to wrap with';
+  const node = getNode(root, path);
+  if (!node) return 'node not found';
+  const wrapper = makeNode(root, type);
+  wrapper.children = [node];
+  if (path.length === 0) {
+    const inner: NodeSpec = { ...node };
+    const fresh: NodeSpec = { ...wrapper, children: [inner] };
+    root.type = fresh.type;
+    root.name = fresh.name;
+    root.children = fresh.children;
+    delete root.node;
+    delete root.description;
+    delete root.parameters;
+    delete root.ref;
+    delete root.file;
+    delete root.success_policy;
+    delete root.failure_policy;
+    if (fresh.decorator) root.decorator = fresh.decorator;
+    else delete root.decorator;
+    return [0];
+  }
+  const parent = getNode(root, path.slice(0, -1));
+  const idx = path[path.length - 1];
+  if (!parent?.children || idx === undefined) return 'node not found';
+  parent.children[idx] = wrapper;
+  return [...path, 0];
+}
+
+/** Change a node's type in place: composites swap among themselves, leaves between action and condition. */
+export function retype(root: NodeSpec, path: Path, type: NodeType): string | undefined {
+  const node = getNode(root, path);
+  if (!node) return 'node not found';
+  if (node.type === type) return undefined;
+  const kind = (t: NodeType): string => (isComposite(t) ? 'composite' : isLeaf(t) ? 'leaf' : t);
+  if (kind(node.type) !== kind(type))
+    return `a ${node.type} cannot become a ${type}; add the new node and move the children instead`;
+  node.type = type;
+  if (type !== 'parallel') {
+    delete node.success_policy;
+    delete node.failure_policy;
+  }
+  return undefined;
+}
+
+/** Add a new node right after the one at path. Returns the new path or an error. */
+export function addSibling(root: NodeSpec, path: Path, child: NodeSpec): Path | string {
+  if (path.length === 0) return 'the root has no siblings; add a child instead';
+  const parent = getNode(root, path.slice(0, -1));
+  const idx = path[path.length - 1];
+  if (!parent?.children || idx === undefined) return 'node not found';
+  if (parent.type === 'decorator') return 'a decorator has exactly one child';
+  parent.children.splice(idx + 1, 0, child);
+  return [...path.slice(0, -1), idx + 1];
+}
+
 /** Rename a node, keeping names unique. Returns an error message or undefined. */
 export function rename(root: NodeSpec, path: Path, name: string): string | undefined {
   const clean = name.trim();
