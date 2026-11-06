@@ -58,3 +58,14 @@ body[data-lang] @media(max-width:800px){
 .codetabs-bar button{font:inherit;font-size:.85rem;font-weight:600;color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;cursor:pointer;white-space:nowrap}
 .codetabs-bar button:hover{color:var(--text)}
 .codetabs-bar button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+
+/* hamburger: an icon button with a comfortable tap target; the bars become an X when open */
+.menu-toggle{min-width:44px;min-height:44px;padding:0;align-items:center;justify-content:center}
+.menu-toggle .bars,.menu-toggle .bars::before,.menu-toggle .bars::after{display:block;width:20px;height:2px;border-radius:2px;background:currentColor;content:'';transition:transform .15s,background .15s}
+.menu-toggle .bars{position:relative}
+.menu-toggle .bars::before,.menu-toggle .bars::after{position:absolute;left:0}
+.menu-toggle .bars::before{top:-6px}
+.menu-toggle .bars::after{top:6px}
+.menu-toggle[aria-expanded='true'] .bars{background:transparent}
+.menu-toggle[aria-expanded='true'] .bars::before{transform:translateY(6px) rotate(45deg)}
+.menu-toggle[aria-expanded='true'] .bars::after{transform:translateY(-6px) rotate(-45deg)}

@@ -14,6 +14,7 @@ Probe, in order:
 - Forum: post, report, reply; check that moderation exists and is visible.
 - Accessibility basics: keyboard path, contrast, focus rings, labels.
 - Speed: first load on a throttled connection.
+- Modern conventions: run the `modern-web-audit` skill; dated patterns (a "Menu" word instead of a hamburger icon, hover-only controls, missing social cards) count as gaps.
 
 ## Method
 

@@ -10,6 +10,8 @@
 
 **Technique**: a named way of writing trees (recursive, event-driven, graph-based, concurrent, and so on), taught in Learn.
 
+**Step-through**: simulating a tree one leaf at a time, where the author declares each leaf's status (Success, Failure or Running) and the composites resolve from those answers. Contrast with a full evaluation, which runs the whole traversal at once.
+
 **Communitree**: the email list people join from the home and sign-up pages.
 
 **Release**: a tagged version with release notes and artifacts, deployed to beetreecraft.com by CI.
