@@ -58,6 +58,14 @@ jobs:
         # DNS and www must stay true: false removes the apex/www records and the certificate
         run: task deploy:backend DNS=true WWW=true
       - name: Deploy site
-        run: task deploy:site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/assets"
+          gh release download "${{ github.event.release.tag_name }}" --repo "${{ github.repository }}" \
+            --pattern 'beetree_*' --dir "$RUNNER_TEMP/assets"
+          scripts/downloads_layout.sh "${{ github.event.release.tag_name }}" "$RUNNER_TEMP/assets" "$RUNNER_TEMP/dl"
+          DOWNLOADS_DIR="$RUNNER_TEMP/dl" task deploy:site
       - name: Smoke test production
         run: task smoke
