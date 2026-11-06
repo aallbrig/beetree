@@ -193,3 +193,10 @@ items:
     author: "Jakob Rasmussen"
     summary: "A critique of behavior trees from the utility AI side. It works one shooter example two ways, where the tree grows many branches and the utility version needs one table of about ten scorers, and it notes where utility needs tuning. The author sells a utility toolkit, so read it as an argued position, and as a good prompt for when to add scoring to a selector."
     score: 11
+  - title: "Combat Evolved: The Encounter Design of Halo 3"
+    url: "https://gamedeveloper.com/design/combat-evolved-the-encounter-design-of-halo-3"
+    kind: Article
+    year: "2018"
+    author: "Tommy Thompson"
+    summary: "How Halo 3 moved from scripted goals to a declarative task tree that squads claim by priority, with shared squad knowledge. Useful background for driving several agents from one tree; high level, no code."
+    score: 9
