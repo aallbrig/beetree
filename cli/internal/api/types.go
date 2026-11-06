@@ -50,6 +50,7 @@ type Profile struct {
 	DisplayName string `json:"displayName"`
 	Bio         string `json:"bio"`
 	Email       string `json:"email,omitempty"`
+	Moderator   bool   `json:"moderator,omitempty"`
 	CreatedAt   string `json:"createdAt"`
 }
 

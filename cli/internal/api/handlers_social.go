@@ -31,6 +31,7 @@ func (s *Server) getMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p.Email = c.Email
+	p.Moderator = c.IsModerator()
 	writeJSON(w, http.StatusOK, p)
 }
 
