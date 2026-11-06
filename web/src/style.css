@@ -584,3 +584,48 @@ input[type='checkbox'] {
   font-weight: bold;
   margin-left: 0.4rem;
 }
+
+/* hamburger: an icon button with a comfortable tap target; the bars become an X when open */
+.nav .menu-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+}
+.nav .menu-toggle .bars,
+.nav .menu-toggle .bars::before,
+.nav .menu-toggle .bars::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  content: '';
+  transition:
+    transform 0.15s,
+    background 0.15s;
+}
+.nav .menu-toggle .bars {
+  position: relative;
+}
+.nav .menu-toggle .bars::before,
+.nav .menu-toggle .bars::after {
+  position: absolute;
+  left: 0;
+}
+.nav .menu-toggle .bars::before {
+  top: -6px;
+}
+.nav .menu-toggle .bars::after {
+  top: 6px;
+}
+.nav .menu-toggle[aria-expanded='true'] .bars {
+  background: transparent;
+}
+.nav .menu-toggle[aria-expanded='true'] .bars::before {
+  transform: translateY(6px) rotate(45deg);
+}
+.nav .menu-toggle[aria-expanded='true'] .bars::after {
+  transform: translateY(-6px) rotate(-45deg);
+}

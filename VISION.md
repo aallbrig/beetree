@@ -12,7 +12,8 @@ BeeTreeCraft is where people who care about behavior trees want to be: a place t
 2. **Agent inventory and builder.** Signed-in people keep an inventory of the agents they have made, each with its tree. Builder and inventory are enough to author real trees without leaving the site. Ships with 4 to 5 **templates** inspired by common video game tropes (for example: patrolling guard, skittish critter, boss with phases, shopkeeper's daily routine, loyal companion), each runnable in the live 3D preview.
 3. **Forum.** Where people discuss behavior trees. Moderated: reporting, a review queue, rate limits and roles. Built on serverless AWS (SAM: Lambda, DynamoDB, API Gateway, Cognito) so it scales without servers to tend.
 4. **Learning resource.** The best place to start and to go deeper. Original explainers plus a curated library of articles, centred on the Game AI Pro chapters and the book Behavior Trees in Robotics and AI. Credits live on the references page.
-5. **Engine output.** One engine-agnostic tree format, native code for Unity, Unreal and Godot, and a CLI, REST API and MCP server that expose the same capabilities.
+5. **Simulation and debugging.** The reason to choose BeeTreeCraft over a text editor. Anywhere a tree can be built it can also be run: a full evaluation that returns the final status and a trace, and a step-through where each leaf pauses so the author declares whether it returns Success, Failure or Running, and watches the composites resolve. This is how people find out why a tree behaves the way it does. It exists in the TUI today and should reach the CLI, the builder, the REST API and the MCP server.
+6. **Engine output.** One engine-agnostic tree format, native code for Unity, Unreal and Godot, and a CLI, REST API and MCP server that expose the same capabilities.
 
 ## Techniques for writing behavior trees
 
@@ -26,7 +27,7 @@ A comprehensive view, taught in Learn and reflected in the builder. Each techniq
 - Decorators as policy: retries, cooldowns, timeouts, guards
 - Hybrids: utility scoring, state machines, planners (GOAP, HTN) next to trees
 - Data-driven trees: authoring in files, hot reload, versioning
-- Testing and simulation: deterministic ticks, golden traces, regression of behavior
+- Testing and simulation: full evaluation versus step-through, forcing leaf statuses, deterministic ticks, golden traces, regression of behavior
 - Debugging and visualization: seeing why a node ran
 - Scale: many agents, shared computation, budgeting ticks
 - Newer ideas: LLM-assisted authoring and tree repair

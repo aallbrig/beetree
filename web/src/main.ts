@@ -90,7 +90,8 @@ function renderNav(): void {
       renderNav();
     },
   });
-  menuBtn.textContent = menuOpen ? 'Close' : 'Menu';
+  menuBtn.setAttribute('aria-label', menuOpen ? 'Close menu' : 'Menu');
+  menuBtn.append(h('span', { class: 'bars', 'aria-hidden': 'true' }));
 
   const links = h(
     'div',

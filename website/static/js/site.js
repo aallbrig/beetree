@@ -37,7 +37,7 @@
       menu.addEventListener('click', function () {
         var open = links.classList.toggle('open');
         menu.setAttribute('aria-expanded', String(open));
-        menu.textContent = open ? 'Close' : 'Menu';
+        menu.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
       });
     }
     paint();
