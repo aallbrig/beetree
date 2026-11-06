@@ -62,6 +62,7 @@ tr -d '\n' < "$PUBLIC/index.html" | grep -oE '<section class="?wrap"? id="?templ
 # sign-up belongs below the fold: the hero section must not link to it
 hero=$(tr -d '\n' < "$PUBLIC/index.html" | grep -oE '<section class="?hero[" >].*' | sed 's#</section>.*##')
 [ -n "$hero" ] || { echo "home hero not found" >&2; exit 1; }
+printf '%s' "$hero" | grep -q '<h1>Build and simulate game AI behavior trees</h1>' || { echo "hero headline must state the job" >&2; exit 1; }
 if printf '%s' "$hero" | grep -q '#/signup'; then echo "hero must not link to sign-up" >&2; exit 1; fi
 
 # the builder bundle ships the copy and download controls
