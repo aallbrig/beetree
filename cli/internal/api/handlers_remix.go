@@ -32,6 +32,16 @@ func (s *Server) withLineageState(r *http.Request, l *Lineage) *Lineage {
 	return &out
 }
 
+// remixError is a failed remix with the HTTP status and code the REST route reports.
+type remixError struct {
+	status int
+	code   string
+	msg    string
+	wait   int
+}
+
+func (e *remixError) Error() string { return e.msg }
+
 // remixTree copies a public tree into the caller's account as a private tree
 // that records where it came from.
 func (s *Server) remixTree(w http.ResponseWriter, r *http.Request) {
@@ -39,15 +49,29 @@ func (s *Server) remixTree(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	orig, err := s.Store.GetTree(r.Context(), r.PathValue("id"))
-	if err != nil || orig.Visibility != VisibilityPublic {
-		writeErr(w, http.StatusNotFound, "not_found", "not found")
+	t, err := s.remixFor(r, c, r.PathValue("id"))
+	if err != nil {
+		if re, ok := err.(*remixError); ok {
+			if re.wait > 0 {
+				w.Header().Set("Retry-After", retryAfter(re.wait))
+			}
+			writeErr(w, re.status, re.code, re.msg)
+			return
+		}
+		s.storeErr(w, err)
 		return
 	}
+	writeJSON(w, http.StatusCreated, t)
+}
+
+// remixFor makes the copy for the REST route and the MCP remix_tree tool.
+func (s *Server) remixFor(r *http.Request, c Claims, id string) (Tree, error) {
+	orig, err := s.Store.GetTree(r.Context(), id)
+	if err != nil || orig.Visibility != VisibilityPublic {
+		return Tree{}, &remixError{status: http.StatusNotFound, code: "not_found", msg: "not found"}
+	}
 	if ok, wait := s.remixLimiter.allow(c.Sub, s.Now(), RemixLimit, RemixWindow); !ok {
-		w.Header().Set("Retry-After", retryAfter(wait))
-		writeErr(w, http.StatusTooManyRequests, "rate_limited", "remix limit reached; try again later")
-		return
+		return Tree{}, &remixError{status: http.StatusTooManyRequests, code: "rate_limited", msg: "remix limit reached; try again later", wait: wait}
 	}
 	now := s.stamp()
 	ref := LineageRef{Kind: "tree", ID: orig.ID, Title: orig.Name, OwnerID: orig.OwnerID, OwnerName: orig.OwnerName, At: now}
@@ -68,9 +92,8 @@ func (s *Server) remixTree(w http.ResponseWriter, r *http.Request) {
 		RemixedFrom: &Lineage{LineageRef: ref, Ancestors: ancestors},
 	}
 	if err := s.Store.PutTree(r.Context(), t); err != nil {
-		s.storeErr(w, err)
-		return
+		return Tree{}, err
 	}
 	t.RemixedFrom = s.withLineageState(r, t.RemixedFrom)
-	writeJSON(w, http.StatusCreated, t)
+	return t, nil
 }

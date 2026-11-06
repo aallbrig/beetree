@@ -57,6 +57,7 @@ Every tool needs a valid API key. Tools marked (account) also act on your accoun
 | `create_tree` (account) | Save a tree to your account |
 | `update_tree` (account) | Replace the spec of a tree you own; omitted fields keep their values |
 | `delete_tree` (account) | Permanently delete a tree you own |
+| `remix_tree` (account) | Copy a public tree into your account as a private "(Remix)" tree that keeps credit to the original author; 20 per day |
 | `get_scene` | Fetch an Explore scene by id (private scenes only for their owner) |
 | `list_my_scenes` (account) | List your Explore scenes |
 | `get_template` | List starter templates, or fetch one by name (for clients without resource support) |
