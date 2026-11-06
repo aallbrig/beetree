@@ -57,6 +57,11 @@ for c in copy-yaml download-yaml copy-code download-code; do
   grep -rqF "$c" "$PUBLIC/app/assets" || { echo "builder is missing the $c control" >&2; exit 1; }
 done
 
+# the dashboard ships tree search, sort and rename
+for c in tree-search tree-sort 'Renamed.'; do
+  grep -rqF "$c" "$PUBLIC/app/assets" || { echo "dashboard is missing the $c control" >&2; exit 1; }
+done
+
 # every root-relative href in the built HTML must resolve (the /app/ SPA owns its #/ routes)
 bad=0
 while IFS= read -r link; do

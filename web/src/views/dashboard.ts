@@ -1,6 +1,8 @@
 import { api } from '../api';
 import { formatDate, h, toast } from '../dom';
 import { type Ctx } from '../router';
+import type { Tree } from '../types';
+import { filterSortTrees, renameTree, type TreeSort } from '../treelist';
 
 export async function dashboardView(ctx: Ctx): Promise<void> {
   const [me, stats, trees, scenes] = await Promise.all([
@@ -12,23 +14,55 @@ export async function dashboardView(ctx: Ctx): Promise<void> {
   const stat = (label: string, n: number): HTMLElement =>
     h('div', { class: 'card stat' }, h('b', {}, n), h('span', { class: 'muted small' }, label));
 
-  const rows = trees.items.map((t) => {
+  const tbody = h('tbody', {});
+  const search = h('input', {
+    type: 'search',
+    id: 'tree-search',
+    placeholder: 'Search by name or tag',
+    'aria-label': 'Search your trees',
+  });
+  const sortSel = h(
+    'select',
+    { id: 'tree-sort', 'aria-label': 'Sort your trees' },
+    h('option', { value: 'recent' }, 'Recently updated'),
+    h('option', { value: 'name' }, 'Name'),
+    h('option', { value: 'likes' }, 'Most liked'),
+  );
+
+  const makeRow = (t: Tree): HTMLElement => {
     const del = h('button', { class: 'btn small danger', type: 'button' }, 'Delete');
     del.addEventListener('click', () => {
       if (!confirm(`Delete "${t.name}"? This cannot be undone.`)) return;
       api.deleteTree(t.id).then(
         () => {
           toast('Deleted.');
-          document.getElementById(`row-${t.id}`)?.remove();
+          trees.items = trees.items.filter((x) => x.id !== t.id);
+          refresh();
         },
         () => {
           toast('Could not delete.', 'err');
         },
       );
     });
+    const rename = h('button', { class: 'btn small', type: 'button' }, 'Rename');
+    rename.addEventListener('click', () => {
+      const next = prompt('New name', t.name);
+      if (next === null || next.trim() === '' || next.trim() === t.name) return;
+      renameTree(api, t.id, next).then(
+        (saved) => {
+          t.name = saved.name;
+          t.updatedAt = saved.updatedAt;
+          toast('Renamed.');
+          refresh();
+        },
+        () => {
+          toast('Could not rename.', 'err');
+        },
+      );
+    });
     return h(
       'tr',
-      { id: `row-${t.id}` },
+      { id: `row-${t.id}`, class: 'tree-row' },
       h('td', {}, h('a', { href: `#/tree/${t.id}` }, t.name)),
       h('td', {}, t.visibility === 'public' ? 'Public' : 'Private'),
       h('td', {}, `${t.likeCount} likes`),
@@ -38,10 +72,22 @@ export async function dashboardView(ctx: Ctx): Promise<void> {
         'td',
         { class: 'row' },
         h('a', { class: 'btn small', href: `#/builder/${t.id}` }, 'Edit'),
+        rename,
         del,
       ),
     );
-  });
+  };
+  const refresh = (): void => {
+    const shown = filterSortTrees(trees.items, search.value, sortSel.value as TreeSort);
+    tbody.replaceChildren(
+      ...(shown.length
+        ? shown.map(makeRow)
+        : [h('tr', {}, h('td', { colspan: '6', class: 'muted' }, 'No trees match.'))]),
+    );
+  };
+  search.addEventListener('input', refresh);
+  sortSel.addEventListener('change', refresh);
+  refresh();
 
   ctx.root.append(
     h(
@@ -68,6 +114,7 @@ export async function dashboardView(ctx: Ctx): Promise<void> {
       ? h(
           'div',
           { class: 'card', style: 'overflow:auto' },
+          h('div', { class: 'row', style: 'margin-bottom:12px' }, search, sortSel),
           h(
             'table',
             {},
@@ -82,7 +129,7 @@ export async function dashboardView(ctx: Ctx): Promise<void> {
                 ),
               ),
             ),
-            h('tbody', {}, ...rows),
+            tbody,
           ),
         )
       : h(
