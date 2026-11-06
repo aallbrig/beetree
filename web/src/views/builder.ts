@@ -354,9 +354,9 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     const found = findProblems(spec.tree);
     ol.setProblems(found);
     const issues = found.map((p) => p.message);
-    status.textContent = issues.length
-      ? `${issues[0] ?? ''}${issues.length > 1 ? ` (+${issues.length - 1} more)` : ''}`
-      : `${countNodes(spec.tree)} nodes`;
+    clear(status);
+    if (issues.length) status.append(...issues.map((m) => h('div', {}, m)));
+    else status.textContent = `${countNodes(spec.tree)} nodes`;
     status.style.color = issues.length ? 'var(--warn)' : 'var(--muted)';
     agent?.setSpec(spec.tree);
     if (walker) {
