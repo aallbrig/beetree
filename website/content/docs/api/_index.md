@@ -55,6 +55,29 @@ Render, simulate and generate use the same body shape:
 | `POST /v1/simulate` | `overrides`: `{"node_name": "FAILURE"}` | `{status, trace, steps}` |
 | `POST /v1/generate` | `engine`: `unity` `unreal` `godot` | `{files: [{path, content, isStub}]}` |
 
+## Step through a simulation
+
+`POST /v1/simulate` evaluates a whole tree with fixed overrides. To answer leaf by leaf instead, call `POST /v1/simulate/step`. It is stateless: send the spec and every answer so far (empty to start). While `done` is `false`, `pending` is the leaf that needs a status; append `SUCCESS`, `FAILURE` or `RUNNING` to `answers` and call again. The last response carries `status` and `trace`.
+
+A patrol tree with a `has_waypoint` condition and a `move` action under a sequence:
+
+```bash
+# 1. start
+curl -s https://api.beetreecraft.com/v1/simulate/step -H 'content-type: application/json' \
+  -d '{"spec":"<yaml>","answers":[]}'
+# {"done":false,"pending":{"node":"has_waypoint","type":"condition"},"answered":0,...}
+
+# 2. has_waypoint succeeded
+curl -s ... -d '{"spec":"<yaml>","answers":["SUCCESS"]}'
+# {"done":false,"pending":{"node":"move","type":"action"},"answered":1,...}
+
+# 3. move failed
+curl -s ... -d '{"spec":"<yaml>","answers":["SUCCESS","FAILURE"]}'
+# {"done":true,"answered":2,"status":"FAILURE","trace":"enter root\n  ...","steps":[...]}
+```
+
+MCP clients get the same flow as two tools: `simulate_start` (`spec`) returns the first pending leaf, and `simulate_answer` (`spec`, `status`, plus earlier `answers`) returns the next one or the final result.
+
 Browse public trees: `GET /v1/trees?q=patrol&sort=popular`.
 
 ## Authentication
