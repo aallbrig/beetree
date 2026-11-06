@@ -1,0 +1,18 @@
+{{ define "main" }}
+<div class="wrap"><article class="prose">
+<h1>{{ .Title }}</h1>
+{{ .Content }}
+{{ $items := site.Data.resources.items }}
+{{ range $kind := slice "Book" "Chapter" "Article" "Paper" "Talk" "Tool" }}
+  {{ $group := where $items "kind" $kind }}
+  {{ if $group }}
+  <h2>{{ $kind }}s</h2>
+  <ul class="resources">
+    {{ range $group }}
+    <li><a href="{{ .url }}">{{ .title }}</a>{{ with .author }}, {{ . }}{{ end }}{{ with .year }} ({{ . }}){{ end }}. {{ .summary }}</li>
+    {{ end }}
+  </ul>
+  {{ end }}
+{{ end }}
+</article></div>
+{{ end }}

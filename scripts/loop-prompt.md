@@ -20,4 +20,6 @@ Take the backlog only from the Backlog section below. When you open an issue you
 6. **Ship.** Branch, commit (conventional commits, trailers from the harness), push, open a PR whose `## Summary` is written for a reader who was away (it becomes the release notes). Wait until `gh pr checks` lists the checks, then `task pr:merge -- N`, `git checkout main && git pull`, and `task release -- vX.Y.Z` with the next free patch (`gh release list --limit 1`; another run may have released meanwhile). Chain with `&&` under `set -o pipefail`. Close the issue you finished with a comment naming the release.
 7. **Exit.** The deploy runs in CI; do not wait for it. Finish with one paragraph: the version released, what a visitor can now do, and the gate that proves it.
 
+Focus `research` means: invoke `find-resources` and ship the vetted additions it finds as the iteration's release.
+
 Keep an iteration to one releasable feature. The UI uses no emojis. Never commit secrets, API keys, account IDs or personal data (`CLAUDE.md`, Public Repo Hygiene). Infrastructure, IAM and DNS changes go through `task deploy:backend` with `DNS=true WWW=true`.

@@ -100,7 +100,8 @@ function renderNav(): void {
     group('Learn', [
       doc('/learn/behavior-trees/', 'Behavior trees & history'),
       doc('/learn/building-blocks/', 'Building blocks'),
-      doc('/references/', 'References'),
+      doc('/resources/', 'Resources'),
+      doc('/references/', 'References and credits'),
     ]),
     group('Docs', [
       doc('/docs/', 'Overview'),
