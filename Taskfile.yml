@@ -229,6 +229,7 @@ tasks:
         scripts/check_doc_trees.sh
         scripts/check_doc_tutorial.sh
         scripts/check_home_cli.sh
+        scripts/check_threat_model.sh
 
   site:vendor:
     desc: Copy Swagger UI assets into the Hugo static dir (generated, not committed)
