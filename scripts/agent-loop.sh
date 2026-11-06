@@ -62,7 +62,8 @@ sync_clone() {
 # reach the agent: anyone can open an issue, so their text is untrusted input.
 backlog() {
   gh issue list --label loop-idea --state open --author "$TRUSTED" --limit 30 \
-    --json number,title,body -q '.[] | "#\(.number) \(.title)\n\(.body | .[0:600])\n"' 2>/dev/null || true
+    --json number,title,body -q '.[] | "#\(.number) \(.title)\n\(.body | .[0:600])\n"' 2>/dev/null \
+    | sed -E 's#</?[[:space:]]*backlog[[:space:]]*>#[backlog tag removed]#Ig' || true # a body cannot close the data block early
 }
 
 build_prompt() {

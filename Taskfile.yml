@@ -314,6 +314,7 @@ tasks:
     desc: "Check the loop's prompt-injection defenses"
     cmds:
       - scripts/check_loop.sh
+      - scripts/test_loop_backlog.sh
       - scripts/check_security_audit.sh
 
   agent:loop:start:
