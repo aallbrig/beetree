@@ -8,7 +8,7 @@ The `beetree` CLI works on local `.beetree.yaml` files. It needs no account and 
 
 ## Install
 
-Download a binary for Linux, macOS or Windows from the [latest release](https://github.com/aallbrig/beetreecraft/releases/latest), put it on your `PATH`, and check it:
+Download a binary for Linux, macOS or Windows from the {{< repolink path="releases/latest" >}}latest release{{< /repolink >}}, put it on your `PATH`, and check it:
 
 ```bash
 beetree version
@@ -16,10 +16,7 @@ beetree version
 
 Or build from source (needs Go):
 
-```bash
-git clone https://github.com/aallbrig/beetreecraft
-cd beetreecraft && make install
-```
+{{< repoclone >}}
 
 ## Your first tree
 

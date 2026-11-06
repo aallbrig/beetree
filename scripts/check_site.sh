@@ -100,7 +100,25 @@ grep -E "^route\('/builder'," web/src/main.ts | grep -vq 'private' || { echo "th
 printf '%s' "$hero" | grep -Eq 'href="?/app/#/builder[" >]' || { echo "hero must link to the builder without an account" >&2; exit 1; }
 grep -rqF "Your draft is kept" "$PUBLIC/app/assets" || { echo "builder must keep the draft when asking anonymous visitors to sign in" >&2; exit 1; }
 grep -q 'data-copy' website/static/js/site.js || { echo "site.js must handle data-copy buttons" >&2; exit 1; }
-grep -q 'git clone https://github.com/aallbrig/beetreecraft' website/content/docs/cli.md || { echo "hero install command drifted from docs/cli" >&2; exit 1; }
+grep -q 'repoclone' website/content/docs/cli.md || { echo "docs/cli must show the clone command via the repoclone shortcode" >&2; exit 1; }
+grep -q 'git clone https://github.com/aallbrig/beetreecraft' "$PUBLIC/docs/cli/index.html" || { echo "hero install command drifted from docs/cli" >&2; exit 1; }
+
+# the repository URL is set once (hugo params.repoUrl, web/src/repo.ts) and nothing else hard-codes it
+REPO_URL_SET=$(sed -n "s/^ *repoUrl = '\\(.*\\)'$/\\1/p" website/hugo.toml)
+[ -n "$REPO_URL_SET" ] || { echo "website/hugo.toml must set params.repoUrl" >&2; exit 1; }
+grep -qF "REPO_URL = '$REPO_URL_SET'" web/src/repo.ts || { echo "web/src/repo.ts REPO_URL must equal params.repoUrl" >&2; exit 1; }
+hard=$(git grep -nF "$REPO_URL_SET" -- website/layouts website/content web/src ':!web/src/repo.ts' ':!web/src/repo.test.ts' || true)
+[ -z "$hard" ] || { echo "hard-coded repository url (use params.repoUrl or REPO_URL):" >&2; echo "$hard" >&2; exit 1; }
+# with the param empty, the built site carries no repository links
+EMPTY="$(mktemp -d)"
+(cd website && HUGO_PARAMS_REPOURL= hugo --quiet --destination "$EMPTY" >/dev/null) || { echo "site must build with an empty repoUrl" >&2; exit 1; }
+if grep -rqF "$REPO_URL_SET" "$EMPTY" --include=*.html; then
+  echo "empty repoUrl still leaves repository links:" >&2
+  grep -rlF "$REPO_URL_SET" "$EMPTY" --include=*.html >&2
+  rm -rf "$EMPTY"
+  exit 1
+fi
+rm -rf "$EMPTY"
 
 # the builder bundle ships the copy and download controls
 for c in copy-yaml download-yaml copy-code download-code; do

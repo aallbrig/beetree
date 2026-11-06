@@ -58,7 +58,7 @@
   </header>
   <main id="main">{{ block "main" . }}{{ end }}</main>
   <footer class="foot">
-    <p>BeeTreeCraft · <a href="https://github.com/aallbrig/beetreecraft">Source on GitHub</a> · <a href="/references/">References and credits</a> · <a href="https://github.com/aallbrig/beetreecraft/releases">Changelog</a> · <a href="/privacy/">Privacy</a> · <a href="https://github.com/aallbrig/beetreecraft/security/policy">Security</a> · <a href="/about/">About</a> · <a href="https://github.com/aallbrig/beetreecraft/issues/new">Contact</a> · <a href="/site-map/">Site map</a> (<a href="/sitemap.xml">XML</a>) · <button id="theme-toggle" class="linklike" type="button">Dark mode</button>{{ with getenv "HUGO_SITE_VERSION" }} · <a class="ver" href="https://github.com/aallbrig/beetreecraft/releases/tag/{{ . }}">{{ . }}</a>{{ end }}</p>
+    <p>BeeTreeCraft · {{ with site.Params.repoUrl }}<a href="{{ . }}">Source on GitHub</a> · {{ end }}<a href="/references/">References and credits</a> · {{ with site.Params.repoUrl }}<a href="{{ . }}/releases">Changelog</a> · {{ end }}<a href="/privacy/">Privacy</a> · {{ with site.Params.repoUrl }}<a href="{{ . }}/security/policy">Security</a> · {{ end }}<a href="/about/">About</a> · {{ with site.Params.repoUrl }}<a href="{{ . }}/issues/new">Contact</a> · {{ end }}<a href="/site-map/">Site map</a> (<a href="/sitemap.xml">XML</a>) · <button id="theme-toggle" class="linklike" type="button">Dark mode</button>{{ with getenv "HUGO_SITE_VERSION" }} · {{ if site.Params.repoUrl }}<a class="ver" href="{{ site.Params.repoUrl }}/releases/tag/{{ . }}">{{ . }}</a>{{ else }}<span class="ver">{{ . }}</span>{{ end }}{{ end }}</p>
   </footer>
 </body>
 </html>
