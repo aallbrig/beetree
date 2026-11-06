@@ -8,3 +8,4 @@ https://people.kth.se/~petter/Publications/IROS14_co.pdf | unscored | PDF text n
 https://www.datalearner.com/academic/journal-papers/0957-4174/volumes-and-issues/359/paper-detail/15872 | unscored | page returned 404; Agis et al. event-driven BT extension, retry via publisher or CONICET repository
 https://cppcon2023.sched.com/event/1Qtdf/behaviortreecpp-task-planning-for-robots-and-virtual-agents | unscored | Faconti CppCon 2023 talk; only the event page is readable and free video access is unconfirmed
 https://ceur-ws.org/Vol-3082/paper13.pdf | unscored | PDF text not extractable; retry via another mirror
+https://gdcvault.com/play/1012416/Behavior-Trees-Three-Ways-of | unscored | GDC 2010 "Three Ways of Cultivating Strong AI"; free video access unconfirmed, only the description is readable
