@@ -46,7 +46,7 @@ func ParseJSON(data []byte) (*model.TreeSpec, error) {
 func ParseFile(path string) (*model.TreeSpec, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("reading file %s: %w", path, err)
+		return nil, fmt.Errorf("reading file %s: %w%s", path, err, readHint(path, err))
 	}
 
 	ext := fileExtension(path)
@@ -75,6 +75,17 @@ func fileExtension(path string) string {
 		if path[i] == '.' {
 			return path[i:]
 		}
+	}
+	return ""
+}
+
+// readHint returns a next-step suggestion for common file mistakes.
+func readHint(path string, err error) string {
+	if errors.Is(err, os.ErrNotExist) {
+		return "\n  hint: check the path; run `beetree new` to create a tree or see examples/*.beetree.yaml"
+	}
+	if info, statErr := os.Stat(path); statErr == nil && info.IsDir() {
+		return "\n  hint: " + path + " is a directory; pass a .beetree.yaml file inside it"
 	}
 	return ""
 }
