@@ -274,6 +274,24 @@ paths:
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
         '429': {$ref: '#/components/responses/Error'}
+  /v1/trees/{id}/remix:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    post:
+      summary: Remix a public tree into your account
+      description: Copies a public tree as a new private tree named with a Remix suffix. The copy records remixedFrom (kind, id, title, ownerId, ownerName, at, ancestors) frozen at copy time. On reads, remixedFrom.state is public, private or deleted according to the original now. Private trees answer 404. Limit 20 remixes per user per day.
+      operationId: remixTree
+      tags: [Trees]
+      security: [{bearerAuth: []}, {apiKeyAuth: []}]
+      responses:
+        '201':
+          description: The private copy
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Tree'}
+        '401': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
+        '429': {$ref: '#/components/responses/Error'}
   /v1/trees/{id}/like:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -883,8 +901,31 @@ components:
         likeCount: {type: integer}
         commentCount: {type: integer}
         likedByMe: {type: boolean}
+        remixedFrom: {$ref: '#/components/schemas/Lineage'}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
+    Lineage:
+      type: object
+      description: Where a remix came from, frozen when it was copied. state is derived on read.
+      properties:
+        kind: {type: string, enum: [tree]}
+        id: {type: string}
+        title: {type: string}
+        ownerId: {type: string}
+        ownerName: {type: string}
+        at: {type: string, format: date-time}
+        state: {type: string, enum: [public, private, deleted]}
+        ancestors:
+          type: array
+          items:
+            type: object
+            properties:
+              kind: {type: string}
+              id: {type: string}
+              title: {type: string}
+              ownerId: {type: string}
+              ownerName: {type: string}
+              at: {type: string, format: date-time}
     Comment:
       type: object
       properties:

@@ -169,6 +169,7 @@ var routeScopes = map[string]string{
 	"GET /v1/trees/{id}":                         "trees:read",
 	"PUT /v1/trees/{id}":                         "trees:write",
 	"DELETE /v1/trees/{id}":                      "trees:delete",
+	"POST /v1/trees/{id}/remix":                  "trees:write",
 	"PUT /v1/trees/{id}/like":                    "trees:write",
 	"DELETE /v1/trees/{id}/like":                 "trees:write",
 	"GET /v1/trees/{id}/comments":                "trees:read",

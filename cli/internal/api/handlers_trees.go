@@ -231,6 +231,7 @@ func (s *Server) getTree(w http.ResponseWriter, r *http.Request) {
 	if c, ok := ClaimsFrom(r.Context()); ok {
 		t.LikedByMe, _ = s.Store.HasLiked(r.Context(), t.ID, c.Sub)
 	}
+	t.RemixedFrom = s.withLineageState(r, t.RemixedFrom)
 	writeJSON(w, http.StatusOK, t)
 }
 
