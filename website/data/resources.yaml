@@ -61,3 +61,17 @@ items:
     year: "2021"
     summary: "Game AI Pro Online Edition 2021, chapter 13. Data-driven trees and template techniques for reuse."
     score: 11
+  - title: "Handling Concurrency in Behavior Trees"
+    url: "https://arxiv.org/abs/2110.11813"
+    kind: Paper
+    year: "2021"
+    author: "Michele Colledanchise and Lorenzo Natale"
+    summary: "Shows why the parallel node gives unpredictable results when children act on shared resources, and introduces two new node types that make concurrent behavior predictable. Backed by simulation experiments, a real-robot test and open-source code."
+    score: 14
+  - title: "A Survey of Behavior Trees in Robotics and AI"
+    url: "https://arxiv.org/abs/2005.05842"
+    kind: Paper
+    year: "2020"
+    author: "Matteo Iovino, Edvards Scukins, Jonathan Styrud, Petter Ögren and Christian Smith"
+    summary: "Surveys behavior tree research by method, application area and contribution, from game AI to manipulation and drones, and ends with open research challenges. A good map of the field after the introductory book."
+    score: 12
