@@ -1,6 +1,7 @@
 import { api, ApiError } from '../api';
 import { outline, type Outline } from '../components/outline';
 import { clear, h, toast } from '../dom';
+import { History } from '../history';
 import { navigate, type Cleanup, type Ctx } from '../router';
 import { World, type Agent } from '../scene/world';
 import {
@@ -155,10 +156,20 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     { class: 'btn small', type: 'button', 'aria-label': 'Move down' },
     '↓',
   );
+  const undoBtn = h(
+    'button',
+    { class: 'btn small', type: 'button', 'aria-label': 'Undo', title: 'Undo (Ctrl+Z)' },
+    'Undo',
+  );
+  const redoBtn = h(
+    'button',
+    { class: 'btn small', type: 'button', 'aria-label': 'Redo', title: 'Redo (Ctrl+Shift+Z)' },
+    'Redo',
+  );
   const design = h(
     'div',
     { class: 'stack' },
-    h('div', { class: 'row' }, typeSel, addBtn, rmBtn, upBtn, downBtn),
+    h('div', { class: 'row' }, typeSel, addBtn, rmBtn, upBtn, downBtn, undoBtn, redoBtn),
     outlineHost,
     propsHost,
   );
@@ -263,8 +274,13 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     }
   }
 
+  const history = new History(stringifySpec(spec));
+
   function refresh(): void {
     syncMeta();
+    history.record(stringifySpec(spec));
+    undoBtn.disabled = !history.canUndo;
+    redoBtn.disabled = !history.canRedo;
     ol = outline(spec.tree, (p) => {
       selected = p;
       refresh();
@@ -392,6 +408,34 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
       yamlErr.textContent = e instanceof Error ? e.message : 'Invalid YAML.';
     }
   }
+
+  function restore(snapshot: string | undefined): void {
+    if (snapshot === undefined) return;
+    spec = parseSpec(snapshot);
+    nameIn.value = spec.metadata.name;
+    descIn.value = spec.metadata.description ?? '';
+    tagsIn.value = (spec.metadata.tags ?? []).join(', ');
+    while (selected.length > 0 && !getNode(spec.tree, selected)) selected = selected.slice(0, -1);
+    refresh();
+  }
+  undoBtn.addEventListener('click', () => {
+    restore(history.undo());
+  });
+  redoBtn.addEventListener('click', () => {
+    restore(history.redo());
+  });
+  const onKey = (e: KeyboardEvent): void => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    const t = e.target;
+    if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) return;
+    if (t instanceof HTMLSelectElement) return;
+    const k = e.key.toLowerCase();
+    if (k === 'z') restore(e.shiftKey ? history.redo() : history.undo());
+    else if (k === 'y') restore(history.redo());
+    else return;
+    e.preventDefault();
+  };
+  document.addEventListener('keydown', onKey);
 
   addBtn.addEventListener('click', () => {
     const type = typeSel.value as NodeType;
@@ -525,6 +569,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   }, 120);
   return () => {
     clearInterval(timer);
+    document.removeEventListener('keydown', onKey);
     world?.dispose();
   };
 }
