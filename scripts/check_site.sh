@@ -52,6 +52,11 @@ hero=$(tr -d '\n' < "$PUBLIC/index.html" | grep -oE '<section class="?hero[" >].
 [ -n "$hero" ] || { echo "home hero not found" >&2; exit 1; }
 if printf '%s' "$hero" | grep -q '#/signup'; then echo "hero must not link to sign-up" >&2; exit 1; fi
 
+# the builder bundle ships the copy and download controls
+for c in copy-yaml download-yaml copy-code download-code; do
+  grep -rqF "$c" "$PUBLIC/app/assets" || { echo "builder is missing the $c control" >&2; exit 1; }
+done
+
 # every root-relative href in the built HTML must resolve (the /app/ SPA owns its #/ routes)
 bad=0
 while IFS= read -r link; do
