@@ -1,0 +1,49 @@
+# BeeTree Example: Shieldbearer
+# Blocks from the front: faces the nearest threat and advances
+# Generic combat stand-in for the Explore combat scene. Fewer than 25 nodes.
+
+version: "1.0"
+metadata:
+  name: shieldbearer
+  description: "Blocks from the front: faces the nearest threat and advances"
+  author: beetree-examples
+  tags:
+    - combat
+    - explore-scene
+
+blackboard:
+  - name: threat
+    type: Entity
+    description: "Nearest enemy"
+  - name: advance_speed
+    type: float
+    default: 0.5
+    description: "Slow, deliberate advance speed"
+
+tree:
+  type: selector
+  name: shieldbearer_root
+  children:
+    - type: sequence
+      name: guard_and_advance
+      children:
+        - type: condition
+          name: has_threat
+          node: HasThreat
+          description: "Is an enemy known?"
+        - type: action
+          name: face_threat
+          node: FaceNearestThreat
+          description: "Turn the shield toward the nearest threat"
+        - type: action
+          name: raise_shield
+          node: RaiseShield
+          description: "Block incoming fire"
+        - type: action
+          name: advance
+          node: AdvanceSlowly
+          description: "Step forward at advance_speed"
+    - type: action
+      name: lower_shield_and_wait
+      node: HoldPosition
+      description: "Idle with the shield down"
