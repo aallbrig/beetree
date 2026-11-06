@@ -236,3 +236,19 @@ func TestMCPToolsRespectScopes(t *testing.T) {
 	assert.True(t, isErr)
 	assert.Contains(t, text, "trees:delete")
 }
+
+// Every MCP tool that acts on an account must demand a scope, so a limited key
+// cannot reach it by a missing table entry, and must refuse anonymous callers.
+func TestMCPAccountToolsDemandScopeAndSignIn(t *testing.T) {
+	h := newTestServer(t)
+	for _, tl := range mcpTools() {
+		if !tl.needsAuth {
+			continue
+		}
+		assert.NotEmpty(t, toolScopes[tl.Name], "account tool %s must require a scope", tl.Name)
+		_, out := rpc(h, "", 1, "tools/call", map[string]any{"name": tl.Name, "arguments": map[string]any{"id": "x", "spec": goodSpec}})
+		text, isErr := toolResult(t, out)
+		assert.True(t, isErr, "anonymous call to %s must be refused", tl.Name)
+		assert.Contains(t, text, "signed-in user", tl.Name)
+	}
+}
