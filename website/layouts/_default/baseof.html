@@ -44,6 +44,7 @@
             <a href="/docs/trees/">The tree format</a>
             <a href="/docs/cli/">CLI</a>
             <a href="/docs/api/">REST API</a>
+            <a href="/docs/api/reference/">API explorer (Swagger)</a>
             <a href="/docs/mcp/">MCP server</a>
           </div>
         </div>
@@ -63,7 +64,7 @@
   </header>
   <main id="main">{{ block "main" . }}{{ end }}</main>
   <footer class="foot">
-    <p>BeeTreeCraft · <a href="https://github.com/aallbrig/beetreecraft">Source on GitHub</a> · <a href="/references/">References and credits</a> · <a href="/site-map/">Site map</a> (<a href="/sitemap.xml">XML</a>){{ with getenv "HUGO_SITE_VERSION" }} · <small class="ver">{{ . }}</small>{{ end }}</p>
+    <p>BeeTreeCraft · <a href="https://github.com/aallbrig/beetreecraft">Source on GitHub</a> · <a href="/references/">References and credits</a> · <a href="/site-map/">Site map</a> (<a href="/sitemap.xml">XML</a>){{ with getenv "HUGO_SITE_VERSION" }} · <a class="ver" href="https://github.com/aallbrig/beetreecraft/releases/tag/{{ . }}">{{ . }}</a>{{ end }}</p>
   </footer>
 </body>
 </html>

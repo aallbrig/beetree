@@ -50,7 +50,15 @@ app.append(nav, main, foot);
 void fetch('/version.json')
   .then((r) => r.json() as Promise<{ version?: string }>)
   .then((v) => {
-    if (v.version) version.textContent = `· ${v.version}`;
+    if (!v.version) return;
+    version.textContent = '· ';
+    version.append(
+      h(
+        'a',
+        { href: `https://github.com/aallbrig/beetreecraft/releases/tag/${v.version}` },
+        v.version,
+      ),
+    );
   })
   .catch(() => undefined);
 
@@ -110,6 +118,7 @@ function renderNav(): void {
       doc('/docs/trees/', 'The tree format'),
       doc('/docs/cli/', 'CLI'),
       doc('/docs/api/', 'REST API'),
+      doc('/docs/api/reference/', 'API explorer (Swagger)'),
       doc('/docs/mcp/', 'MCP server'),
     ]),
     group('Community', [l('/community', 'Community trees'), l('/forum', 'Forum')]),

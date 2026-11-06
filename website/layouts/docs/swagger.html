@@ -2,7 +2,7 @@
 {{ define "main" }}
 <div class="wrap">
   <h1>{{ .Title }}</h1>
-  <p class="muted">Interactive reference for <code>{{ site.Params.apiUrl }}</code>. Use <b>Authorize</b> with a token from your <a href="/app/#/profile">profile page</a> to try authenticated calls. Raw spec: <a href="{{ site.Params.apiUrl }}/v1/openapi.json">openapi.json</a>.</p>
+  <p class="muted">Interactive reference for <code>{{ site.Params.apiUrl }}</code>. Every call except health and the public showcase needs an API key. Create one on your <a href="/app/#/profile">profile page</a>, press <b>Authorize</b>, and paste it under <code>apiKeyAuth</code>. Raw spec: <a href="{{ site.Params.apiUrl }}/v1/openapi.json">openapi.json</a>.</p>
   <div id="swagger-ui" data-spec="{{ site.Params.apiUrl }}/v1/openapi.json"></div>
 </div>
 <script src="/vendor/swagger/swagger-ui-bundle.js"></script>
