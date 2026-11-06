@@ -284,6 +284,30 @@ export function rename(root: NodeSpec, path: Path, name: string): string | undef
   return undefined;
 }
 
+export const PARALLEL_POLICIES = ['require_all', 'require_one'] as const;
+export type PolicyKey = 'success_policy' | 'failure_policy';
+
+/** Set or clear (empty value) a parallel node's success or failure policy. Returns an error message or undefined. */
+export function setPolicy(
+  root: NodeSpec,
+  path: Path,
+  key: PolicyKey,
+  value: string,
+): string | undefined {
+  const node = getNode(root, path);
+  if (!node) return 'node not found';
+  if (node.type !== 'parallel') return 'only parallel nodes have policies';
+  if (value === '') {
+    if (key === 'success_policy') delete node.success_policy;
+    else delete node.failure_policy;
+    return undefined;
+  }
+  if (!(PARALLEL_POLICIES as readonly string[]).includes(value))
+    return `policy must be one of ${PARALLEL_POLICIES.join(', ')}`;
+  node[key] = value;
+  return undefined;
+}
+
 export function* walk(n: NodeSpec, path: Path = []): Generator<[NodeSpec, Path]> {
   yield [n, path];
   for (let i = 0; i < (n.children ?? []).length; i++) {

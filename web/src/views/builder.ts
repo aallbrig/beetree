@@ -24,6 +24,8 @@ import {
   indent,
   outdent,
   rename,
+  PARALLEL_POLICIES,
+  setPolicy,
   findProblems,
   stringifySpec,
   parseValidatorError,
@@ -542,6 +544,25 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
         refresh();
       });
       propsHost.append(h('div', {}, h('label', {}, 'Decorator'), dec));
+    }
+    if (node.type === 'parallel') {
+      for (const [key, label] of [
+        ['success_policy', 'Success policy'],
+        ['failure_policy', 'Failure policy'],
+      ] as const) {
+        const sel = h(
+          'select',
+          { 'aria-label': label },
+          h('option', { value: '' }, '(default)'),
+          ...PARALLEL_POLICIES.map((d) => h('option', { value: d }, d)),
+        );
+        sel.value = node[key] ?? '';
+        sel.addEventListener('change', () => {
+          setPolicy(spec.tree, selected, key, sel.value);
+          refresh();
+        });
+        propsHost.append(h('div', {}, h('label', {}, label), sel));
+      }
     }
     const desc = h('input', {
       type: 'text',
