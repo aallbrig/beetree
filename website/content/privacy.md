@@ -21,6 +21,7 @@ The API stores the following in Amazon DynamoDB:
 - your profile: user id, display name, bio, profile picture choice (one of 100 presets) and creation time (your email is visible only to you)
 - your newsletter choice: whether you agreed to receive BeeTreeCraft news and campaign email, when, and where you chose (sign-up or profile). It is off unless you tick it, it is never shown to other people, and you can untick it any time on your profile page. No marketing platform is connected yet; when one is, only people who opted in will be added
 - the trees you save, with their public or private setting
+- remixes: when you remix a public tree, the copy records which tree it came from, the original's title, its author's id and display name, and the time. That credit is kept for as long as the copy exists, even if the original is later made private or deleted or its author changes their name; a deleted original shows no title
 - your likes, comments and forum posts, shown with your display name
 - API keys you create: only a SHA-256 hash and the first eight characters are kept, so the full key cannot be recovered
 

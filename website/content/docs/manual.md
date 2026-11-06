@@ -139,6 +139,7 @@ The site opens in light mode. Use the **Dark mode** / **Light mode** button in t
 
 - Set a tree's visibility to **Public** and it appears in [Community](/app/#/community), where anyone can read, like and comment on it.
 - Open any community tree and press **Fork in builder** to start your own copy.
+- Press **Remix** on a public tree to copy it into your private trees. The copy is named "(Remix)" and shows a history line, "Remixed from ... by ...", that keeps credit to the original author even if the original later goes private or is deleted. Edit the copy as you like; you can make it public only after it differs from the original. You can remix 20 trees a day, and the same action is available over the [REST API](/docs/api/) and the `remix_tree` tool of the [MCP server](/docs/mcp/).
 - Join the [Forum](/app/#/forum) to ask for help or show off your work. The forum is plain text only: no links, images or formatting, and line breaks are kept.
 - Your [Dashboard](/app/#/dashboard) shows your trees with their likes and comments, plus your forum activity.
 
