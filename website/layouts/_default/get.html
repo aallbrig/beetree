@@ -1,0 +1,45 @@
+{{ define "main" }}<div class="wrap"><article class="prose">
+<h1>{{ .Title }}</h1>
+{{ .Content }}
+
+<h2>Install with one line (Linux and macOS)</h2>
+<div class="install">
+  <code id="get-install-cmd">curl -fsSL https://beetreecraft.com/install.sh | sh</code>
+  <button type="button" class="btn" data-copy="#get-install-cmd" aria-label="Copy the install command">Copy</button>
+</div>
+<p>The script detects your operating system and architecture, downloads the archive listed in <a href="/downloads/latest/latest.json">latest.json</a>, verifies its SHA-256 checksum, and installs <code>beetree</code> to <code>~/.local/bin</code>. It stops without installing if the checksum does not match. Read it first at <a href="/install.sh">/install.sh</a>. Set <code>BEETREE_INSTALL_DIR</code> to install elsewhere, or <code>BEETREE_DRY_RUN=1</code> to see what it would do.</p>
+
+<h2>Download an archive</h2>
+<p id="get-version" class="muted">Loading the latest version...</p>
+<ul id="get-files" class="get-files">
+  <li><a href="/downloads/latest/latest.json">latest.json</a> lists every archive with its checksum.</li>
+</ul>
+
+<h2>Verify a download</h2>
+<ol>
+  <li>Download the archive and <a href="/downloads/latest/SHA256SUMS">SHA256SUMS</a> into the same directory.</li>
+  <li>Linux: <code>sha256sum --ignore-missing -c SHA256SUMS</code>. macOS: <code>shasum -a 256 -c SHA256SUMS --ignore-missing</code>. Windows PowerShell: <code>Get-FileHash beetree_windows_amd64.zip</code> and compare it to the line in SHA256SUMS.</li>
+  <li>Unpack the archive, put <code>beetree</code> on your <code>PATH</code>, and run <code>beetree version</code>.</li>
+</ol>
+<p>Then follow the <a href="/docs/cli/">CLI guide</a>.</p>
+</article></div>
+<script>
+(function () {
+  var list = document.getElementById('get-files'), ver = document.getElementById('get-version');
+  var labels = { linux: 'Linux', darwin: 'macOS', windows: 'Windows' };
+  var archs = { amd64: 'x86-64', arm64: 'ARM64' };
+  if (!window.fetch) { ver.textContent = 'Use latest.json below to find your archive.'; return; }
+  fetch('/downloads/latest/latest.json').then(function (r) { return r.json(); }).then(function (d) {
+    ver.textContent = 'Latest version: ' + d.version;
+    list.textContent = '';
+    d.files.forEach(function (f) {
+      var li = document.createElement('li'), a = document.createElement('a'), c = document.createElement('code');
+      a.className = 'btn'; a.href = f.url; a.textContent = (labels[f.os] || f.os) + ' ' + (archs[f.arch] || f.arch);
+      c.textContent = f.sha256;
+      li.appendChild(a); li.appendChild(document.createTextNode(' SHA-256 '));
+      li.appendChild(c); list.appendChild(li);
+    });
+  }).catch(function () { ver.textContent = 'Could not load the version list; open latest.json directly.'; });
+})();
+</script>
+{{ end }}

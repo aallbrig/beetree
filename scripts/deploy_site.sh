@@ -39,6 +39,8 @@ if [ -n "${DOWNLOADS_DIR:-}" ]; then
   aws s3 cp "$DOWNLOADS_DIR/downloads/latest/latest.json" "s3://$BUCKET/downloads/latest/latest.json" \
     --content-type application/json --cache-control "public, max-age=60" --region "$REGION"
 fi
+aws s3 cp "$PUBLIC/install.sh" "s3://$BUCKET/install.sh" --content-type "text/plain; charset=utf-8" \
+  --cache-control "public, max-age=300" --region "$REGION"
 aws s3 cp "$PUBLIC/app/assets" "s3://$BUCKET/app/assets" --recursive --exclude "*" --include "index-*" \
   --cache-control "public, max-age=31536000, immutable" --region "$REGION"
 

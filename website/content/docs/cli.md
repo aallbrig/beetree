@@ -8,13 +8,14 @@ The `beetree` CLI works on local `.beetree.yaml` files. It needs no account and 
 
 ## Install
 
-Download a binary for Linux, macOS or Windows from the {{< repolink path="releases/latest" >}}latest release{{< /repolink >}}, put it on your `PATH`, and check it:
+On Linux and macOS, one line installs the latest release after checking its checksum:
 
 ```bash
+curl -fsSL https://beetreecraft.com/install.sh | sh
 beetree version
 ```
 
-Or build from source (needs Go):
+Prefer to download by hand, or on Windows? The [Download page](/get/) has an archive per platform and the steps to verify it. You can also build from source (needs Go):
 
 {{< repoclone >}}
 

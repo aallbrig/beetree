@@ -75,6 +75,7 @@ tasks:
     desc: Shell script syntax check
     cmds:
       - bash -n scripts/*.sh
+      - shellcheck website/static/install.sh
 
   format:
     desc: All formatting
@@ -298,6 +299,7 @@ tasks:
     desc: Check the /downloads layout (stable names, latest.json, checksums)
     cmds:
       - scripts/check_downloads.sh
+      - scripts/check_install.sh
 
   loop:check:
     desc: "Check the loop's prompt-injection defenses"
