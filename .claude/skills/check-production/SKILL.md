@@ -9,7 +9,7 @@ Production is healthy when every line below holds. Run them in parallel.
 
 1. `curl -s -o /dev/null -w '%{http_code}' https://beetreecraft.com/` is 200, and so are `/app/`, `/docs/`, `/learn/building-blocks/` and `/schemas/beetree.schema.json`.
 2. `https://beetreecraft.com/version.json` shows the latest release tag (`gh release list --limit 1`). A mismatch means the deploy is behind or failed.
-3. `curl -s https://api.beetreecraft.com/v1/health` returns `{"status":"ok"}`; `/v1/trees` without a key returns 401, never 200 or 5xx.
+3. `curl -s https://api.beetreecraft.com/v1/health` returns `{"status":"ok"}`; `/v1/me` and `POST /v1/trees` without a key return 401 (anonymous `GET /v1/trees` lists public trees and returns 200 by design), never 5xx.
 4. The latest `Release deploy` run (`gh run list --workflow "Release deploy" --limit 1`) is `completed success` or still in progress.
 5. Both `beetreecraft.com` and `www.beetreecraft.com` resolve (`dig +short`). A deploy with `DNS=false` or `WWW=false` deletes those records; `task deploy:backend` defaults to `DNS=true WWW=true`.
 

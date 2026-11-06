@@ -6,7 +6,7 @@ PUBLIC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/website/public"
 
 required=(index.html 404.html docs/index.html docs/manual/index.html docs/cli/index.html
   docs/cli-reference/index.html docs/trees/index.html docs/api/index.html docs/api/reference/index.html
-  docs/mcp/index.html references/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js version.json sitemap.xml)
+  docs/mcp/index.html references/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js version.json sitemap.xml site-map/index.html)
 grep -Eq 'class="?ver[" >]' "$PUBLIC/index.html" || { echo "footer version missing" >&2; exit 1; }
 for d in docs/api docs/mcp; do
   grep -q 'X-API-Key' "$PUBLIC/$d/index.html" || { echo "$d must document X-API-Key" >&2; exit 1; }
@@ -17,6 +17,12 @@ done
 
 # the building-blocks page must render its tabbed code (raw HTML is dropped silently if a shortcode is misused)
 [ "$(grep -oE 'class="?codetab[" >]' "$PUBLIC/learn/building-blocks/index.html" | wc -l)" -ge 28 ] || { echo "building-blocks code tabs missing" >&2; exit 1; }
+
+# the human site map must list every top-level section and be linked from the footer
+for l in /app/ /learn/behavior-trees/ /docs/ /docs/api/ /docs/mcp/ /references/ '/app/#/explore' '/app/#/forum' /sitemap.xml; do
+  grep -Eq "href=\"?$l[\" >]" "$PUBLIC/site-map/index.html" || { echo "site map missing $l" >&2; exit 1; }
+done
+grep -Eq 'href="?/site-map/[" >]' "$PUBLIC/index.html" || { echo "footer must link /site-map/" >&2; exit 1; }
 
 # every root-relative href in the built HTML must resolve (the /app/ SPA owns its #/ routes)
 bad=0
