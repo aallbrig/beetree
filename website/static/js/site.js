@@ -42,8 +42,30 @@
     if (menu && links) {
       menu.addEventListener('click', function () {
         var open = links.classList.toggle('open');
+        document.body.classList.toggle('menu-open', open);
         menu.setAttribute('aria-expanded', String(open));
         menu.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && links.classList.contains('open')) menu.click();
+      });
+      // On phones a group label folds its links open and shut, one group at a time.
+      var narrow = window.matchMedia('(max-width: 800px)');
+      links.querySelectorAll('.grp-label').forEach(function (label) {
+        label.setAttribute('aria-expanded', 'false');
+        label.addEventListener('click', function () {
+          if (!narrow.matches) return;
+          var grp = label.parentElement;
+          var willOpen = !grp.classList.contains('open');
+          links.querySelectorAll('.grp').forEach(function (g) {
+            g.classList.remove('open');
+            g.querySelector('.grp-label').setAttribute('aria-expanded', 'false');
+          });
+          if (willOpen) {
+            grp.classList.add('open');
+            label.setAttribute('aria-expanded', 'true');
+          }
+        });
       });
     }
     paint();

@@ -37,7 +37,7 @@ pre,code{font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}pre{backgroun
 .grp:hover .grp-label,.grp:focus-within .grp-label{background:var(--surface-2);color:var(--text)}
 .grp-menu{position:absolute;top:100%;left:0;min-width:220px;display:flex;flex-direction:column;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);visibility:hidden;opacity:0;transition:opacity .12s;z-index:30}
 .grp:hover .grp-menu,.grp:focus-within .grp-menu{visibility:visible;opacity:1}
-body[data-lang] @media(max-width:800px){
+@media(max-width:800px){
   .top nav .grp{display:block}
   .grp-label{display:block;width:100%;text-align:left;padding:12px 12px 4px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;cursor:default}
   .grp-label::after{content:""}
@@ -74,3 +74,18 @@ body[data-lang] @media(max-width:800px){
 
 .linklike{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
 .install{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin:18px auto 4px;max-width:46rem}.install code{background:var(--surface-2);border:1px solid var(--border,#ccc);border-radius:6px;padding:10px 12px;font-size:.9rem;overflow-x:auto;max-width:100%;text-align:left}.install-note{margin:6px 0 20px;font-size:.9rem}
+
+/* mobile menu: the open header scrolls on its own and groups fold like an accordion */
+@media(max-width:800px){
+  body.menu-open{overflow:hidden}
+  body.menu-open .top{max-height:100vh;max-height:100dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .top nav .links.open{padding-bottom:24px;gap:0}
+  .top nav .grp{border-top:1px solid var(--line)}
+  .top nav .grp-label{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:12px;font-size:1rem;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer}
+  .top nav .grp-label::after{content:"\25BE";transition:transform .15s}
+  .top nav .grp.open .grp-label::after{transform:rotate(180deg)}
+  .top nav .grp .grp-menu{display:none;position:static;visibility:visible;opacity:1;box-shadow:none;border:0;background:none;padding:0 0 8px 12px;min-width:0}
+  .top nav .grp.open .grp-menu{display:flex}
+  .top nav .links > a{min-height:48px;display:flex;align-items:center;font-weight:600;color:var(--text);border-top:1px solid var(--line)}
+  .top nav .links .btn{margin-top:8px;justify-content:center;text-align:center}
+}
