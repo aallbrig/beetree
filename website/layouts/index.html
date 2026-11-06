@@ -45,7 +45,7 @@
       <p>Write it by hand, build it in the browser, or generate it from the CLI. Every tool speaks the same format.</p>
       <p><a class="btn" href="/docs/trees/">Read the format guide</a></p>
     </div>
-<pre class="code"><code>version: "1.0"
+<pre class="code" id="home-tree"><code>version: "1.0"
 metadata:
   name: guard
 tree:
@@ -64,11 +64,21 @@ tree:
 <section class="wrap">
   <h2 class="center">The CLI, too</h2>
   <p class="center muted">For pipelines and terminal people.</p>
-<pre class="code"><code>$ beetree validate guard.beetree.yaml
-guard.beetree.yaml is valid (6 nodes)
+<pre class="code" id="home-cli"><code>$ beetree validate guard.beetree.yaml
+✓ guard.beetree.yaml is valid (5 nodes)
 
-$ beetree simulate guard.beetree.yaml
-$ beetree generate godot guard.beetree.yaml</code></pre>
+$ beetree simulate guard.beetree.yaml --override can_see_target=FAILURE
+Simulation: guard_ai → SUCCESS
+──────────────────────────────────────────────────
+▶ ? guard_ai
+  ▶ → combat
+    ● ¿ can_see_target → FAILURE
+  ◀ → combat → FAILURE
+  ● ! patrol → SUCCESS
+◀ ? guard_ai → SUCCESS
+
+$ beetree generate godot guard.beetree.yaml
+Generated 7 files in generated/godot</code></pre>
   <p class="center"><a class="btn" href="/docs/cli/">CLI guide</a> <a class="btn" href="/docs/cli-reference/">Command reference</a></p>
 </section>
 
