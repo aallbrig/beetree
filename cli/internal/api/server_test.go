@@ -388,6 +388,55 @@ func TestScenes(t *testing.T) {
 	assert.Equal(t, 204, do(h, "DELETE", "/v1/scenes/"+id, "alice", nil).Code)
 }
 
+func TestSceneShareConfirmation(t *testing.T) {
+	h := newTestServer(t)
+	mk := func(user, vis string) string {
+		r := do(h, "POST", "/v1/trees", user, map[string]any{"spec": goodSpec, "visibility": vis})
+		require.Equal(t, 201, r.Code, string(r.Body))
+		return r.JSON(t)["id"].(string)
+	}
+	priv, pub, theirs := mk("alice", "private"), mk("alice", "public"), mk("bob", "private")
+	agents := []map[string]any{
+		{"name": "a", "treeId": priv, "x": 0, "z": 0},
+		{"name": "b", "treeId": priv, "x": 1, "z": 0},
+		{"name": "c", "treeId": pub, "x": 2, "z": 0},
+		{"name": "d", "treeId": theirs, "x": 3, "z": 0},
+		{"name": "e", "treeId": "sample:guard", "x": 4, "z": 0},
+	}
+	body := map[string]any{"name": "arena", "visibility": "public", "agents": agents}
+
+	r := do(h, "POST", "/v1/scenes", "alice", body)
+	require.Equal(t, 409, r.Code, string(r.Body))
+	got := r.JSON(t)
+	assert.Equal(t, "confirmation_required", got["error"].(map[string]any)["code"])
+	trees := got["trees"].([]any)
+	require.Len(t, trees, 1, "only my private trees, each once")
+	assert.Equal(t, priv, trees[0].(map[string]any)["id"])
+	assert.Equal(t, 404, do(h, "GET", "/v1/trees/"+priv, "bob", nil).Code, "dry run changes nothing")
+	assert.Len(t, do(h, "GET", "/v1/scenes", "alice", nil).JSON(t)["items"], 0)
+
+	body["confirm"] = true
+	r = do(h, "POST", "/v1/scenes", "alice", body)
+	require.Equal(t, 201, r.Code, string(r.Body))
+	id := r.JSON(t)["id"].(string)
+	assert.Equal(t, 200, do(h, "GET", "/v1/trees/"+priv, "bob", nil).Code, "confirmed save publishes the tree")
+	assert.Equal(t, 404, do(h, "GET", "/v1/trees/"+theirs, "alice", nil).Code, "other people's trees are never touched")
+
+	// Unsharing the scene leaves the trees public.
+	body["visibility"] = "private"
+	assert.Equal(t, 200, do(h, "PUT", "/v1/scenes/"+id, "alice", body).Code)
+	assert.Equal(t, 200, do(h, "GET", "/v1/trees/"+priv, "bob", nil).Code)
+
+	// Updating to public with a new private tree asks again.
+	more := mk("alice", "private")
+	body["visibility"] = "public"
+	body["agents"] = append(agents, map[string]any{"name": "f", "treeId": more, "x": 5, "z": 0})
+	body["confirm"] = false
+	r = do(h, "PUT", "/v1/scenes/"+id, "alice", body)
+	require.Equal(t, 409, r.Code)
+	assert.Equal(t, more, r.JSON(t)["trees"].([]any)[0].(map[string]any)["id"])
+}
+
 func TestBadJSON(t *testing.T) {
 	h := newTestServer(t)
 	req := httptest.NewRequest("POST", "/v1/validate", strings.NewReader("{nope"))

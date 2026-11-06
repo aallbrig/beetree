@@ -1,4 +1,5 @@
 import { api, ApiError } from '../api';
+import { saveSceneConfirmed } from '../scenepublish';
 import { clear, h, toast } from '../dom';
 import { navigate, type Cleanup, type Ctx } from '../router';
 import { populate } from '../scene/loader';
@@ -89,11 +90,12 @@ export async function scenesView(ctx: Ctx): Promise<Cleanup | undefined> {
   let savedId = sceneId;
   /** Saves the scene (creating it if new) and resolves its id. */
   const ensureSaved = async (): Promise<string> => {
-    const s = await api.saveScene(savedId, {
-      name: nameIn.value.trim() || 'My scene',
-      visibility: visIn.value,
-      agents,
-    });
+    const s = await saveSceneConfirmed(
+      api.saveScene,
+      savedId,
+      { name: nameIn.value.trim() || 'My scene', visibility: visIn.value, agents },
+      (msg) => window.confirm(msg),
+    );
     savedId = s.id;
     return s.id;
   };
@@ -249,8 +251,12 @@ export async function scenesView(ctx: Ctx): Promise<Cleanup | undefined> {
   });
   saveBtn.addEventListener('click', () => {
     saveBtn.disabled = true;
-    api
-      .saveScene(sceneId, { name: nameIn.value.trim(), visibility: visIn.value, agents })
+    saveSceneConfirmed(
+      api.saveScene,
+      sceneId,
+      { name: nameIn.value.trim(), visibility: visIn.value, agents },
+      (msg) => window.confirm(msg),
+    )
       .then((s) => {
         toast('Scene saved.');
         if (!sceneId) navigate(`/scenes/${s.id}`);

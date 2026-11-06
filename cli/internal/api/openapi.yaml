@@ -603,6 +603,7 @@ paths:
         '400': {$ref: '#/components/responses/Error'}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+        '409': {$ref: '#/components/responses/Error'}
         '413': {$ref: '#/components/responses/Error'}
         '429': {$ref: '#/components/responses/Error'}
     delete:
@@ -768,6 +769,9 @@ components:
             properties:
               name: {type: string}
               visibility: {type: string, enum: [public, private]}
+              confirm:
+                type: boolean
+                description: Accept publishing your private trees that a public scene uses. Without it the call answers 409 with a trees list and changes nothing.
               agents:
                 type: array
                 maxItems: 24

@@ -21,13 +21,35 @@ export interface ApiKeyInfo {
   createdAt: string;
 }
 
+/** A private tree that saving a public scene would also publish. */
+export interface SharedTree {
+  id: string;
+  name: string;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** Set on a 409 confirmation_required answer. */
+    readonly trees: SharedTree[] = [],
   ) {
     super(message);
   }
+}
+
+/** Reads the trees list of a confirmation_required answer; empty for any other body. */
+export function sharedTrees(data: unknown): SharedTree[] {
+  const list: unknown =
+    typeof data === 'object' && data !== null && 'trees' in data ? data.trees : [];
+  if (!Array.isArray(list)) return [];
+  const out: SharedTree[] = [];
+  for (const t of list as unknown[]) {
+    if (typeof t !== 'object' || t === null) continue;
+    const { id, name } = t as { id?: unknown; name?: unknown };
+    if (typeof id === 'string' && typeof name === 'string') out.push({ id, name });
+  }
+  return out;
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -51,6 +73,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     throw new ApiError(
       res.status,
       typeof err?.message === 'string' ? err.message : `Request failed (${res.status})`,
+      sharedTrees(data),
     );
   }
   // JSON enters here: the API contract (openapi.yaml, tested server-side) is the type source.
@@ -119,7 +142,7 @@ export const api = {
   getScene: (id: string) => request<Scene>('GET', `/v1/scenes/${id}`),
   saveScene: (
     id: string | undefined,
-    s: { name: string; visibility: string; agents: SceneAgent[] },
+    s: { name: string; visibility: string; agents: SceneAgent[]; confirm?: boolean },
   ) =>
     id ? request<Scene>('PUT', `/v1/scenes/${id}`, s) : request<Scene>('POST', '/v1/scenes', s),
   deleteScene: (id: string) => request<undefined>('DELETE', `/v1/scenes/${id}`),
