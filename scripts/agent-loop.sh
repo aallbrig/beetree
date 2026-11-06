@@ -58,7 +58,7 @@ build_prompt() {
   local n="$1" focus="$2"
   cat "$ROOT/scripts/loop-prompt.md"
   printf '\n## This iteration\n\n- Iteration: %s\n- Focus surface: %s (skill: evaluate-%s)\n- Map issue: #%s\n- Production: %s\n- Latest release: %s\n- Clone state:\n```\n%s\n```\n' \
-    "$n" "$focus" "$( [ "$focus" = builder ] || [ "$focus" = docs ] && echo website || echo "$focus" )" "$MAP" "$(production)" "$(release)" "$(cd "$CLONE" && git status --short --branch | head -15)"
+    "$n" "$focus" "$(case "$focus" in docs) echo website;; *) echo "$focus";; esac)" "$MAP" "$(production)" "$(release)" "$(cd "$CLONE" && git status --short --branch | head -15)"
 }
 
 n="$(cat "$STATE/iteration" 2>/dev/null || echo 0)"
