@@ -64,6 +64,17 @@ describe('SimWalker', () => {
     expect(w.result).toBe('success');
   });
 
+  it('explains why a node failed or succeeded', () => {
+    const w = new SimWalker(parseSpec(SAMPLES[1]?.yaml ?? '').tree);
+    w.step();
+    w.resolve('failure'); // can_see_target fails
+    const leaf = w.trace.find((s) => s.event === 'resolve' && s.name === 'can_see_target');
+    expect(leaf?.reason).toBe('answered failure');
+    const blocked = w.trace.find((s) => s.event === 'resolve' && s.path.join('.') === '0');
+    expect(blocked?.status).toBe('failure');
+    expect(blocked?.reason).toBe('can_see_target failed');
+  });
+
   it('ignores resolve when not waiting, and resets', () => {
     const w = new SimWalker(parseSpec(SAMPLES[0]?.yaml ?? '').tree);
     w.resolve('success');
