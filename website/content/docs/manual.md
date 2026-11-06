@@ -145,4 +145,4 @@ The site opens in light mode. Use the **Dark mode** / **Light mode** button in t
 
 ## 7. Your profile
 
-On your [profile](/app/#/profile) you can change your display name and bio, and create **API keys** for the [REST API](/docs/api/) and [MCP server](/docs/mcp/). A key is shown once when you create it, so copy it straight into an environment variable or secrets manager; you can revoke it on the same page. See [Get an API key](/docs/api/#get-an-api-key).
+On your [profile](/app/#/profile) you can change your display name and bio, and create **API keys** for the [REST API](/docs/api/) and [MCP server](/docs/mcp/). A key is shown once when you create it, so copy it straight into an environment variable or secrets manager; you can revoke it on the same page. See [Get an API key](/docs/api/#get-an-api-key). When you create a key you choose a preset (Read-only, Read/write or Full) and an expiry (30 days, 90 days, a year or never); the key lists its scopes, expiry and last use, and its scopes cannot change later, so create a new key instead. See [Key scopes and expiry](/docs/api/#key-scopes-and-expiry).

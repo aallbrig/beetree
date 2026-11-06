@@ -217,6 +217,22 @@ func TestLiveStack(t *testing.T) {
 	code, _ = call(anon, "list_my_trees", nil)
 	assert.Equal(t, 401, code, "MCP rejects anonymous callers")
 
+	// 4b. A read-only key reads but cannot write; the denial names the scope.
+	code, ro := me.do("POST", "/v1/keys", map[string]string{"name": "smoke ro " + name, "preset": "read-only"})
+	require.Equal(t, 201, code, fmt.Sprint(ro))
+	roID := ro["id"].(string)
+	t.Cleanup(func() { _, _ = me.do("DELETE", "/v1/keys/"+roID, nil) })
+	readOnly := client{t: t, base: apiURL, key: ro["key"].(string)}
+	code, _ = readOnly.do("GET", "/v1/trees", nil)
+	assert.Equal(t, 200, code, "a read-only key can read")
+	code, denied := readOnly.do("POST", "/v1/trees", map[string]any{"spec": spec, "name": "Smoke denied"})
+	assert.Equal(t, 403, code, "a read-only key cannot write")
+	assert.Contains(t, fmt.Sprint(denied), "insufficient_scope")
+	assert.Contains(t, fmt.Sprint(denied), "trees:write")
+	code, rpc = call(readOnly, "create_tree", map[string]any{"spec": spec, "name": "Smoke denied"})
+	assert.Equal(t, 200, code)
+	assert.Contains(t, fmt.Sprint(rpc["result"]), "insufficient_scope", "MCP follows key scopes")
+
 	// 5. Cleanup is verified, not assumed.
 	code, _ = me.do("DELETE", "/v1/trees/"+treeID, nil)
 	assert.Equal(t, 204, code)
