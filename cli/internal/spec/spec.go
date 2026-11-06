@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/aallbrig/beetree-cli/internal/model"
 	"gopkg.in/yaml.v3"
@@ -82,6 +83,13 @@ func fileExtension(path string) string {
 // readHint returns a next-step suggestion for common file mistakes.
 func readHint(path string, err error) string {
 	if errors.Is(err, os.ErrNotExist) {
+		for _, cand := range []string{filepath.Join("trees", filepath.Base(path)), filepath.Join("trees", filepath.Base(path)+".beetree.yaml")} {
+			if cand != path {
+				if info, statErr := os.Stat(cand); statErr == nil && !info.IsDir() {
+					return "\n  hint: did you mean " + cand + "? `beetree new` writes trees under trees/"
+				}
+			}
+		}
 		return "\n  hint: check the path; run `beetree new` to create a tree or see examples/*.beetree.yaml"
 	}
 	if info, statErr := os.Stat(path); statErr == nil && info.IsDir() {

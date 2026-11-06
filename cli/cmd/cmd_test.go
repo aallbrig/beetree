@@ -102,7 +102,7 @@ func TestValidateCommand_NoArgs(t *testing.T) {
 func TestValidateCommand_FileNotFound(t *testing.T) {
 	_, err := executeCommand("validate", "/nonexistent/file.yaml")
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "cannot read")
+	assert.Contains(t, err.Error(), "hint: check the path")
 }
 
 func TestGenerateCommand_NoEngineFails(t *testing.T) {

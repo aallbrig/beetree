@@ -243,3 +243,16 @@ func TestParseFile_ErrorHints(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "is a directory")
 }
+
+func TestParseFile_SuggestsTreesDir(t *testing.T) {
+	dir := t.TempDir()
+	t.Chdir(dir)
+	require.NoError(t, os.MkdirAll("trees", 0o755))
+	require.NoError(t, os.WriteFile("trees/foo.beetree.yaml", []byte(fullYAML), 0o644))
+
+	for _, name := range []string{"foo.beetree.yaml", "foo"} {
+		_, err := ParseFile(name)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "did you mean trees/foo.beetree.yaml")
+	}
+}
