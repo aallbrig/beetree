@@ -334,3 +334,27 @@ func TestValidate_UnknownNodeTypeSuggests(t *testing.T) {
 	errs = Validate(spec)
 	assert.Contains(t, errs[0].Error(), "valid types: action,")
 }
+
+func squadSpec(slot interface{}) *model.TreeSpec {
+	return &model.TreeSpec{
+		Version:  "1.0",
+		Metadata: model.Metadata{Name: "squad"},
+		Tree: model.NodeSpec{Type: "parallel", Name: "squad", Children: []model.NodeSpec{
+			{Type: "action", Name: "hold", Parameters: map[string]interface{}{"slot": "leader"}},
+			{Type: "action", Name: "circle", Parameters: map[string]interface{}{"slot": slot}},
+		}},
+	}
+}
+
+func TestValidate_KnownSlots(t *testing.T) {
+	for _, s := range []string{"leader", "flanker", "support"} {
+		assert.Empty(t, Validate(squadSpec(s)), s)
+	}
+}
+
+func TestValidate_UnknownSlot(t *testing.T) {
+	errs := Validate(squadSpec("sniper"))
+	require.Len(t, errs, 1)
+	assert.Contains(t, errs[0].Error(), "tree.children[1]: unknown slot sniper")
+	assert.NotEmpty(t, Validate(squadSpec(3)))
+}

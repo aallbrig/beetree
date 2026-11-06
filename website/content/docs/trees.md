@@ -59,6 +59,26 @@ Set `decorator:` on a `decorator` node.
 
 BeeTreeCraft's runtime re-evaluates the tree from the root every tick. Put urgent checks (like "am I about to die?") first and they will interrupt whatever lower-priority branch was running.
 
+## One tree, several agents
+
+A squad tree drives several agents at once. The tree ticks once per frame, and each leaf names the agent it acts on with `parameters.slot`. The slots are `leader`, `flanker` and `support`. A leaf with no `slot` acts on the leader, so trees written for a single agent keep working. The validator rejects any other slot name.
+
+```yaml
+version: "1.0"
+metadata:
+  name: squad
+  description: One tree, three roles
+tree:
+  type: parallel
+  name: squad_ai
+  children:
+    - {type: action, name: hold_position, parameters: {slot: leader}}
+    - {type: action, name: circle_target, parameters: {slot: flanker}}
+    - {type: action, name: follow_leader, parameters: {slot: support}}
+```
+
+A slot with no agent in the scene makes its leaf fail.
+
 ## Blackboard and custom nodes
 
 Optional top-level `blackboard` (typed shared variables) and `custom_nodes` (your own node types with typed parameters) generate richer engine code. See `examples/full-enemy-ai.beetree.yaml` in the [repository](https://github.com/aallbrig/beetreecraft/tree/main/examples) for a complete example.
