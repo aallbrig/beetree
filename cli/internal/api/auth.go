@@ -21,6 +21,21 @@ type Claims struct {
 	Sub      string
 	Username string
 	Email    string
+	// Groups are the Cognito groups the token names (cognito:groups).
+	Groups []string
+}
+
+// ModeratorGroup is the Cognito group whose members may review reports.
+const ModeratorGroup = "moderators"
+
+// IsModerator reports whether the caller belongs to ModeratorGroup.
+func (c Claims) IsModerator() bool {
+	for _, g := range c.Groups {
+		if g == ModeratorGroup {
+			return true
+		}
+	}
+	return false
 }
 
 // Authenticator turns a bearer token into Claims.
@@ -102,6 +117,13 @@ func (v *CognitoVerifier) Verify(ctx context.Context, token string) (Claims, err
 	c.Username, _ = m["cognito:username"].(string)
 	if c.Username == "" {
 		c.Username, _ = m["username"].(string)
+	}
+	if gs, ok := m["cognito:groups"].([]any); ok {
+		for _, g := range gs {
+			if name, ok := g.(string); ok {
+				c.Groups = append(c.Groups, name)
+			}
+		}
 	}
 	if c.Sub == "" {
 		return Claims{}, ErrUnauthenticated

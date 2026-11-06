@@ -455,6 +455,19 @@ paths:
         '400': {$ref: '#/components/responses/Error'}
         '401': {$ref: '#/components/responses/Error'}
         '404': {$ref: '#/components/responses/Error'}
+  /v1/forum/threads/{id}/reports:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: Reports filed against a thread and its posts (moderators only)
+      operationId: listReports
+      tags: [Forum]
+      security: [{bearerAuth: []}]
+      responses:
+        '200': {description: Reports}
+        '401': {$ref: '#/components/responses/Error'}
+        '403': {$ref: '#/components/responses/Error'}
+        '404': {$ref: '#/components/responses/Error'}
   /v1/scenes:
     get:
       summary: Your saved 3D scenes
