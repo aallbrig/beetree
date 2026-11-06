@@ -1,75 +1,75 @@
 [
   {
-    "template": "sample:patrol",
+    "template": "sample:shopkeeper",
     "policy": "success",
     "result": "success",
     "trace": [
       {
-        "name": "patrol_forever",
-        "type": "decorator",
+        "name": "shopkeeper_ai",
+        "type": "selector",
         "depth": 0,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "patrol_cycle",
+        "name": "serve_customer",
         "type": "sequence",
         "depth": 1,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "move_to_waypoint",
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "can_see_target",
+        "type": "condition",
+        "depth": 2,
+        "event": "resolve",
+        "status": "success"
+      },
+      {
+        "name": "face_customer",
         "type": "action",
         "depth": 2,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "move_to_waypoint",
+        "name": "face_customer",
         "type": "action",
         "depth": 2,
         "event": "resolve",
         "status": "success"
       },
       {
-        "name": "wait_at_waypoint",
+        "name": "animate_greeting",
         "type": "action",
         "depth": 2,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "wait_at_waypoint",
+        "name": "animate_greeting",
         "type": "action",
         "depth": 2,
         "event": "resolve",
         "status": "success"
       },
       {
-        "name": "next_waypoint",
-        "type": "action",
-        "depth": 2,
-        "event": "enter",
-        "status": ""
-      },
-      {
-        "name": "next_waypoint",
-        "type": "action",
-        "depth": 2,
-        "event": "resolve",
-        "status": "success"
-      },
-      {
-        "name": "patrol_cycle",
+        "name": "serve_customer",
         "type": "sequence",
         "depth": 1,
         "event": "resolve",
         "status": "success"
       },
       {
-        "name": "patrol_forever",
-        "type": "decorator",
+        "name": "shopkeeper_ai",
+        "type": "selector",
         "depth": 0,
         "event": "resolve",
         "status": "success"
@@ -77,48 +77,76 @@
     ]
   },
   {
-    "template": "sample:patrol",
+    "template": "sample:shopkeeper",
     "policy": "failure",
     "result": "failure",
     "trace": [
       {
-        "name": "patrol_forever",
-        "type": "decorator",
+        "name": "shopkeeper_ai",
+        "type": "selector",
         "depth": 0,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "patrol_cycle",
+        "name": "serve_customer",
         "type": "sequence",
         "depth": 1,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "move_to_waypoint",
-        "type": "action",
+        "name": "can_see_target",
+        "type": "condition",
         "depth": 2,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "move_to_waypoint",
-        "type": "action",
+        "name": "can_see_target",
+        "type": "condition",
         "depth": 2,
         "event": "resolve",
         "status": "failure"
       },
       {
-        "name": "patrol_cycle",
+        "name": "serve_customer",
         "type": "sequence",
         "depth": 1,
         "event": "resolve",
         "status": "failure"
       },
       {
-        "name": "patrol_forever",
-        "type": "decorator",
+        "name": "daily_routine",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "wander_to_shelf",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "wander_to_shelf",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "daily_routine",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "failure"
+      },
+      {
+        "name": "shopkeeper_ai",
+        "type": "selector",
         "depth": 0,
         "event": "resolve",
         "status": "failure"
@@ -126,48 +154,48 @@
     ]
   },
   {
-    "template": "sample:patrol",
+    "template": "sample:shopkeeper",
     "policy": "running",
     "result": "running",
     "trace": [
       {
-        "name": "patrol_forever",
-        "type": "decorator",
+        "name": "shopkeeper_ai",
+        "type": "selector",
         "depth": 0,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "patrol_cycle",
+        "name": "serve_customer",
         "type": "sequence",
         "depth": 1,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "move_to_waypoint",
-        "type": "action",
+        "name": "can_see_target",
+        "type": "condition",
         "depth": 2,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "move_to_waypoint",
-        "type": "action",
+        "name": "can_see_target",
+        "type": "condition",
         "depth": 2,
         "event": "resolve",
         "status": "running"
       },
       {
-        "name": "patrol_cycle",
+        "name": "serve_customer",
         "type": "sequence",
         "depth": 1,
         "event": "resolve",
         "status": "running"
       },
       {
-        "name": "patrol_forever",
-        "type": "decorator",
+        "name": "shopkeeper_ai",
+        "type": "selector",
         "depth": 0,
         "event": "resolve",
         "status": "running"
@@ -175,65 +203,93 @@
     ]
   },
   {
-    "template": "sample:patrol",
+    "template": "sample:shopkeeper",
     "policy": "cycle",
-    "result": "failure",
+    "result": "running",
     "trace": [
       {
-        "name": "patrol_forever",
-        "type": "decorator",
+        "name": "shopkeeper_ai",
+        "type": "selector",
         "depth": 0,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "patrol_cycle",
+        "name": "serve_customer",
         "type": "sequence",
         "depth": 1,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "move_to_waypoint",
-        "type": "action",
+        "name": "can_see_target",
+        "type": "condition",
         "depth": 2,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "move_to_waypoint",
-        "type": "action",
+        "name": "can_see_target",
+        "type": "condition",
         "depth": 2,
         "event": "resolve",
         "status": "success"
       },
       {
-        "name": "wait_at_waypoint",
+        "name": "face_customer",
         "type": "action",
         "depth": 2,
         "event": "enter",
         "status": ""
       },
       {
-        "name": "wait_at_waypoint",
+        "name": "face_customer",
         "type": "action",
         "depth": 2,
         "event": "resolve",
         "status": "failure"
       },
       {
-        "name": "patrol_cycle",
+        "name": "serve_customer",
         "type": "sequence",
         "depth": 1,
         "event": "resolve",
         "status": "failure"
       },
       {
-        "name": "patrol_forever",
-        "type": "decorator",
+        "name": "daily_routine",
+        "type": "sequence",
+        "depth": 1,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "wander_to_shelf",
+        "type": "action",
+        "depth": 2,
+        "event": "enter",
+        "status": ""
+      },
+      {
+        "name": "wander_to_shelf",
+        "type": "action",
+        "depth": 2,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "daily_routine",
+        "type": "sequence",
+        "depth": 1,
+        "event": "resolve",
+        "status": "running"
+      },
+      {
+        "name": "shopkeeper_ai",
+        "type": "selector",
         "depth": 0,
         "event": "resolve",
-        "status": "failure"
+        "status": "running"
       }
     ]
   },

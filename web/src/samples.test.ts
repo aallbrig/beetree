@@ -10,6 +10,12 @@ describe('built-in templates', () => {
     expect(new Set(SAMPLES.map((s) => s.id)).size).toBe(SAMPLES.length);
   });
 
+  it('covers every trope VISION.md names', () => {
+    const ids = SAMPLES.map((s) => s.id);
+    for (const trope of ['guard', 'coward', 'boss', 'shopkeeper', 'companion'])
+      expect(ids, trope).toContain(`sample:${trope}`);
+  });
+
   for (const sample of SAMPLES) {
     it(`${sample.title} parses, has unique node names and runs in 3D`, () => {
       const spec = parseSpec(sample.yaml);
