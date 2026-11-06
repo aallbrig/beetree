@@ -142,6 +142,7 @@ Trees are **private by default**. A private tree is invisible, even by id, to ev
 | Action | Request |
 |---|---|
 | Like / unlike | `PUT` / `DELETE /v1/trees/{id}/like` (idempotent) |
+| Remix a public tree | `POST /v1/trees/{id}/remix` makes a private copy with `remixedFrom` credit (20 per day) |
 | Comment | `POST /v1/trees/{id}/comments` with `{"body": "..."}` |
 | Forum | `GET/POST /v1/forum/threads`, `POST /v1/forum/threads/{id}/posts` |
 | Your stats | `GET /v1/me/stats` |

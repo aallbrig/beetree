@@ -32,7 +32,35 @@ type Tree struct {
 	CreatedAt    string   `json:"createdAt"`
 	UpdatedAt    string   `json:"updatedAt"`
 	LikedByMe    bool     `json:"likedByMe,omitempty"`
+	RemixedFrom  *Lineage `json:"remixedFrom,omitempty"`
 }
+
+// LineageRef is a frozen record of an original at the moment it was remixed.
+// It is never refreshed from the live original, so credit survives the
+// original going private or being deleted.
+type LineageRef struct {
+	Kind      string `json:"kind"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	OwnerID   string `json:"ownerId"`
+	OwnerName string `json:"ownerName"`
+	At        string `json:"at"`
+}
+
+// Lineage is the remix record on a copy. State is derived on read from the
+// live original (public, private or deleted) and is never stored.
+type Lineage struct {
+	LineageRef
+	State     string       `json:"state,omitempty"`
+	Ancestors []LineageRef `json:"ancestors,omitempty"`
+}
+
+// Lineage states.
+const (
+	LineagePublic  = "public"
+	LineagePrivate = "private"
+	LineageDeleted = "deleted"
+)
 
 // Comment is a comment on a tree.
 type Comment struct {

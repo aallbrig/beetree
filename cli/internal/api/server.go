@@ -37,6 +37,8 @@ type Server struct {
 
 	public  publicCache
 	limiter writeLimiter
+	// remixLimiter caps remixes per user per day; best effort per instance.
+	remixLimiter writeLimiter
 }
 
 // Route is one API operation. The route table drives both registration and the
@@ -66,6 +68,7 @@ func (s *Server) Routes() []Route {
 		{"GET", "/v1/trees/{id}", s.getTree},
 		{"PUT", "/v1/trees/{id}", s.updateTree},
 		{"DELETE", "/v1/trees/{id}", s.deleteTree},
+		{"POST", "/v1/trees/{id}/remix", s.remixTree},
 		{"PUT", "/v1/trees/{id}/like", s.likeTree},
 		{"DELETE", "/v1/trees/{id}/like", s.unlikeTree},
 		{"GET", "/v1/trees/{id}/comments", s.listComments},

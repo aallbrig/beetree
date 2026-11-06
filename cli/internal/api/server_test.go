@@ -642,3 +642,60 @@ func TestForumKeepsTextOnly(t *testing.T) {
 	assert.Equal(t, "Hello world", got["title"])
 	assert.Equal(t, "line1\nline2", got["body"])
 }
+
+func TestRemixTree(t *testing.T) {
+	h := newTestServer(t)
+	pub := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec, "name": "Patrol", "visibility": "public"}).JSON(t)
+	id := pub["id"].(string)
+	priv := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec, "name": "Hidden"}).JSON(t)
+
+	assert.Equal(t, 401, do(h, "POST", "/v1/trees/"+id+"/remix", "", nil).Code)
+	assert.Equal(t, 404, do(h, "POST", "/v1/trees/"+priv["id"].(string)+"/remix", "bob", nil).Code, "private tree is 404")
+	assert.Equal(t, 404, do(h, "POST", "/v1/trees/"+priv["id"].(string)+"/remix", "alice", nil).Code)
+
+	r := do(h, "POST", "/v1/trees/"+id+"/remix", "bob", nil)
+	require.Equal(t, 201, r.Code, string(r.Body))
+	cp := r.JSON(t)
+	assert.Equal(t, "private", cp["visibility"])
+	assert.Equal(t, "Patrol (Remix)", cp["name"])
+	assert.Equal(t, "bob", cp["ownerId"])
+	lin := cp["remixedFrom"].(map[string]any)
+	assert.Equal(t, id, lin["id"])
+	assert.Equal(t, "Patrol", lin["title"])
+	assert.Equal(t, "alice", lin["ownerName"])
+	assert.Equal(t, "public", lin["state"])
+	cpID := cp["id"].(string)
+	state := func() string {
+		return do(h, "GET", "/v1/trees/"+cpID, "bob", nil).JSON(t)["remixedFrom"].(map[string]any)["state"].(string)
+	}
+
+	// lineage survives the original going private, flips back when re-shared
+	do(h, "PUT", "/v1/trees/"+id, "alice", map[string]any{"spec": goodSpec, "name": "Renamed", "visibility": "private"})
+	assert.Equal(t, "private", state())
+	got := do(h, "GET", "/v1/trees/"+cpID, "bob", nil).JSON(t)["remixedFrom"].(map[string]any)
+	assert.Equal(t, "Patrol", got["title"], "frozen title kept")
+	do(h, "PUT", "/v1/trees/"+id, "alice", map[string]any{"spec": goodSpec, "name": "Renamed", "visibility": "public"})
+	assert.Equal(t, "public", state())
+
+	// remix of a remix records the chain
+	do(h, "PUT", "/v1/trees/"+cpID, "bob", map[string]any{"spec": goodSpec, "name": "Mine", "visibility": "public"})
+	r2 := do(h, "POST", "/v1/trees/"+cpID+"/remix", "carol", nil).JSON(t)["remixedFrom"].(map[string]any)
+	assert.Equal(t, "Mine", r2["title"])
+	require.Len(t, r2["ancestors"], 1)
+	assert.Equal(t, id, r2["ancestors"].([]any)[0].(map[string]any)["id"])
+
+	// deleted original
+	do(h, "DELETE", "/v1/trees/"+id, "alice", nil)
+	assert.Equal(t, "deleted", state())
+	assert.Equal(t, "Patrol", do(h, "GET", "/v1/trees/"+cpID, "bob", nil).JSON(t)["remixedFrom"].(map[string]any)["title"])
+}
+
+func TestRemixRateLimit(t *testing.T) {
+	h := newTestServer(t)
+	id := do(h, "POST", "/v1/trees", "alice", map[string]any{"spec": goodSpec, "visibility": "public"}).JSON(t)["id"].(string)
+	for i := 0; i < RemixLimit; i++ {
+		require.Equal(t, 201, do(h, "POST", "/v1/trees/"+id+"/remix", "bob", nil).Code, "remix %d", i)
+	}
+	assert.Equal(t, 429, do(h, "POST", "/v1/trees/"+id+"/remix", "bob", nil).Code)
+	assert.Equal(t, 201, do(h, "POST", "/v1/trees/"+id+"/remix", "carol", nil).Code, "limit is per user")
+}
