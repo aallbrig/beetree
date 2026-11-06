@@ -113,7 +113,8 @@ export const api = {
       `/v1/public/trees?q=${encodeURIComponent(q)}&sort=${sort}`,
     ),
   listKeys: () => request<Items<ApiKeyInfo>>('GET', '/v1/keys'),
-  createKey: (name: string) => request<ApiKeyInfo & { key: string }>('POST', '/v1/keys', { name }),
+  createKey: (name: string, preset: 'read-only' | 'read-write' | 'full' = 'full') =>
+    request<ApiKeyInfo & { key: string }>('POST', '/v1/keys', { name, preset }),
   deleteKey: (id: string) => request<undefined>('DELETE', `/v1/keys/${id}`),
   me: () => request<Profile>('GET', '/v1/me'),
   updateMe: (

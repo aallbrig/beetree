@@ -188,6 +188,12 @@ func runAPIKeyContract(t *testing.T, s Store) {
 	require.Len(t, list, 2)
 	assert.Equal(t, "k2", list[0].ID, "newest first")
 
+	require.NoError(t, s.TouchAPIKey(ctx, "h1", "2026-02-01T00:00:00Z"))
+	got, err = s.GetAPIKeyByHash(ctx, "h1")
+	require.NoError(t, err)
+	assert.Equal(t, "2026-02-01T00:00:00Z", got.LastUsedAt)
+	assert.ErrorIs(t, s.TouchAPIKey(ctx, "nope", "2026-02-01T00:00:00Z"), ErrNotFound, "touch never recreates a key")
+
 	assert.ErrorIs(t, s.DeleteAPIKey(ctx, "other", "k1"), ErrNotFound, "only the owner can revoke")
 	require.NoError(t, s.DeleteAPIKey(ctx, "u1", "k1"))
 	_, err = s.GetAPIKeyByHash(ctx, "h1")

@@ -609,6 +609,31 @@ func (d *DynamoStore) PutAPIKey(ctx context.Context, k APIKey) error {
 	return err
 }
 
+func (d *DynamoStore) TouchAPIKey(ctx context.Context, hash, usedAt string) error {
+	k, err := d.GetAPIKeyByHash(ctx, hash)
+	if err != nil {
+		return err
+	}
+	k.LastUsedAt = usedAt
+	data, err := json.Marshal(k)
+	if err != nil {
+		return err
+	}
+	// Conditional so a key revoked meanwhile is not resurrected.
+	_, err = d.DB.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		TableName: &d.Table, Key: key("APIKEY#"+hash, "META"),
+		UpdateExpression:          aws.String("SET #d = :d"),
+		ConditionExpression:       aws.String("attribute_exists(pk)"),
+		ExpressionAttributeNames:  map[string]string{"#d": "data"},
+		ExpressionAttributeValues: item{":d": s(string(data))},
+	})
+	var cc *types.ConditionalCheckFailedException
+	if errors.As(err, &cc) {
+		return ErrNotFound
+	}
+	return err
+}
+
 func (d *DynamoStore) GetAPIKeyByHash(ctx context.Context, hash string) (APIKey, error) {
 	it, err := d.get(ctx, "APIKEY#"+hash, "META")
 	if err != nil {

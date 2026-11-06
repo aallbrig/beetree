@@ -46,7 +46,7 @@ func TestAnonymousCallsAreRejectedExceptHealthAndSpec(t *testing.T) {
 func TestAPIKeyLifecycle(t *testing.T) {
 	h, store := newSecureServer(t)
 
-	created := do(h, "POST", "/v1/keys", "alice", map[string]string{"name": "laptop"})
+	created := do(h, "POST", "/v1/keys", "alice", map[string]any{"name": "laptop", "preset": "full"})
 	require.Equal(t, 201, created.Code, string(created.Body))
 	body := created.JSON(t)
 	secret, _ := body["key"].(string)
@@ -89,10 +89,10 @@ func TestAPIKeyRules(t *testing.T) {
 	assert.Equal(t, 401, do(h, "POST", "/v1/keys", "", map[string]string{"name": "x"}).Code)
 	assert.Equal(t, 400, do(h, "POST", "/v1/keys", "alice", map[string]string{"name": "  "}).Code)
 	for i := 0; i < maxKeysPerUser; i++ {
-		require.Equal(t, 201, do(h, "POST", "/v1/keys", "alice", map[string]string{"name": "k"}).Code)
+		require.Equal(t, 201, do(h, "POST", "/v1/keys", "alice", map[string]any{"name": "k", "preset": "read-only"}).Code)
 	}
-	assert.Equal(t, 409, do(h, "POST", "/v1/keys", "alice", map[string]string{"name": "k"}).Code)
-	assert.Equal(t, 201, do(h, "POST", "/v1/keys", "bob", map[string]string{"name": "k"}).Code, "limit is per user")
+	assert.Equal(t, 409, do(h, "POST", "/v1/keys", "alice", map[string]any{"name": "k", "preset": "read-only"}).Code)
+	assert.Equal(t, 201, do(h, "POST", "/v1/keys", "bob", map[string]any{"name": "k", "preset": "read-only"}).Code, "limit is per user")
 	assert.Equal(t, 404, do(h, "DELETE", "/v1/keys/idz", "bob", nil).Code)
 }
 
