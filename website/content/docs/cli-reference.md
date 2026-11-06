@@ -35,28 +35,45 @@ Launch the interactive behavior tree editor.
 If a .beetree.yaml file is provided, it will be loaded for editing.
 Otherwise, a new empty tree is created.
 
-Key bindings:
+Navigate mode:
 
 ```
-  ↑/↓        Navigate tree
-  ←/→        Collapse/expand
-  a           Add child node
-  e           Edit selected node properties
-  d           Delete selected node
-  m           Move node (press m again on target to place, Esc to cancel)
-  u           Undo last change
-  r           Run interactive simulation (step through tree, choose each result)
-  s           Save to file (prompts for path if new)
-  q           Quit (confirms if unsaved changes)
+  a           Add a child node
+  e           Edit the selected node
+  d           Delete the selected node
+  c           Duplicate the selected node
+  m           Start a move, then press m on the target to place it
+  p           Edit node parameters
+  b           Edit blackboard variables
+  u           Undo the last change
+  U           Redo
+  r           Run the step-through simulation
+  v           Validate the tree
+  /           Search nodes by name
+  s           Save
+  S           Save as a new path
+  q           Quit (prompts if unsaved)
+  ?           Show the help overlay
+  Up/Down     Move the selection
+  Left/Right  Collapse or expand the node
 ```
 
-Simulation mode:
+Move mode:
 
 ```
-  S           Node returns Success
-  F           Node returns Failure
-  R           Node returns Running
-  Esc         Stop simulation
+  Up/Down     Choose the target parent
+  m           Place the node under the target
+  Esc         Cancel the move
+```
+
+Simulate mode:
+
+```
+  S           Resolve the paused leaf as Success
+  F           Resolve the paused leaf as Failure
+  R           Resolve the paused leaf as Running
+  Esc         Stop the simulation
+  q           Leave the finished simulation
 ```
 
 ```
