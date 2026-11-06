@@ -139,3 +139,15 @@ items:
     author: "Anurag Sarkar and Seth Cooper"
     summary: "An EXAG 2021 paper that uses behavior trees to build level generators instead of agents: small subtrees generate parts of a level and compose into larger trees. Demonstrated on Super Mario Bros., Mega Man, Metroid and dungeon layouts. A useful look at the reuse and composition strengths of trees outside NPC control."
     score: 11
+  - title: "Comparison between Behavior Trees and Finite State Machines"
+    url: "https://arxiv.org/abs/2405.16137"
+    kind: Paper
+    year: "2024"
+    author: "Matteo Iovino, Julian Forster, Pietro Falco, Jen Jen Chung, Roland Siegwart and Christian Smith"
+    summary: "A preprint that compares behavior trees and finite state machines as robot control policies on a mobile manipulation task, in simulation and on a real robot. It proposes metrics for reactivity, modularity, readability and design, and finds the behavior is the same either way but a tree gets easier to maintain than a state machine as the task grows. Read it for evidence behind the usual case for trees."
+    score: 13
+  - title: "Nav2 Behavior Trees"
+    url: "https://docs.nav2.org/rolling/getting_started/nav2_behavior_trees/"
+    kind: Tool
+    summary: "The Nav2 documentation page on how a production robot navigation stack uses behavior trees to orchestrate independent planner, controller and recovery servers. Shows a minimal replanning tree in XML and lists the provided trees, from point-to-point navigation to following a dynamic point. A short overview with links to a node-by-node walkthrough of the default tree."
+    score: 12
