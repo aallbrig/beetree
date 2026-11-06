@@ -656,3 +656,27 @@ input[type='checkbox'] {
   cursor: pointer;
   text-decoration: underline;
 }
+
+.outline .row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.outline .row .node {
+  flex: 1;
+}
+.fold {
+  min-width: 36px;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.node.match {
+  background: var(--surface-2);
+  text-decoration: underline;
+}

@@ -39,6 +39,9 @@ import {
   PARALLEL_POLICIES,
   setPolicy,
   findProblems,
+  findNodes,
+  branchIds,
+  revealPath,
   stringifySpec,
   parseValidatorError,
   type NodeType,
@@ -126,6 +129,27 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
 
   const status = h('div', { class: 'small', role: 'status' });
   const outlineHost = h('div');
+  const collapsed = new Set<string>();
+  let matchIds = new Set<string>();
+  let matchPaths: Path[] = [];
+  let matchAt = -1;
+  const searchIn = h('input', {
+    type: 'search',
+    class: 'input',
+    placeholder: 'Find node by name',
+    'aria-label': 'Find node by name',
+  });
+  const searchInfo = h('span', { class: 'small', role: 'status' });
+  const collapseAllBtn = h('button', { class: 'btn small', type: 'button' }, 'Collapse all');
+  const expandAllBtn = h('button', { class: 'btn small', type: 'button' }, 'Expand all');
+  const outlineTools = h(
+    'div',
+    { class: 'toolbar', style: 'display:flex;gap:6px;flex-wrap:wrap;align-items:center' },
+    searchIn,
+    searchInfo,
+    collapseAllBtn,
+    expandAllBtn,
+  );
   const propsHost = h('div', { class: 'stack' });
   const yamlArea = h('textarea', {
     class: 'code',
@@ -220,6 +244,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
       redoBtn,
     ),
     h('p', { class: 'muted', style: 'font-size:.85rem;margin:.25rem 0' }, SHORTCUT_HELP),
+    outlineTools,
     outlineHost,
     propsHost,
   );
@@ -550,6 +575,33 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     refresh();
   });
 
+  searchIn.addEventListener('input', () => {
+    matchAt = -1;
+    for (const p of findNodes(spec.tree, searchIn.value)) revealPath(collapsed, p, pathId);
+    refresh();
+  });
+  searchIn.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const found = findNodes(spec.tree, searchIn.value);
+    if (found.length === 0) return;
+    matchAt = (matchAt + 1) % found.length;
+    const target = found[matchAt];
+    if (!target) return;
+    revealPath(collapsed, target, pathId);
+    selected = target;
+    refresh();
+    searchIn.focus();
+  });
+  collapseAllBtn.addEventListener('click', () => {
+    for (const id of branchIds(spec.tree, pathId)) collapsed.add(id);
+    refresh();
+  });
+  expandAllBtn.addEventListener('click', () => {
+    collapsed.clear();
+    refresh();
+  });
+
   function refresh(): void {
     syncMeta();
     renderVars();
@@ -557,10 +609,20 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     history.record(stringifySpec(spec));
     undoBtn.disabled = !history.canUndo;
     redoBtn.disabled = !history.canRedo;
-    ol = outline(spec.tree, (p) => {
-      selected = p;
-      refresh();
-    });
+    matchPaths = findNodes(spec.tree, searchIn.value);
+    matchIds = new Set(matchPaths.map((p) => pathId(p)));
+    searchInfo.textContent =
+      searchIn.value.trim() === ''
+        ? ''
+        : `${matchPaths.length} match${matchPaths.length === 1 ? '' : 'es'}`;
+    ol = outline(
+      spec.tree,
+      (p) => {
+        selected = p;
+        refresh();
+      },
+      { collapsed, matches: matchIds, onToggle: refresh },
+    );
     ol.setSelected(selected);
     clear(outlineHost);
     outlineHost.append(ol.el);

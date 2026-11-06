@@ -1,7 +1,7 @@
 import type { Status } from '../engine/bt';
 import { pathId } from '../engine/bt';
 import { h } from '../dom';
-import type { NodeSpec, Path, Problem } from '../spec';
+import { countNodes, type NodeSpec, type Path, type Problem } from '../spec';
 
 const ICONS: Record<string, string> = {
   action: '▶',
@@ -21,8 +21,20 @@ export interface Outline {
   setProblems(problems: readonly Problem[]): void;
 }
 
-/** A collapsible-free, keyboard-accessible tree outline with live status dots. */
-export function outline(root: NodeSpec, onSelect?: (path: Path) => void): Outline {
+/** A keyboard-accessible, collapsible tree outline with live status dots. */
+export interface OutlineView {
+  /** Ids of branches shown folded; the set is edited in place by the toggle. */
+  collapsed: Set<string>;
+  /** Ids to highlight as search matches. */
+  matches?: ReadonlySet<string>;
+  onToggle?: () => void;
+}
+
+export function outline(
+  root: NodeSpec,
+  onSelect?: (path: Path) => void,
+  view?: OutlineView,
+): Outline {
   const buttons = new Map<string, HTMLButtonElement>();
 
   const build = (node: NodeSpec, path: Path): HTMLLIElement => {
@@ -42,9 +54,30 @@ export function outline(root: NodeSpec, onSelect?: (path: Path) => void): Outlin
         onSelect(path);
       });
     buttons.set(id, btn);
-    const li = h('li', {}, btn);
+    if (view?.matches?.has(id)) btn.classList.add('match');
     const kids = node.children ?? [];
-    if (kids.length > 0) {
+    let row: HTMLElement = btn;
+    const folded = view?.collapsed.has(id) ?? false;
+    if (view && kids.length > 0) {
+      btn.setAttribute('aria-expanded', String(!folded));
+      const toggle = h(
+        'button',
+        {
+          class: 'fold',
+          type: 'button',
+          'aria-label': `${folded ? 'Expand' : 'Collapse'} ${node.name}`,
+        },
+        folded ? `+${countNodes(node) - 1}` : '−',
+      );
+      toggle.addEventListener('click', () => {
+        if (folded) view.collapsed.delete(id);
+        else view.collapsed.add(id);
+        view.onToggle?.();
+      });
+      row = h('div', { class: 'row' }, toggle, btn);
+    }
+    const li = h('li', {}, row);
+    if (kids.length > 0 && !folded) {
       li.append(h('ul', { class: 'outline' }, ...kids.map((c, i) => build(c, [...path, i]))));
     }
     return li;
