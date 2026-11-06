@@ -1,6 +1,7 @@
 import './style.css';
 import { currentTheme, showTheme, toggleTheme } from './theme';
 import { clearDraft } from './draft';
+import { applyPendingConsent } from './consent';
 import { currentUsername, isSignedIn, onAuthChange, signOut } from './auth';
 import { clear, h } from './dom';
 import { navigate, render, route, setGuard, start } from './router';
@@ -188,6 +189,7 @@ route('/scenes/([\\w-]+)', scenesView, { private: true, wide: true });
 route('/profile', profileView, { private: true });
 
 onAuthChange(() => {
+  if (isSignedIn()) void applyPendingConsent();
   renderNav();
   void render();
 });

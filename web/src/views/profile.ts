@@ -1,4 +1,5 @@
 import { api, ApiError, type ApiKeyInfo } from '../api';
+import { AVATAR_IDS, avatarSrc } from '../avatar';
 import { getToken } from '../auth';
 import { treeCard } from '../components/cards';
 import { formatDate, h, toast } from '../dom';
@@ -17,9 +18,47 @@ export async function profileView(ctx: Ctx): Promise<void> {
     { maxlength: '500', 'aria-label': 'Bio', style: 'min-height:90px' },
     me.bio,
   );
+  let avatar = me.avatar ?? '';
+  const preview = h('img', {
+    class: 'avatar big',
+    alt: 'Your profile picture',
+    width: '64',
+    height: '64',
+    src: avatarSrc(avatar || 'a001'),
+  });
+  const picker = h('div', {
+    class: 'avatar-grid',
+    role: 'radiogroup',
+    'aria-label': 'Profile picture',
+  });
+  for (const id of AVATAR_IDS) {
+    const b = h(
+      'button',
+      {
+        class: `avatar-opt${id === avatar ? ' on' : ''}`,
+        type: 'button',
+        role: 'radio',
+        'aria-checked': String(id === avatar),
+        'aria-label': `Picture ${id.slice(1)}`,
+      },
+      h('img', { src: avatarSrc(id), alt: '', width: '40', height: '40', loading: 'lazy' }),
+    );
+    b.addEventListener('click', () => {
+      avatar = id;
+      preview.src = avatarSrc(id);
+      for (const o of picker.children) {
+        o.classList.remove('on');
+        o.setAttribute('aria-checked', 'false');
+      }
+      b.classList.add('on');
+      b.setAttribute('aria-checked', 'true');
+    });
+    picker.append(b);
+  }
+  const news = h('input', { type: 'checkbox', id: 'news', checked: me.marketingOptIn === true });
   const save = h('button', { class: 'btn primary', type: 'button' }, 'Save profile');
   save.addEventListener('click', () => {
-    api.updateMe(name.value.trim(), bio.value).then(
+    api.updateMe(name.value.trim(), bio.value, { avatar, marketingOptIn: news.checked }).then(
       () => {
         toast('Profile saved.');
       },
@@ -124,7 +163,29 @@ export async function profileView(ctx: Ctx): Promise<void> {
           ),
         ),
         h('div', {}, h('label', {}, 'Bio'), bio),
+        h(
+          'div',
+          {},
+          h('label', {}, 'Profile picture'),
+          h(
+            'div',
+            { class: 'row' },
+            preview,
+            h('span', { class: 'small muted' }, 'Pick one of 100.'),
+          ),
+          picker,
+        ),
         h('div', {}, h('label', {}, 'Email'), h('div', {}, me.email ?? '')),
+        h(
+          'div',
+          { class: 'field row' },
+          news,
+          h(
+            'label',
+            { for: 'news', style: 'margin:0;font-weight:400' },
+            'Email me BeeTreeCraft news, new features and updates. Untick to unsubscribe.',
+          ),
+        ),
         h('div', { class: 'small muted' }, `Member since ${formatDate(me.createdAt)}`),
         save,
       ),
@@ -168,6 +229,13 @@ export async function profileView(ctx: Ctx): Promise<void> {
 export async function userView(ctx: Ctx): Promise<void> {
   const { profile, trees } = await api.user(ctx.params[0] ?? '');
   ctx.root.append(
+    h('img', {
+      class: 'avatar big',
+      alt: `${profile.displayName}'s profile picture`,
+      width: '64',
+      height: '64',
+      src: avatarSrc(profile.avatar ?? 'a001'),
+    }),
     h('h1', {}, profile.displayName),
     h('p', { class: 'muted' }, profile.bio || 'No bio yet.'),
     h('h2', {}, 'Shared trees'),

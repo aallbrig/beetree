@@ -740,3 +740,72 @@ input[type='checkbox'] {
     justify-content: center;
   }
 }
+
+/* profile pictures: 100 presets in a tappable grid */
+.avatar {
+  border-radius: 50%;
+  display: block;
+}
+.avatar.big {
+  width: 64px;
+  height: 64px;
+}
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  margin-top: 8px;
+  border: 1px solid var(--border, #e5dfc8);
+  border-radius: 10px;
+}
+.avatar-opt {
+  padding: 3px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+}
+.avatar-opt img {
+  width: 100%;
+  height: auto;
+  border-radius: 50%;
+}
+.avatar-opt.on {
+  border-color: var(--accent, #e8a300);
+}
+.avatar-opt:focus-visible {
+  outline: 2px solid var(--accent, #e8a300);
+  outline-offset: 2px;
+}
+
+/* the date field was wider than its card on phones */
+input[type='date'] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* forum: text only, so keep the writer's line breaks and never overflow on a phone */
+.post-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.excerpt {
+  margin: 4px 0 6px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.counter {
+  text-align: right;
+}
+.counter.near {
+  color: var(--err);
+}

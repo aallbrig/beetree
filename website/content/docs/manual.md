@@ -133,7 +133,7 @@ The site opens in light mode. Use the **Dark mode** / **Light mode** button in t
 
 - Set a tree's visibility to **Public** and it appears in [Community](/app/#/community), where anyone can read, like and comment on it.
 - Open any community tree and press **Fork in builder** to start your own copy.
-- Join the [Forum](/app/#/forum) to ask for help or show off your work.
+- Join the [Forum](/app/#/forum) to ask for help or show off your work. The forum is plain text only: no links, images or formatting, and line breaks are kept.
 - Your [Dashboard](/app/#/dashboard) shows your trees with their likes and comments, plus your forum activity.
 
 ## 7. Your profile

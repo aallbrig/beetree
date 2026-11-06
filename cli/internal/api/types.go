@@ -51,7 +51,28 @@ type Profile struct {
 	Bio         string `json:"bio"`
 	Email       string `json:"email,omitempty"`
 	Moderator   bool   `json:"moderator,omitempty"`
+	// Avatar is the id of one of the 100 preset pictures (a001 to a100); empty means the default.
+	Avatar string `json:"avatar,omitempty"`
+	// MarketingOptIn records consent to receive product news and campaign email. It is
+	// private: shown to the owner only, kept so the list can move to a marketing platform.
+	MarketingOptIn  bool   `json:"marketingOptIn"`
+	MarketingAt     string `json:"marketingOptInAt,omitempty"`
+	MarketingSource string `json:"marketingSource,omitempty"`
+	CreatedAt       string `json:"createdAt"`
+}
+
+// PublicProfile is the profile as other people may see it: no email, no consent record.
+type PublicProfile struct {
+	UserID      string `json:"userId"`
+	DisplayName string `json:"displayName"`
+	Bio         string `json:"bio"`
+	Avatar      string `json:"avatar,omitempty"`
 	CreatedAt   string `json:"createdAt"`
+}
+
+// Public returns the fields safe to show to anyone.
+func (p Profile) Public() PublicProfile {
+	return PublicProfile{p.UserID, p.DisplayName, p.Bio, p.Avatar, p.CreatedAt}
 }
 
 // Thread is a forum thread.

@@ -9,6 +9,7 @@ import {
   notifySignedIn,
 } from '../auth';
 import { maybeShowCommunitree } from '../communitree';
+import { rememberConsent } from '../consent';
 import { h, toast } from '../dom';
 import { navigate, type Ctx } from '../router';
 
@@ -102,6 +103,7 @@ export function signUpView(ctx: Ctx): () => void {
   const dob = input('date', 'birthdate', { autocomplete: 'bday' });
   const pass = input('password', 'password', { autocomplete: 'new-password', minlength: '10' });
   const adult = h('input', { type: 'checkbox', required: true, id: 'adult' });
+  const news = h('input', { type: 'checkbox', id: 'news' });
   const err = h('div', { class: 'error', role: 'alert' });
   const form = h(
     'form',
@@ -124,6 +126,16 @@ export function signUpView(ctx: Ctx): () => void {
         'I confirm that I am 18 years of age or older.',
       ),
     ),
+    h(
+      'div',
+      { class: 'field row' },
+      news,
+      h(
+        'label',
+        { for: 'news', style: 'margin:0;font-weight:400' },
+        'Email me BeeTreeCraft news, new features and updates. Optional; you can unsubscribe at any time from your profile.',
+      ),
+    ),
     err,
     h('button', { class: 'btn primary', type: 'submit' }, 'Create account'),
   );
@@ -134,6 +146,7 @@ export function signUpView(ctx: Ctx): () => void {
       password: pass.value,
       birthdate: dob.value,
     });
+    rememberConsent(user.value.trim(), news.checked);
     toast('Check your email for a confirmation code.');
     navigate(`/confirm?u=${encodeURIComponent(user.value.trim())}`);
   });
