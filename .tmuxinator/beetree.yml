@@ -21,3 +21,10 @@ windows:
         - dev:
           - clear
         - task site:dev
+  - loop:
+      layout: main-horizontal
+      panes:
+        - dev:
+          - clear
+        - while true; do scripts/agent-loop.sh; echo "loop exited or already running; retrying in 5 min"; sleep 300; done
+        - watch -n 30 task agent:loop:status
