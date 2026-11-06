@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"sort"
@@ -58,14 +59,28 @@ func summarize(ts []Tree) []Tree {
 
 func (s *Server) listTrees(w http.ResponseWriter, r *http.Request) {
 	limit := 50
-	if n, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && n > 0 && n <= 100 {
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil || n < 1 || n > 100 {
+			writeErr(w, http.StatusBadRequest, "bad_limit", "limit must be an integer from 1 to 100")
+			return
+		}
 		limit = n
+	}
+	offset := 0
+	if raw := r.URL.Query().Get("cursor"); raw != "" {
+		n, ok := decodeCursor(raw)
+		if !ok {
+			writeErr(w, http.StatusBadRequest, "bad_cursor", "cursor is not valid; use the next_cursor from a previous response")
+			return
+		}
+		offset = n
 	}
 	q := strings.ToLower(r.URL.Query().Get("q"))
 	tag := strings.ToLower(r.URL.Query().Get("tag"))
 	// Filtering and popularity sorting must see every public tree, or older
 	// trees are unfindable. A plain listing only needs the newest page.
-	fetch := limit
+	fetch := offset + limit + 1
 	if q != "" || tag != "" || r.URL.Query().Get("sort") == "popular" {
 		fetch = 0 // 0 means all
 	}
@@ -87,10 +102,34 @@ func (s *Server) listTrees(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("sort") == "popular" {
 		sort.SliceStable(out, func(i, j int) bool { return out[i].LikeCount > out[j].LikeCount })
 	}
+	if offset > len(out) {
+		offset = len(out)
+	}
+	out = out[offset:]
+	next := ""
 	if len(out) > limit {
 		out = out[:limit]
+		next = encodeCursor(offset + limit)
 	}
-	writeJSON(w, http.StatusOK, listOf(summarize(out)))
+	body := listOf(summarize(out))
+	if next != "" {
+		body["next_cursor"] = next
+	}
+	writeJSON(w, http.StatusOK, body)
+}
+
+// Cursors are opaque to clients: a position in the listing's stable order.
+func encodeCursor(offset int) string {
+	return base64.RawURLEncoding.EncodeToString([]byte("o" + strconv.Itoa(offset)))
+}
+
+func decodeCursor(c string) (int, bool) {
+	b, err := base64.RawURLEncoding.DecodeString(c)
+	if err != nil || len(b) < 2 || b[0] != 'o' {
+		return 0, false
+	}
+	n, err := strconv.Atoi(string(b[1:]))
+	return n, err == nil && n >= 0
 }
 
 func containsStr(list []string, v string) bool {

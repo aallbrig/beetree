@@ -177,8 +177,10 @@ paths:
         - {name: q, in: query, schema: {type: string}, description: 'Match name, description or tags'}
         - {name: tag, in: query, schema: {type: string}}
         - {name: sort, in: query, schema: {type: string, enum: [recent, popular]}}
-        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100}, description: 'Page size, default 50. Out of range returns 400.'}
+        - {name: cursor, in: query, schema: {type: string}, description: 'Opaque next_cursor from the previous page. Invalid returns 400.'}
       responses:
+        '400': {$ref: '#/components/responses/Error'}
         '200':
           description: Trees (without spec bodies)
           content:
@@ -189,6 +191,7 @@ paths:
                   items:
                     type: array
                     items: {$ref: '#/components/schemas/Tree'}
+                  next_cursor: {type: string, description: 'Present when more trees follow; pass as cursor'}
         '429': {$ref: '#/components/responses/Error'}
     post:
       summary: Create a tree
