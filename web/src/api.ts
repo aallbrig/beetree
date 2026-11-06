@@ -93,8 +93,15 @@ export const api = {
   createKey: (name: string) => request<ApiKeyInfo & { key: string }>('POST', '/v1/keys', { name }),
   deleteKey: (id: string) => request<undefined>('DELETE', `/v1/keys/${id}`),
   me: () => request<Profile>('GET', '/v1/me'),
-  updateMe: (displayName: string, bio: string) =>
-    request<Profile>('PUT', '/v1/me', { displayName, bio }),
+  updateMe: (
+    displayName: string,
+    bio: string,
+    more: {
+      avatar?: string;
+      marketingOptIn?: boolean;
+      marketingSource?: 'signup' | 'profile';
+    } = {},
+  ) => request<Profile>('PUT', '/v1/me', { displayName, bio, ...more }),
   myTrees: () => request<Items<Tree>>('GET', '/v1/me/trees'),
   myStats: () => request<Stats>('GET', '/v1/me/stats'),
   user: (id: string) => request<{ profile: Profile; trees: Tree[] }>('GET', `/v1/users/${id}`),

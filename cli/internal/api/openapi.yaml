@@ -385,6 +385,9 @@ paths:
               properties:
                 displayName: {type: string, pattern: '^[A-Za-z0-9_-]{3,32}$'}
                 bio: {type: string, maxLength: 500}
+                avatar: {type: string, pattern: '^(a(00[1-9]|0[1-9][0-9]|100))?$', description: 'Preset picture id; omit to keep, empty string to clear'}
+                marketingOptIn: {type: boolean, description: 'Consent to product news email; omit to keep'}
+                marketingSource: {type: string, enum: [signup, profile]}
       responses:
         '200':
           description: Updated
@@ -879,6 +882,10 @@ components:
         bio: {type: string}
         email: {type: string}
         moderator: {type: boolean, description: 'Present and true on GET /v1/me when the caller may review reports'}
+        avatar: {type: string, description: 'Preset picture id a001 to a100; empty for the default', example: a017}
+        marketingOptIn: {type: boolean, description: 'Consent to product news email. Returned to the owner only (GET /v1/me), never on public profiles'}
+        marketingOptInAt: {type: string, format: date-time}
+        marketingSource: {type: string, enum: [signup, profile]}
         createdAt: {type: string, format: date-time}
     Stats:
       type: object

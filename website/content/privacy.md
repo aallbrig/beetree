@@ -18,7 +18,8 @@ Sign-up uses Amazon Cognito. Cognito holds your email address and your birthdate
 
 The API stores the following in Amazon DynamoDB:
 
-- your profile: user id, display name, bio and creation time (your email is visible only to you)
+- your profile: user id, display name, bio, profile picture choice (one of 100 presets) and creation time (your email is visible only to you)
+- your newsletter choice: whether you agreed to receive BeeTreeCraft news and campaign email, when, and where you chose (sign-up or profile). It is off unless you tick it, it is never shown to other people, and you can untick it any time on your profile page. No marketing platform is connected yet; when one is, only people who opted in will be added
 - the trees you save, with their public or private setting
 - your likes, comments and forum posts, shown with your display name
 - API keys you create: only a SHA-256 hash and the first eight characters are kept, so the full key cannot be recovered

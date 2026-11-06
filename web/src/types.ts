@@ -27,6 +27,8 @@ export interface Profile {
   bio: string;
   email?: string;
   moderator?: boolean;
+  avatar?: string;
+  marketingOptIn?: boolean;
   createdAt: string;
 }
 export interface Stats {
