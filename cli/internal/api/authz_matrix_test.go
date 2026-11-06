@@ -124,11 +124,12 @@ var authzMatrix = map[string][5]int{
 	"GET /v1/forum/reports":              {401, 403, 403, 403, 403},
 	"GET /v1/forum/threads/{id}/reports": {401, 403, 403, 403, 403},
 
-	"GET /v1/scenes":         {401, 200, 200, 200, 200},
-	"POST /v1/scenes":        {401, 201, 201, 403, 201},
-	"GET /v1/scenes/{id}":    {404, 200, 404, 200, 200},
-	"PUT /v1/scenes/{id}":    {401, 200, 404, 403, 200},
-	"DELETE /v1/scenes/{id}": {401, 204, 404, 403, 204},
+	"GET /v1/scenes":             {401, 200, 200, 200, 200},
+	"POST /v1/scenes":            {401, 201, 201, 403, 201},
+	"GET /v1/scenes/{id}":        {404, 200, 404, 200, 200},
+	"PUT /v1/scenes/{id}":        {401, 200, 404, 403, 200},
+	"DELETE /v1/scenes/{id}":     {401, 204, 404, 403, 204},
+	"POST /v1/scenes/{id}/remix": {401, 404, 404, 403, 404},
 
 	"GET /v1/keys":         {401, 200, 200, 403, 403},
 	"POST /v1/keys":        {401, 201, 201, 403, 403},

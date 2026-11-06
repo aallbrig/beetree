@@ -153,6 +153,8 @@ type Scene struct {
 	Visibility string       `json:"visibility"`
 	CreatedAt  string       `json:"createdAt"`
 	UpdatedAt  string       `json:"updatedAt"`
+	// RemixedFrom is set on copies made by the remix route.
+	RemixedFrom *Lineage `json:"remixedFrom,omitempty"`
 }
 
 // Stats is the engagement summary shown on a user's dashboard.
