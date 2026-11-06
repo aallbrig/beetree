@@ -321,3 +321,30 @@ func TestMCPToolsCompactJSON(t *testing.T) {
 		assert.True(t, json.Valid([]byte(text)), name)
 	}
 }
+
+func TestMCPSearchReportsTruncation(t *testing.T) {
+	store := NewMemStore()
+	s := &Server{Store: store, Auth: fakeAuth{}, Version: "test", AllowAnonymous: true}
+	h := s.Handler()
+	search := func(q string) (trees []Tree, truncated bool) {
+		_, r := rpc(h, "", 1, "tools/call", map[string]any{"name": "search_trees", "arguments": map[string]any{"query": q}})
+		text, isErr := toolResult(t, r)
+		require.False(t, isErr, text)
+		var got struct {
+			Trees     []Tree `json:"trees"`
+			Truncated bool   `json:"truncated"`
+		}
+		require.NoError(t, json.Unmarshal([]byte(text), &got))
+		return got.Trees, got.Truncated
+	}
+	_, truncated := search("nothing")
+	assert.False(t, truncated, "an empty catalog is never truncated")
+	for i := 0; i < mcpSearchWindow+1; i++ {
+		require.NoError(t, store.PutTree(context.Background(), Tree{ID: fmt.Sprintf("t%04d", i), Name: "filler", Visibility: VisibilityPublic, CreatedAt: "2026-02-01T00:00:00Z"}))
+	}
+	trees, truncated := search("no-such-name")
+	assert.Empty(t, trees)
+	assert.True(t, truncated, "more public trees than the window must report truncation")
+	_, truncated = search("filler")
+	assert.False(t, truncated, "a search that fills its limit is not truncated")
+}

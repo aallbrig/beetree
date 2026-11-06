@@ -292,6 +292,7 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 		}
 		q, tag := strings.ToLower(a.Query), strings.ToLower(a.Tag)
 		var out []Tree
+		full := false
 		for _, t := range ts {
 			if q != "" && !strings.Contains(strings.ToLower(t.Name+" "+t.Description+" "+strings.Join(t.Tags, " ")), q) {
 				continue
@@ -300,10 +301,13 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 				continue
 			}
 			if out = append(out, t); len(out) == limit {
+				full = true
 				break
 			}
 		}
-		return toolJSON(summarize(out))
+		// truncated: the scan covered only the newest window and ended without
+		// filling the limit, so older public trees may match but were not seen.
+		return toolJSON(map[string]any{"trees": summarize(out), "truncated": !full && len(ts) >= mcpSearchWindow})
 	case "get_tree":
 		t, err := s.Store.GetTree(ctx, a.ID)
 		if err != nil || !canRead(r, t) {
