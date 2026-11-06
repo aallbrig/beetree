@@ -46,6 +46,10 @@ Example:
 			return err
 		}
 
+		if err := checkValid(tree, filePath); err != nil {
+			return err
+		}
+
 		if err := treeedit.SaveSpec(tree, filePath); err != nil {
 			return err
 		}
@@ -114,6 +118,10 @@ Example:
 			return err
 		}
 
+		if err := checkValid(tree, filePath); err != nil {
+			return err
+		}
+
 		if err := treeedit.SaveSpec(tree, filePath); err != nil {
 			return err
 		}
@@ -166,6 +174,10 @@ Example:
 		}
 
 		if err := treeedit.UpdateNode(&tree.Tree, nodeName, updates); err != nil {
+			return err
+		}
+
+		if err := checkValid(tree, filePath); err != nil {
 			return err
 		}
 

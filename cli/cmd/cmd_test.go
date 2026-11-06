@@ -949,3 +949,64 @@ func TestRoot_ErrorsDoNotDumpUsage(t *testing.T) {
 	require.Error(t, err)
 	assert.NotContains(t, output, "Usage:")
 }
+
+const invalidSpecYAML = `
+version: "1.0"
+metadata:
+  name: "bad-tree"
+tree:
+  type: "bogus"
+  name: "root"
+`
+
+func writeInvalidSpec(t *testing.T) string {
+	t.Helper()
+	p := filepath.Join(t.TempDir(), "bad.beetree.yaml")
+	require.NoError(t, os.WriteFile(p, []byte(invalidSpecYAML), 0644))
+	return p
+}
+
+func TestCommandsRejectInvalidSpec(t *testing.T) {
+	cases := map[string]func(p string) []string{
+		"render":   func(p string) []string { return []string{"render", p} },
+		"simulate": func(p string) []string { return []string{"simulate", p} },
+		"generate": func(p string) []string {
+			return []string{"generate", "unity", p, "--output", filepath.Join(filepath.Dir(p), "out")}
+		},
+	}
+	for name, args := range cases {
+		t.Run(name, func(t *testing.T) {
+			p := writeInvalidSpec(t)
+			_, err := executeCommand(args(p)...)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "invalid")
+			assert.Contains(t, err.Error(), "bogus")
+		})
+	}
+}
+
+func TestNodeAddRejectsUnknownType(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "ok.beetree.yaml")
+	require.NoError(t, os.WriteFile(p, []byte(`
+version: "1.0"
+metadata:
+  name: "t"
+tree:
+  type: "selector"
+  name: "root"
+  children:
+    - type: "action"
+      name: "a"
+      node: "A"
+`), 0644))
+	before, err := os.ReadFile(p)
+	require.NoError(t, err)
+
+	_, err = executeCommand("node", "add", p, "root", "w", "--type", "wobble", "--node", "W")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "wobble")
+
+	after, err := os.ReadFile(p)
+	require.NoError(t, err)
+	assert.Equal(t, string(before), string(after), "file must be untouched")
+}

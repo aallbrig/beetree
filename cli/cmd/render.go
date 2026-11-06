@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/aallbrig/beetree-cli/internal/renderer"
-	"github.com/aallbrig/beetree-cli/internal/spec"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +21,7 @@ Supported formats:
   dot     - Graphviz DOT digraph`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		tree, err := spec.ParseFile(args[0])
+		tree, err := loadValidSpec(args[0])
 		if err != nil {
 			return err
 		}

@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/aallbrig/beetree-cli/internal/codegen"
-	"github.com/aallbrig/beetree-cli/internal/spec"
 	"github.com/spf13/cobra"
 )
 
@@ -74,9 +73,9 @@ func init() {
 }
 
 func generateSingleSpec(cmd *cobra.Command, gen codegen.Generator, specFile, engineName string) error {
-	tree, err := spec.ParseFile(specFile)
+	tree, err := loadValidSpec(specFile)
 	if err != nil {
-		return fmt.Errorf("parse spec: %w", err)
+		return err
 	}
 
 	files, err := gen.Generate(tree)
