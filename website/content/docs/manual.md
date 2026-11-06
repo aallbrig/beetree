@@ -37,8 +37,6 @@ The scene selector on Explore lists the built-in scenes. Each scene declares its
 
 **Demo scene 2** is a combat scene: four allied Troopers against an enemy Commander, two Skirmishers and a Shieldbearer. These are generic stand-ins with their own trees, not characters from any game. Controls: a **damage timer**.
 
-**Demo scene 3** shows one tree driving three agents. A Leader, a Flanker and a Support all run the same [squad tree](https://github.com/aallbrig/beetreecraft/blob/main/examples/squad.beetree.yaml): the leader holds, the flanker closes in on the intruder, the support follows the leader. Each agent's label shows its slot. Controls: the clickable **intruder**. See [One tree, several agents](/docs/trees/#one-tree-several-agents) for the format.
-
 - Toggle the timer on or off.
 - **Period** sets seconds between ticks, from 1 to 20 (default 5).
 - **Damage** is taken per tick (default 10).
@@ -77,6 +75,12 @@ tree:
 ```
 
 Scene 2 is inspired by a beach-landing style firefight; see the [credit on References](/references/).
+
+### Demo scene 3: one tree, many agents
+
+A squad tree ticks once per frame, and each leaf names the agent it acts on with a **slot**: `leader`, `flanker` or `support`. The scene gives each of its three agents one slot, so a single tree drives all of them. A leaf with no slot acts on the leader.
+
+A Leader, a Flanker and a Support all run the same [squad tree](https://github.com/aallbrig/beetreecraft/blob/main/examples/squad.beetree.yaml): the leader holds, the flanker closes in on the intruder, the support follows the leader. Each agent's label shows its slot. Controls: the clickable **intruder**. See [One tree, several agents](/docs/trees/#one-tree-several-agents) for the format.
 
 ## 3. Build a tree
 
