@@ -48,7 +48,7 @@ func newTestServer(t *testing.T) http.Handler {
 	n := 0
 	clock := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	s := &Server{
-		Store: NewMemStore(), Auth: fakeAuth{}, Version: "test",
+		Store: NewMemStore(), Auth: fakeAuth{}, Version: "test", AllowAnonymous: true,
 		Now:   func() time.Time { clock = clock.Add(time.Second); return clock },
 		NewID: func() string { n++; return "id" + string(rune('a'+n)) },
 	}

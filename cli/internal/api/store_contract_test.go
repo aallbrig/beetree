@@ -123,6 +123,8 @@ func runStoreContract(t *testing.T, s Store) {
 		assert.ErrorIs(t, s.AddPost(ctx, Post{ID: "p2", ThreadID: "nope"}), ErrNotFound)
 	})
 
+	t.Run("api keys", func(t *testing.T) { runAPIKeyContract(t, s) })
+
 	t.Run("scenes", func(t *testing.T) {
 		sc := Scene{ID: "s1", OwnerID: "u1", Name: "arena", Visibility: VisibilityPrivate, CreatedAt: "2026-01-01T00:00:00Z",
 			Agents: []SceneAgent{{Name: "a", TreeID: "t1", Model: "character-a", X: 1, Z: 2}}}
@@ -156,4 +158,28 @@ func runStoreContract(t *testing.T, s Store) {
 
 func TestMemStoreContract(t *testing.T) {
 	runStoreContract(t, NewMemStore())
+}
+
+func runAPIKeyContract(t *testing.T, s Store) {
+	t.Helper()
+	ctx := context.Background()
+	k := APIKey{ID: "k1", OwnerID: "u1", Username: "alice", Name: "ci", Prefix: "btc_abcd", Hash: "h1", CreatedAt: "2026-01-01T00:00:00Z"}
+	require.NoError(t, s.PutAPIKey(ctx, k))
+	require.NoError(t, s.PutAPIKey(ctx, APIKey{ID: "k2", OwnerID: "u1", Name: "dev", Hash: "h2", CreatedAt: "2026-01-02T00:00:00Z"}))
+
+	got, err := s.GetAPIKeyByHash(ctx, "h1")
+	require.NoError(t, err)
+	assert.Equal(t, "alice", got.Username)
+	_, err = s.GetAPIKeyByHash(ctx, "nope")
+	assert.ErrorIs(t, err, ErrNotFound)
+
+	list, err := s.ListAPIKeys(ctx, "u1")
+	require.NoError(t, err)
+	require.Len(t, list, 2)
+	assert.Equal(t, "k2", list[0].ID, "newest first")
+
+	assert.ErrorIs(t, s.DeleteAPIKey(ctx, "other", "k1"), ErrNotFound, "only the owner can revoke")
+	require.NoError(t, s.DeleteAPIKey(ctx, "u1", "k1"))
+	_, err = s.GetAPIKeyByHash(ctx, "h1")
+	assert.ErrorIs(t, err, ErrNotFound)
 }

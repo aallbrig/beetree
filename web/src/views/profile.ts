@@ -1,4 +1,4 @@
-import { api, ApiError } from '../api';
+import { api, ApiError, type ApiKeyInfo } from '../api';
 import { getToken } from '../auth';
 import { treeCard } from '../components/cards';
 import { formatDate, h, toast } from '../dom';
@@ -42,6 +42,68 @@ export async function profileView(ctx: Ctx): Promise<void> {
       toast('Could not copy.', 'err');
     });
   });
+  const keyName = h('input', {
+    type: 'text',
+    maxlength: '60',
+    placeholder: 'Key name, e.g. laptop',
+    'aria-label': 'API key name',
+  });
+  const keyList = h('ul', { class: 'keylist' });
+  const fresh = h('div', { class: 'note hide', role: 'status' });
+  const renderKeys = (keys: ApiKeyInfo[]): void => {
+    keyList.replaceChildren(
+      ...(keys.length === 0
+        ? [h('li', { class: 'muted small' }, 'No keys yet.')]
+        : keys.map((k) =>
+            h(
+              'li',
+              { class: 'row' },
+              h('span', {}, `${k.name} `),
+              h('code', {}, `${k.prefix}…`),
+              h('span', { class: 'small muted' }, ` created ${formatDate(k.createdAt)}`),
+              h(
+                'button',
+                {
+                  class: 'btn small danger',
+                  type: 'button',
+                  onClick: () => {
+                    api
+                      .deleteKey(k.id)
+                      .then(refreshKeys)
+                      .catch(() => {
+                        toast('Could not revoke the key.', 'err');
+                      });
+                  },
+                },
+                'Revoke',
+              ),
+            ),
+          )),
+    );
+  };
+  function refreshKeys(): Promise<void> {
+    return api.listKeys().then((r) => {
+      renderKeys(r.items);
+    });
+  }
+  const makeKey = h('button', { class: 'btn primary', type: 'button' }, 'Create API key');
+  makeKey.addEventListener('click', () => {
+    api
+      .createKey(keyName.value.trim())
+      .then(async (k) => {
+        keyName.value = '';
+        fresh.classList.remove('hide');
+        fresh.replaceChildren(
+          h('strong', {}, 'Copy this key now. It is shown only once.'),
+          h('pre', { class: 'code' }, k.key),
+        );
+        await refreshKeys();
+      })
+      .catch((e: unknown) => {
+        toast(e instanceof ApiError ? e.message : 'Could not create the key.', 'err');
+      });
+  });
+  void refreshKeys();
   ctx.root.append(
     h('h1', {}, 'Your profile'),
     h(
@@ -83,12 +145,17 @@ export async function profileView(ctx: Ctx): Promise<void> {
         h(
           'div',
           { class: 'card stack' },
-          h('h2', {}, 'Developer access'),
+          h('h2', {}, 'API keys'),
           h(
             'p',
             { class: 'small muted' },
-            'Use a token with the REST API or the MCP server. Tokens last about an hour.',
+            'The REST API and the MCP server need a key. Send it as X-API-Key or as a bearer token. Keep it secret; revoke it here if it leaks.',
           ),
+          h('div', { class: 'row' }, keyName, makeKey),
+          fresh,
+          keyList,
+          h('h3', {}, 'Short-lived token'),
+          h('p', { class: 'small muted' }, 'A sign-in token also works and lasts about an hour.'),
           copy,
           h('a', { href: '/docs/api/' }, 'API docs →'),
           h('a', { href: '/docs/mcp/' }, 'MCP docs →'),

@@ -21,8 +21,9 @@ import (
 //	THREAD#<id>  META             thread (data), postCount, lastActivity
 //	THREAD#<id>  POST#<ts>#<id>
 //	SCENE#<id>   META
+//	APIKEY#<hash> META        API key record (hash only, never the secret)
 //
-// gsi1: owner index (gsi1pk=OWNER#<id>, gsi1sk=TREE#<ts> | SCENE#<ts>)
+// gsi1: owner index (gsi1pk=OWNER#<id>, gsi1sk=TREE#<ts> | SCENE#<ts> | APIKEY#<ts>#<id>)
 // gsi2: feeds       (gsi2pk=PUBLIC#TREE | FORUM, gsi2sk=<ts>#<id>)
 //
 // Mutable counters live in their own attributes so they can be updated
@@ -538,6 +539,59 @@ func (d *DynamoStore) ListScenesByOwner(ctx context.Context, ownerID string) ([]
 		out = append(out, sc)
 	}
 	return out, nil
+}
+
+// ---- API keys ----------------------------------------------------------------
+
+func (d *DynamoStore) PutAPIKey(ctx context.Context, k APIKey) error {
+	data, err := json.Marshal(k)
+	if err != nil {
+		return err
+	}
+	it := key("APIKEY#"+k.Hash, "META")
+	it["data"] = s(string(data))
+	it["gsi1pk"], it["gsi1sk"] = s("OWNER#"+k.OwnerID), s("APIKEY#"+k.CreatedAt+"#"+k.ID)
+	_, err = d.DB.PutItem(ctx, &dynamodb.PutItemInput{TableName: &d.Table, Item: it})
+	return err
+}
+
+func (d *DynamoStore) GetAPIKeyByHash(ctx context.Context, hash string) (APIKey, error) {
+	it, err := d.get(ctx, "APIKEY#"+hash, "META")
+	if err != nil {
+		return APIKey{}, err
+	}
+	var k APIKey
+	return k, json.Unmarshal([]byte(str(it, "data")), &k)
+}
+
+func (d *DynamoStore) ListAPIKeys(ctx context.Context, ownerID string) ([]APIKey, error) {
+	items, err := d.queryIndex(ctx, gsiOwner, "gsi1pk", "gsi1sk", "OWNER#"+ownerID, "APIKEY#", true, 0)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]APIKey, 0, len(items))
+	for _, it := range items {
+		var k APIKey
+		if err := json.Unmarshal([]byte(str(it, "data")), &k); err != nil {
+			return nil, err
+		}
+		out = append(out, k)
+	}
+	return out, nil
+}
+
+func (d *DynamoStore) DeleteAPIKey(ctx context.Context, ownerID, id string) error {
+	keys, err := d.ListAPIKeys(ctx, ownerID)
+	if err != nil {
+		return err
+	}
+	for _, k := range keys {
+		if k.ID == id {
+			_, err := d.DB.DeleteItem(ctx, &dynamodb.DeleteItemInput{TableName: &d.Table, Key: key("APIKEY#"+k.Hash, "META")})
+			return err
+		}
+	}
+	return ErrNotFound
 }
 
 // ---- stats -----------------------------------------------------------------

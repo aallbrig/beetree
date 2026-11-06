@@ -8,6 +8,9 @@ required=(index.html 404.html docs/index.html docs/manual/index.html docs/cli/in
   docs/cli-reference/index.html docs/trees/index.html docs/api/index.html docs/api/reference/index.html
   docs/mcp/index.html references/index.html schemas/beetree.schema.json app/index.html vendor/swagger/swagger-ui-bundle.js js/swagger-init.js communitree.css js/communitree.js sitemap.xml)
 grep -Eq 'class="?ver[" >]' "$PUBLIC/index.html" || { echo "footer version missing" >&2; exit 1; }
+for d in docs/api docs/mcp; do
+  grep -q 'X-API-Key' "$PUBLIC/$d/index.html" || { echo "$d must document X-API-Key" >&2; exit 1; }
+done
 for f in "${required[@]}"; do
   [ -f "$PUBLIC/$f" ] || { echo "missing: $f" >&2; exit 1; }
 done
