@@ -35,6 +35,10 @@ n=$(grep -c '^  - title:' "$data")
 awk '/^    score:/ && $2 < 9 {bad=1} END {exit bad}' "$data" || { echo "a resource scores below the rubric threshold of 9" >&2; exit 1; }
 # the references page credits the inspiration for Demo scene 2
 grep -q 'beach-landing style firefight' "$PUBLIC/references/index.html" || { echo "references must credit the scene 2 inspiration" >&2; exit 1; }
+# the manual documents the Explore scenes and the scene 2 timer
+for t in 'Demo scene 1' 'Demo scene 2' 'damage timer'; do
+  grep -q "$t" "$PUBLIC/docs/manual/index.html" || { echo "manual must document: $t" >&2; exit 1; }
+done
 # the TUI page leads with the step-through debugger and embeds its recorded demos
 [ "$(grep -oE '<img[^>]*/img/tui-[a-z-]+\.gif' "$PUBLIC/docs/tui/index.html" | wc -l)" -ge 2 ] || { echo "docs/tui must embed its GIFs" >&2; exit 1; }
 for g in tui-step-through.gif tui-editor.gif; do [ -s "$PUBLIC/img/$g" ] || { echo "missing: img/$g" >&2; exit 1; }; done

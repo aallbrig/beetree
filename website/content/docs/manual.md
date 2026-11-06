@@ -29,6 +29,53 @@ Try this:
 - Click an agent (or its name in the side panel) to see **its tree**. The coloured dot beside each node shows what it is doing right now: yellow is running, green succeeded, red failed.
 - Drag to orbit the camera, scroll to zoom.
 
+### Choose a scene
+
+The scene selector on Explore lists the built-in scenes. Each scene declares its own controls.
+
+**Demo scene 1** is the patrol-and-intruder scene above. Controls: the **health** slider and the clickable **intruder**.
+
+**Demo scene 2** is a combat scene: four allied Troopers against an enemy Commander, two Skirmishers and a Shieldbearer. These are generic stand-ins with their own trees, not characters from any game. Controls: a **damage timer**.
+
+- Toggle the timer on or off.
+- **Period** sets seconds between ticks, from 1 to 20 (default 5).
+- **Damage** is taken per tick (default 10).
+- **Target** is the selected agent, or every agent of one faction.
+
+What to watch for:
+
+- A Trooper holds, takes cover when under fire, and retreats once its health falls below 30 percent.
+- A Skirmisher flees when its Commander falls.
+- A Shieldbearer faces the nearest threat and advances.
+- The Commander charges, then retreats to recharge when its health is low.
+
+Drain the enemy faction with the timer and watch the Skirmishers' trees react. Each tree stays under 25 nodes. Here is the Trooper's shape, trimmed to its core (the full file is [`examples/trooper.beetree.yaml`](https://github.com/aallbrig/beetreecraft/blob/main/examples/trooper.beetree.yaml)):
+
+```yaml
+version: "1.0"
+metadata:
+  name: trooper-core
+  description: "Retreat when hurt, otherwise hold"
+tree:
+  type: selector
+  name: trooper_root
+  children:
+    - type: sequence
+      name: retreat_when_hurt
+      children:
+        - type: condition
+          name: health_low
+          node: IsHealthBelowThreshold
+        - type: action
+          name: retreat
+          node: RetreatToRally
+    - type: action
+      name: hold_position
+      node: HoldPosition
+```
+
+Scene 2 is inspired by a beach-landing style firefight; see the [credit on References](/references/).
+
 ## 3. Build a tree
 
 Open [Build](/app/#/build) and choose **New tree**. (You need to be signed in.) Everything you make later lives under **My trees**.
