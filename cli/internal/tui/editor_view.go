@@ -742,9 +742,9 @@ func (ev *EditorView) syncSimTraceView() {
 	ev.propsView.SetText(b.String())
 }
 
-// navigateHint leads with help and quit so a narrow terminal cuts the
+// navigateHint leads with help, quit, save and run so a narrow terminal cuts the
 // less important keys, not the ones a newcomer needs to find their way out.
-const navigateHint = "[?]help  [q]uit  [a]dd  [e]dit  [d]elete  [c]opy  [m]ove  [p]arams  [b]board  [u]ndo  [U]redo  [r]un  [v]alidate  [/]find  [s]ave"
+const navigateHint = "[?]help  [q]uit  [s]ave  [r]un  [a]dd  [e]dit  [d]elete  [m]ove  [u]ndo  [c]opy  [p]arams  [b]board  [U]redo  [v]alidate  [/]find"
 
 func (ev *EditorView) syncStatusBar() {
 	dirty := ""
