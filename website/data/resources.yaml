@@ -214,3 +214,10 @@ items:
     author: "Cody Olivier"
     summary: "A shipped-game postmortem on boss attacks in a top-down shooter. A hand-built attack branch with timer decorators was hard to change and test, so the author replaced it with a random selector over self-contained attack leaves that fail unless their conditions hold. Small, concrete and reusable across bosses; a good example of choosing a node type to keep a tree flat and testable."
     score: 12
+  - title: "Behavior Trees and State Machines in Robotics Applications"
+    url: "https://arxiv.org/abs/2208.04211"
+    kind: Paper
+    year: "2023"
+    author: "Razan Ghzouli, Thorsten Berger, Einar Broch Johnsen, Andrzej Wasowski and Swaib Dragule"
+    summary: "Compares behavior tree and state machine languages by analysing several DSLs in depth and mining open-source robotics projects for how each is used. The authors find the two share many language concepts and reuse patterns, and that behavior tree use is growing quickly; they release the extracted models as a dataset. Published in IEEE Transactions on Software Engineering; read it for evidence-based grounding when choosing between the two."
+    score: 13

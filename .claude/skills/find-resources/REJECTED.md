@@ -14,3 +14,5 @@ https://cgi.csc.liv.ac.uk/~xiaowei/game_materials/lecture24.pdf | unscored | PDF
 https://www.sambuz.com/doc/automated-testing-for-multiplayer-game-ai-automated-ppt-presentation-901544 | 9 | Rare (Sea of Thieves) BT testing slides, but an ad-laden mirror with no named event; retry via the original GDC/Rare source
 https://80.lv/articles/days-gone-squad-coordination-explained | 7 | Days Gone squad confidence article; never mentions behavior trees
 https://cryengine.com/docs/static/engines/cryengine-5/categories/23756813/pages/23310620 | unscored | page body truncated, only navigation readable
+https://gdcvault.com/play/1023055/contactUs | unscored | Gillberg, "AI Behavior Editing and Debugging in The Division" (GDC 2016); tagged free but only the description was readable and a login notice appeared
+https://cra.com/crapublications/towards-a-human-in-the-loop-system-for-authoring-game-ai-using-behavior-languages/ | unscored | Kleinman et al. FDG 2023 workshop paper; full text not freely confirmed and behavior trees not named
