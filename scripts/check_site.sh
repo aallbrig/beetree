@@ -50,9 +50,10 @@ done
 grep -Eq 'href="?/site-map/[" >]' "$PUBLIC/index.html" || { echo "footer must link /site-map/" >&2; exit 1; }
 
 # the home page names the trope templates and links to the live preview
-for t in 'Patrol loop' 'Guard' 'Coward' 'Boss with phases' 'Loyal companion'; do
-  grep -q "<h3>$t</h3>" "$PUBLIC/index.html" || { echo "home must name template: $t" >&2; exit 1; }
-  tr -d '\n' < "$PUBLIC/index.html" | grep -Eq "<a [^>]*href=\"?/app/#/builder\?template=[a-z]+\"?[^>]*><h3>$t</h3>" || { echo "home template heading must sit inside a link to the builder: $t" >&2; exit 1; }
+for pair in "shopkeeper:Shopkeeper's routine" 'guard:Guard' 'coward:Coward' 'boss:Boss with phases' 'companion:Loyal companion'; do
+  slug="${pair%%:*}"; t="${pair#*:}"
+  tr -d '\n' < "$PUBLIC/index.html" | grep -Fq "href=\"/app/#/builder?template=$slug\"><h3>$t</h3>" || { echo "home card for template $slug must be headed: $t" >&2; exit 1; }
+  grep -q "id: 'sample:$slug'" web/src/samples.ts || { echo "home links to unknown template: $slug" >&2; exit 1; }
 done
 tr -d '\n' < "$PUBLIC/index.html" | grep -oE '<section class="?wrap"? id="?templates.*' | sed 's#</section>.*##' | grep -Eq 'href="?/app/#/explore' || { echo "home templates section must link to the live preview" >&2; exit 1; }
 
