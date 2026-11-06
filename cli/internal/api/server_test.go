@@ -339,6 +339,15 @@ func TestForum(t *testing.T) {
 	require.Len(t, items, 1)
 	assert.Equal(t, "spam", items[0].(map[string]any)["reason"])
 
+	all := "/v1/forum/reports"
+	assert.Equal(t, 401, do(h, "GET", all, "", nil).Code)
+	assert.Equal(t, 403, do(h, "GET", all, "bob", nil).Code, "members cannot read the cross-thread queue")
+	recent := do(h, "GET", all, "mod", nil)
+	require.Equal(t, 200, recent.Code)
+	ritems := recent.JSON(t)["items"].([]any)
+	require.Len(t, ritems, 1)
+	assert.Equal(t, id, ritems[0].(map[string]any)["threadId"])
+
 	got := do(h, "GET", "/v1/forum/threads/"+id, "", nil).JSON(t)
 	assert.Len(t, got["posts"], 1)
 	assert.Equal(t, float64(1), got["thread"].(map[string]any)["postCount"])

@@ -29,10 +29,11 @@ import (
 // Mutable counters live in their own attributes so they can be updated
 // atomically without rewriting the JSON document.
 const (
-	gsiOwner  = "gsi1"
-	gsiFeed   = "gsi2"
-	feedTree  = "PUBLIC#TREE"
-	feedForum = "FORUM"
+	gsiOwner    = "gsi1"
+	gsiFeed     = "gsi2"
+	feedTree    = "PUBLIC#TREE"
+	feedForum   = "FORUM"
+	feedReports = "REPORTS"
 )
 
 // DynamoAPI is the subset of the DynamoDB client the store uses.
@@ -503,6 +504,7 @@ func (d *DynamoStore) AddReport(ctx context.Context, r Report) error {
 	}
 	it := key("THREAD#"+r.ThreadID, "REPORT#"+r.PostID+"#"+r.ReporterID)
 	it["data"] = s(string(data))
+	it["gsi2pk"], it["gsi2sk"] = s(feedReports), s(r.CreatedAt+"#"+r.ID)
 	_, err = d.DB.PutItem(ctx, &dynamodb.PutItemInput{TableName: &d.Table, Item: it,
 		ConditionExpression: aws.String("attribute_not_exists(pk)")})
 	var dup *types.ConditionalCheckFailedException
@@ -514,6 +516,23 @@ func (d *DynamoStore) AddReport(ctx context.Context, r Report) error {
 
 func (d *DynamoStore) ListReports(ctx context.Context, threadID string) ([]Report, error) {
 	items, err := d.listPartition(ctx, "THREAD#"+threadID, "REPORT#")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Report, 0, len(items))
+	for _, it := range items {
+		var r Report
+		if err := json.Unmarshal([]byte(str(it, "data")), &r); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, nil
+}
+
+// ListRecentReports returns reports across all threads, newest first.
+func (d *DynamoStore) ListRecentReports(ctx context.Context, limit int) ([]Report, error) {
+	items, err := d.queryIndex(ctx, gsiFeed, "gsi2pk", "gsi2sk", feedReports, "", true, limit)
 	if err != nil {
 		return nil, err
 	}

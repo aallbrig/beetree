@@ -34,6 +34,8 @@ type Store interface {
 	// ErrNotFound when the thread does not exist.
 	AddReport(ctx context.Context, r Report) error
 	ListReports(ctx context.Context, threadID string) ([]Report, error)
+	// ListRecentReports lists reports across all threads, newest first.
+	ListRecentReports(ctx context.Context, limit int) ([]Report, error)
 
 	PutScene(ctx context.Context, s Scene) error
 	GetScene(ctx context.Context, id string) (Scene, error)

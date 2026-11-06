@@ -251,6 +251,25 @@ func (m *MemStore) ListReports(_ context.Context, threadID string) ([]Report, er
 	return append([]Report(nil), m.reports[threadID]...), nil
 }
 
+func (m *MemStore) ListRecentReports(_ context.Context, limit int) ([]Report, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var all []Report
+	for _, rs := range m.reports {
+		all = append(all, rs...)
+	}
+	sort.Slice(all, func(i, j int) bool {
+		if all[i].CreatedAt != all[j].CreatedAt {
+			return all[i].CreatedAt > all[j].CreatedAt
+		}
+		return all[i].ID > all[j].ID
+	})
+	if limit > 0 && len(all) > limit {
+		all = all[:limit]
+	}
+	return all, nil
+}
+
 func (m *MemStore) ListPosts(_ context.Context, threadID string) ([]Post, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
