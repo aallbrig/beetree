@@ -541,3 +541,36 @@ func TestWriteRateLimitReturns429(t *testing.T) {
 	clock = clock.Add(61 * time.Second)
 	assert.NotEqual(t, 429, post("alice").Code, "window resets")
 }
+
+func TestProfileAvatarAndMarketingConsent(t *testing.T) {
+	h := newTestServer(t)
+	put := func(body map[string]any) resp {
+		body["displayName"] = "Alice_B"
+		return do(h, "PUT", "/v1/me", "alice", body)
+	}
+	for _, bad := range []string{"a000", "a101", "a1", "../x", "<b>"} {
+		assert.Equal(t, 400, put(map[string]any{"avatar": bad}).Code, bad)
+	}
+	for _, good := range []string{"a001", "a010", "a099", "a100"} {
+		require.Equal(t, 200, put(map[string]any{"avatar": good}).Code, good)
+	}
+	me := do(h, "GET", "/v1/me", "alice", nil).JSON(t)
+	assert.Equal(t, "a100", me["avatar"])
+	assert.Equal(t, false, me["marketingOptIn"], "consent is opt-in, never assumed")
+
+	require.Equal(t, 200, put(map[string]any{"marketingOptIn": true, "marketingSource": "signup"}).Code)
+	me = do(h, "GET", "/v1/me", "alice", nil).JSON(t)
+	assert.Equal(t, true, me["marketingOptIn"])
+	assert.Equal(t, "signup", me["marketingSource"])
+	assert.NotEmpty(t, me["marketingOptInAt"])
+	assert.Equal(t, "a100", me["avatar"], "omitted fields keep their value")
+
+	require.Equal(t, 200, put(map[string]any{"marketingOptIn": false}).Code)
+	me = do(h, "GET", "/v1/me", "alice", nil).JSON(t)
+	assert.Equal(t, false, me["marketingOptIn"], "consent can be withdrawn")
+	assert.Equal(t, "profile", me["marketingSource"])
+
+	pub := do(h, "GET", "/v1/users/alice", "", nil)
+	assert.NotContains(t, string(pub.Body), "marketing", "the consent record is private")
+	assert.Contains(t, string(pub.Body), "a100", "the avatar is public")
+}

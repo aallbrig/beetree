@@ -38,7 +38,15 @@ func (s *Server) getMe(w http.ResponseWriter, r *http.Request) {
 type profileRequest struct {
 	DisplayName string `json:"displayName"`
 	Bio         string `json:"bio"`
+	// Avatar, when present, picks a preset picture ("" clears it).
+	Avatar *string `json:"avatar"`
+	// MarketingOptIn, when present, records or withdraws consent to email campaigns.
+	MarketingOptIn *bool `json:"marketingOptIn"`
+	// MarketingSource says where the choice was made: "signup" or "profile".
+	MarketingSource string `json:"marketingSource"`
 }
+
+var avatarRE = regexp.MustCompile(`^a(0[0-9][1-9]|0[1-9]0|100)$`)
 
 func (s *Server) updateMe(w http.ResponseWriter, r *http.Request) {
 	c, ok := requireAuth(w, r)
@@ -58,8 +66,23 @@ func (s *Server) updateMe(w http.ResponseWriter, r *http.Request) {
 		s.storeErr(w, err)
 		return
 	}
+	if req.Avatar != nil && *req.Avatar != "" && !avatarRE.MatchString(*req.Avatar) {
+		writeErr(w, http.StatusBadRequest, "invalid_request", "avatar must be one of a001 to a100")
+		return
+	}
 	p.DisplayName = req.DisplayName
 	p.Bio = clip(req.Bio, 500)
+	if req.Avatar != nil {
+		p.Avatar = *req.Avatar
+	}
+	if req.MarketingOptIn != nil && *req.MarketingOptIn != p.MarketingOptIn {
+		p.MarketingOptIn = *req.MarketingOptIn
+		p.MarketingAt = s.stamp()
+		p.MarketingSource = "profile"
+		if req.MarketingSource == "signup" {
+			p.MarketingSource = "signup"
+		}
+	}
 	if err := s.Store.PutProfile(r.Context(), p); err != nil {
 		s.storeErr(w, err)
 		return
@@ -113,7 +136,7 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 			pub = append(pub, t)
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"profile": p, "trees": listOf(summarize(pub))["items"]})
+	writeJSON(w, http.StatusOK, map[string]any{"profile": p.Public(), "trees": listOf(summarize(pub))["items"]})
 }
 
 func (s *Server) listThreads(w http.ResponseWriter, r *http.Request) {
