@@ -39,6 +39,10 @@ claude mcp add --transport http beetreecraft https://api.beetreecraft.com/mcp \
 
 Get a key from your [profile page](/app/#/profile) under **API keys**. Keys start with `btc_`, are shown once, and can be revoked there. Requests without a valid key get a 401. Never commit a key; use an environment variable or your client's secret store.
 
+### Scopes
+
+MCP tools follow the key's [scopes](/docs/api/#key-scopes-and-expiry). A read-only key can run `list_my_trees` and `validate_tree` but not `create_tree`, which needs `trees:write`; a denied tool returns an `insufficient_scope` result that names the scope the key lacks. Pick the narrowest preset that does the job.
+
 ## Tools
 
 Every tool needs a valid API key. Tools marked (account) also act on your account.
