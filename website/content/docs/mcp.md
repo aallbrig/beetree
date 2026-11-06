@@ -67,6 +67,7 @@ Resources (`resources/list`, `resources/read`):
 | `beetree://node-types` | Node types, decorators, render formats and engines as JSON |
 | `beetree://schema/beetree` | The JSON Schema for `.beetree.yaml`, identical to `/schemas/beetree.schema.json` |
 | `beetree://examples/patrol` | A small valid `.beetree.yaml` to copy the format from |
+| `beetree://templates/<name>` | The builder templates (shopkeeper, guard, coward, boss, companion), each a valid `.beetree.yaml` |
 
 Prompt `design_behavior_tree` (`prompts/get`) takes `character` and an optional `engine`. It walks a model through reading the resources, writing a spec, validating, simulating, rendering and generating code.
 

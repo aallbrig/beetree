@@ -1,0 +1,21 @@
+version: "1.0"
+metadata:
+  name: shopkeeper
+  description: Greet customers, otherwise restock the shelves, mind the counter and take tea
+tree:
+  type: selector
+  name: shopkeeper_ai
+  children:
+    - type: sequence
+      name: serve_customer
+      children:
+        - {type: condition, name: can_see_target}
+        - {type: action, name: face_customer}
+        - {type: action, name: animate_greeting}
+    - type: sequence
+      name: daily_routine
+      children:
+        - {type: action, name: wander_to_shelf}
+        - {type: action, name: animate_restock}
+        - {type: action, name: wait_at_counter}
+        - {type: action, name: drink_tea}

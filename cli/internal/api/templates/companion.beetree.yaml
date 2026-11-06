@@ -1,0 +1,22 @@
+version: "1.0"
+metadata:
+  name: companion
+  description: Defend the owner when a threat appears, otherwise stay close
+tree:
+  type: selector
+  name: companion_ai
+  children:
+    - type: sequence
+      name: defend_owner
+      children:
+        - {type: condition, name: can_see_target}
+        - type: selector
+          name: engage
+          children:
+            - type: sequence
+              name: strike
+              children:
+                - {type: condition, name: target_in_range}
+                - {type: action, name: melee_attack}
+            - {type: action, name: chase_target}
+    - {type: action, name: idle_near_owner}

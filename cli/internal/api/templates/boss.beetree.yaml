@@ -1,0 +1,25 @@
+version: "1.0"
+metadata:
+  name: boss
+  description: Ranged opener, melee up close, retreat and heal when hurt
+tree:
+  type: selector
+  name: boss_ai
+  children:
+    - type: sequence
+      name: desperate_phase
+      children:
+        - {type: condition, name: health_is_low}
+        - {type: action, name: retreat_to_cover}
+        - {type: action, name: heal_self}
+    - type: sequence
+      name: melee_phase
+      children:
+        - {type: condition, name: target_in_range}
+        - {type: action, name: melee_attack}
+    - type: sequence
+      name: ranged_phase
+      children:
+        - {type: condition, name: can_see_target}
+        - {type: action, name: shoot_projectile}
+    - {type: action, name: look_around}
