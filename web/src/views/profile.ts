@@ -3,6 +3,18 @@ import { AVATAR_IDS, avatarSrc } from '../avatar';
 import { getToken } from '../auth';
 import { treeCard } from '../components/cards';
 import { formatDate, h, toast } from '../dom';
+import {
+  EXPIRIES,
+  PRESETS,
+  RESOURCES,
+  expiryText,
+  keyBody,
+  lastUsedText,
+  scopeChips,
+  scopeFor,
+  type Expiry,
+  type Preset,
+} from '../keyscopes';
 import type { Ctx } from '../router';
 
 export async function profileView(ctx: Ctx): Promise<void> {
@@ -101,6 +113,17 @@ export async function profileView(ctx: Ctx): Promise<void> {
               h('code', {}, `${k.prefix}…`),
               h('span', { class: 'small muted' }, ` created ${formatDate(k.createdAt)}`),
               h(
+                'div',
+                { class: 'chips' },
+                ...scopeChips(k.scopes ?? []).map((c) => h('span', { class: 'chip' }, c)),
+                k.legacy ? h('span', { class: 'chip' }, 'made before scopes') : null,
+              ),
+              h(
+                'div',
+                { class: 'small muted' },
+                `${expiryText(k.expiresAt)} · ${lastUsedText(k.lastUsedAt)}`,
+              ),
+              h(
                 'button',
                 {
                   class: 'btn small danger',
@@ -125,10 +148,59 @@ export async function profileView(ctx: Ctx): Promise<void> {
       renderKeys(r.items);
     });
   }
+  const ticked = new Set<string>();
+  let choice: Preset | 'custom' | '' = '';
+  const grid = h('div', { class: 'scopegrid hide' });
+  for (const [res, actions] of Object.entries(RESOURCES)) {
+    grid.append(
+      h(
+        'div',
+        { class: 'row' },
+        h('strong', {}, res),
+        ...actions.map((a) => {
+          const box = h('input', { type: 'checkbox', 'aria-label': `${res} ${a}` });
+          box.addEventListener('change', () => {
+            if (box.checked) ticked.add(scopeFor(res, a));
+            else ticked.delete(scopeFor(res, a));
+          });
+          return h('label', { class: 'small' }, box, ` ${a}`);
+        }),
+      ),
+    );
+  }
+  const choices: [Preset | 'custom', string, string][] = [
+    ...(Object.entries(PRESETS) as [Preset, (typeof PRESETS)[Preset]][]).map(
+      ([id, p]): [Preset, string, string] => [id, p.label, p.help],
+    ),
+    ['custom', 'Custom', 'Pick each resource and action. A higher action includes the lower ones.'],
+  ];
+  const choiceBox = h(
+    'fieldset',
+    { class: 'scopechoice' },
+    h('legend', { class: 'small' }, 'What may this key do?'),
+    ...choices.map(([id, label, help]) => {
+      const radio = h('input', { type: 'radio', name: 'keypreset', value: id });
+      radio.addEventListener('change', () => {
+        choice = id;
+        grid.classList.toggle('hide', id !== 'custom');
+      });
+      return h('label', { class: 'small' }, radio, ` ${label}: ${help}`);
+    }),
+  );
+  const expiry = h(
+    'select',
+    { 'aria-label': 'Key expiry' },
+    ...EXPIRIES.map((e) => h('option', { value: e.value, selected: e.value === '90d' }, e.label)),
+  );
   const makeKey = h('button', { class: 'btn primary', type: 'button' }, 'Create API key');
   makeKey.addEventListener('click', () => {
+    const body = keyBody(keyName.value, choice, ticked, expiry.value as Expiry);
+    if (!body) {
+      toast('Name the key and pick what it may do.', 'err');
+      return;
+    }
     api
-      .createKey(keyName.value.trim())
+      .createKey(body)
       .then(async (k) => {
         keyName.value = '';
         fresh.classList.remove('hide');
@@ -212,7 +284,15 @@ export async function profileView(ctx: Ctx): Promise<void> {
             { class: 'small muted' },
             'The REST API and the MCP server need a key. Send it as X-API-Key or as a bearer token. Keep it secret; revoke it here if it leaks.',
           ),
-          h('div', { class: 'row' }, keyName, makeKey),
+          h('div', { class: 'row' }, keyName),
+          choiceBox,
+          grid,
+          h('div', { class: 'row' }, h('label', { class: 'small' }, 'Expires '), expiry, makeKey),
+          h(
+            'p',
+            { class: 'small muted' },
+            'Scopes cannot be edited after a key is made. To change them, create a new key and revoke the old one.',
+          ),
           fresh,
           keyList,
           h('h3', {}, 'Short-lived token'),

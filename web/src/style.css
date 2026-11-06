@@ -822,3 +822,26 @@ input[type='date'] {
   margin: 0;
   padding: 0;
 }
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+}
+.chip {
+  border: 1px solid var(--border, #888);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.8rem;
+}
+.scopechoice {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--border, #888);
+  border-radius: 6px;
+  padding: 8px;
+}
+.scopegrid {
+  display: grid;
+  gap: 4px;
+}

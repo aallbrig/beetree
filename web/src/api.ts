@@ -14,11 +14,17 @@ import type {
   ValidateResult,
 } from './types';
 
+import type { KeyBody } from './keyscopes';
+
 export interface ApiKeyInfo {
   id: string;
   name: string;
   prefix: string;
   createdAt: string;
+  scopes?: string[];
+  legacy?: boolean;
+  expiresAt?: string;
+  lastUsedAt?: string;
 }
 
 /** A private tree that saving a public scene would also publish. */
@@ -114,8 +120,7 @@ export const api = {
       `/v1/public/trees?q=${encodeURIComponent(q)}&sort=${sort}`,
     ),
   listKeys: () => request<Items<ApiKeyInfo>>('GET', '/v1/keys'),
-  createKey: (name: string, preset: 'read-only' | 'read-write' | 'full' = 'full') =>
-    request<ApiKeyInfo & { key: string }>('POST', '/v1/keys', { name, preset }),
+  createKey: (body: KeyBody) => request<ApiKeyInfo & { key: string }>('POST', '/v1/keys', body),
   deleteKey: (id: string) => request<undefined>('DELETE', `/v1/keys/${id}`),
   me: () => request<Profile>('GET', '/v1/me'),
   updateMe: (
