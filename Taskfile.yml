@@ -293,10 +293,9 @@ tasks:
       - scripts/check_loop.sh
 
   agent:loop:start:
-    desc: "Start the loop in a detached tmux session (beetreecraft-loop)"
+    desc: "Start the beetree tmux session (dev, watch, sites and the loop window) detached; no-op when it already runs"
     cmds:
-      - tmux has-session -t beetreecraft-awake 2>/dev/null || tmux new-session -d -s beetreecraft-awake 'systemd-inhibit --what=sleep --who=beetreecraft-loop --why="overnight dev loop" sleep infinity'
-      - tmux has-session -t beetreecraft-loop 2>/dev/null && echo "already running" || tmux new-session -d -s beetreecraft-loop "scripts/agent-loop.sh; read"
+      - scripts/dev_session.sh start
 
   agent:loop:status:
     desc: "Show the loop's heartbeat, recent log and latest release"
@@ -326,10 +325,9 @@ tasks:
       - mkdir -p .agent-loop && touch .agent-loop/STOP && echo "stopping after the current iteration"
 
   agent:loop:stop:
-    desc: "Stop the loop"
+    desc: "Kill the beetree tmux session, loop included (an iteration in flight is abandoned)"
     cmds:
-      - tmux kill-session -t beetreecraft-awake 2>/dev/null || true
-      - tmux kill-session -t beetreecraft-loop 2>/dev/null && echo stopped || echo "not running"
+      - scripts/dev_session.sh stop
 
   # ---- PRs ----------------------------------------------------------------
   pr:merge:
