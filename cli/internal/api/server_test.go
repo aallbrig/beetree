@@ -463,3 +463,35 @@ func TestListTreesSearchSeesOldTrees(t *testing.T) {
 	assert.Equal(t, "t000", first("tag=relic"))
 	assert.Equal(t, "t000", first("sort=popular"))
 }
+
+func TestListTreesCursorPagination(t *testing.T) {
+	h := newTestServer(t)
+	for i := 0; i < 150; i++ {
+		r := do(h, "POST", "/v1/trees", "alice", map[string]any{"name": "t", "visibility": "public", "spec": goodSpec})
+		require.Equal(t, http.StatusCreated, r.Code, string(r.Body))
+	}
+	seen := map[string]bool{}
+	path := "/v1/trees?limit=40"
+	pages := 0
+	for path != "" {
+		r := do(h, "GET", path, "", nil)
+		require.Equal(t, http.StatusOK, r.Code)
+		m := r.JSON(t)
+		for _, it := range m["items"].([]any) {
+			id := it.(map[string]any)["id"].(string)
+			assert.False(t, seen[id], "tree %s repeated", id)
+			seen[id] = true
+		}
+		pages++
+		path = ""
+		if c, ok := m["next_cursor"].(string); ok {
+			path = "/v1/trees?limit=40&cursor=" + c
+		}
+	}
+	assert.Len(t, seen, 150)
+	assert.Equal(t, 4, pages)
+
+	for _, bad := range []string{"limit=0", "limit=abc", "limit=101", "cursor=!!"} {
+		assert.Equal(t, http.StatusBadRequest, do(h, "GET", "/v1/trees?"+bad, "", nil).Code, bad)
+	}
+}
