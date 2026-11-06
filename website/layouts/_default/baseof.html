@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ if .IsHome }}{{ site.Title }} — behavior trees for game AI{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}</title>
   <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+  <meta property="og:site_name" content="{{ site.Title }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ if .IsHome }}{{ site.Title }} — behavior trees for game AI{{ else }}{{ .Title }} · {{ site.Title }}{{ end }}">
+  <meta property="og:description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+  <meta property="og:url" content="{{ .Permalink }}">
+  <meta property="og:image" content="{{ "img/explore.jpg" | absURL }}">
+  <meta property="og:image:alt" content="The BeeTreeCraft Explore page showing shared behavior trees">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <script src="/js/site.js"></script>
   <link rel="stylesheet" href="/site.css">
