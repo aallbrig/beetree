@@ -16,6 +16,7 @@ import {
   removeVar,
   updateVar,
   countNodes,
+  sizeWarning,
   type NodeSpec,
   findNodes,
   branchIds,
@@ -422,5 +423,13 @@ describe('builder gap fixes from authoring the scene 2 trees', () => {
     expect(addSibling(spec.tree, [0], makeNode(spec.tree, 'action'))).toEqual([1]);
     expect(spec.tree.children?.length).toBe(n + 1);
     expect(typeof addSibling(spec.tree, [], makeNode(spec.tree, 'action'))).toBe('string');
+  });
+});
+
+describe('sizeWarning', () => {
+  it('is silent at the ceiling and warns past it', () => {
+    expect(sizeWarning(25)).toBeUndefined();
+    expect(sizeWarning(26)).toContain('26 nodes');
+    expect(sizeWarning(11, 10)).toContain('10-node');
   });
 });

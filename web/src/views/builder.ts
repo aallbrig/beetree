@@ -27,6 +27,7 @@ import {
   wrapAt,
   retype,
   countNodes,
+  sizeWarning,
   DECORATORS,
   getNode,
   isLeaf,
@@ -655,7 +656,9 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     clear(status);
     if (issues.length) status.append(...issues.map((m) => h('div', {}, m)));
     else status.textContent = `${countNodes(spec.tree)} nodes`;
-    status.style.color = issues.length ? 'var(--warn)' : 'var(--muted)';
+    const big = sizeWarning(countNodes(spec.tree));
+    if (big && !issues.length) status.textContent = big;
+    status.style.color = issues.length || big ? 'var(--warn)' : 'var(--muted)';
     agent?.setSpec(spec.tree);
     if (walker) {
       // selecting a node rebuilds the outline; only a real edit ends the session
