@@ -3,6 +3,9 @@
 ## What This Is
 BeeTree is a CLI/TUI for authoring, simulating, and exporting engine-agnostic behavior trees for video games. Target engines: Unity (C#), Unreal (C++), Godot (GDScript).
 
+## Read first
+`VISION.md` is what the product aspires to; `GLOSSARY.md` is the vocabulary. Check new work against both.
+
 ## Build & Test
 `task --list` is the source of truth. The gate is `task ci`; run `task format:check` before committing, since the pre-commit hooks take minutes and reject unformatted files.
 
@@ -49,14 +52,20 @@ When creating documentation files:
 
 ## Release Policy
 
-Every merged PR ships. After CI (the code quality gates) passes, run `task pr:merge -- N`, then cut a release from the updated `main` with `task release -- vX.Y.Z` so the change reaches beetreecraft.com. The footer shows the live version.
+Every merged PR ships. Once CI (the code quality gates) passes, run `task pr:merge -- N`, then cut a release from the updated `main` with `task release -- vX.Y.Z`. CI deploys it to beetreecraft.com and the footer shows the live version.
 
-Pick the version by the change; expect mostly **patch**:
+Pick the version by the change; expect mostly **patch**, and never let version caution shrink the scope of a change:
 - **patch** (default): features, fixes, content, docs, refactors, dependency bumps
-- **minor**: a visible new capability that changes how people use the product (a new top-level area, a breaking-but-contained format change)
+- **minor**: a visible new capability that changes how people use the product
 - **major**: incompatible CLI, API or tree-format breaks for existing users
 
-Each release carries release notes (the script generates them from merged PRs) and its artifacts (CLI archives, the site bundle, `SHA256SUMS`). Check the `Release deploy` run succeeds and the footer on beetreecraft.com shows the new version.
+Release notes and artifacts on every release. Notes come from each PR's `## Summary`, so write it for a reader who was away: what changed and why it matters. Artifacts are the CLI archives, the site bundle and `SHA256SUMS` (`scripts/release.sh` builds both).
+
+Unattended runs (the loop):
+- Start each session by checking production: the latest `Release deploy` run and `task smoke`. When either is red, `git stash` the current work and fix production first.
+- Cut the release and carry on with the next feature. The deploy runs in CI; look at it at the next natural pause.
+- A failed deploy gets the same treatment: stash, fix, release a patch, resume.
+- Pipe-free gates: chain with `&&` under `set -o pipefail`.
 
 ## Public Repo Hygiene
 
