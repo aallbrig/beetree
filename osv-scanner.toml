@@ -1,0 +1,6 @@
+# Documented exceptions for osv-scanner. Each needs a reason and an expiry.
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2027-02-01
+reason = "minimatch is a dev-only dependency of eslint (lint tooling, never shipped or run on untrusted patterns); the fix needs a major eslint bump"

@@ -28,6 +28,7 @@ tasks:
     cmds:
       - task: format:check
       - task: lint
+      - task: security:scan
       - task: test
       - task: build
       - task: dev:check
@@ -52,6 +53,13 @@ tasks:
     cmds:
       - go vet ./...
       - golangci-lint run ./...
+
+  security:scan:
+    desc: Dependency vulnerability scan (govulncheck, npm audit on production deps, osv-scanner); fails on findings
+    cmds:
+      - cd cli && govulncheck ./...
+      - cd web && npm audit --omit=dev --audit-level=high
+      - osv-scanner scan source --config osv-scanner.toml --lockfile cli/go.mod --lockfile web/package-lock.json
 
   lint:secrets:
     desc: Scan the working tree for secrets
