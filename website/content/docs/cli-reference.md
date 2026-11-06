@@ -357,10 +357,17 @@ beetree simulate <file> [flags]
 
 ### `beetree validate`
 
-Validate a .beetree.yaml specification file
+Validate one or more .beetree.yaml specification files
 
 ```
-beetree validate <file>
+beetree validate <file>...
+```
+
+**Examples**
+
+```
+beetree validate trees/enemy-ai.beetree.yaml
+  beetree validate examples/*.beetree.yaml
 ```
 
 ### `beetree version`

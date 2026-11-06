@@ -94,6 +94,36 @@ tree:
 	assert.True(t, strings.Contains(output, "error") || strings.Contains(output, "Error") || strings.Contains(output, "unknown"))
 }
 
+func TestValidateCommand_MultipleFilesReportsEach(t *testing.T) {
+	dir := t.TempDir()
+	good := filepath.Join(dir, "good.beetree.yaml")
+	bad := filepath.Join(dir, "bad.beetree.yaml")
+	require.NoError(t, os.WriteFile(good, []byte(validSpecYAMLForMulti), 0644))
+	require.NoError(t, os.WriteFile(bad, []byte(invalidSpecYAML), 0644))
+
+	output, err := executeCommand("validate", bad, good)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "1 of 2 files failed")
+	assert.Contains(t, output, good+" is valid")
+
+	output, err = executeCommand("validate", good, good)
+	require.NoError(t, err)
+	assert.Equal(t, 2, strings.Count(output, "is valid"))
+}
+
+const validSpecYAMLForMulti = `
+version: "1.0"
+metadata:
+  name: "test-tree"
+tree:
+  type: "selector"
+  name: "root"
+  children:
+    - type: "action"
+      name: "do_something"
+      node: "DoSomething"
+`
+
 func TestValidateCommand_NoArgs(t *testing.T) {
 	_, err := executeCommand("validate")
 	assert.Error(t, err)
