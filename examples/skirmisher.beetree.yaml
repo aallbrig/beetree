@@ -1,0 +1,56 @@
+# BeeTree Example: Skirmisher
+# Small and cowardly: flees when its Commander falls
+# Generic combat stand-in for the Explore combat scene. Fewer than 25 nodes.
+
+version: "1.0"
+metadata:
+  name: skirmisher
+  description: "Small and cowardly: flees when its Commander falls"
+  author: beetree-examples
+  tags:
+    - combat
+    - explore-scene
+
+blackboard:
+  - name: commander_alive
+    type: bool
+    default: true
+    description: "False once the Commander has fallen"
+  - name: threat
+    type: Entity
+    description: "Nearest enemy"
+
+tree:
+  type: selector
+  name: skirmisher_root
+  children:
+    - type: sequence
+      name: flee_when_leaderless
+      children:
+        - type: decorator
+          name: commander_fallen
+          decorator: negate
+          children:
+            - type: condition
+              name: commander_is_alive
+              node: IsCommanderAlive
+              description: "Reads commander_alive"
+        - type: action
+          name: flee
+          node: FleeFromThreat
+          description: "Run away from the nearest enemy"
+    - type: sequence
+      name: harass
+      children:
+        - type: condition
+          name: has_threat
+          node: HasThreat
+          description: "Is an enemy known?"
+        - type: action
+          name: strafe_and_shoot
+          node: StrafeAndShoot
+          description: "Dart sideways while firing"
+    - type: action
+      name: stay_near_commander
+      node: FollowCommander
+      description: "Stay close to the Commander"

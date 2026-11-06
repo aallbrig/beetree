@@ -1,0 +1,64 @@
+# BeeTree Example: Commander
+# Strong enemy leader: charges, retreats to recharge when health is low
+# Generic combat stand-in for the Explore combat scene. Fewer than 25 nodes.
+
+version: "1.0"
+metadata:
+  name: commander
+  description: "Strong enemy leader: charges, retreats to recharge when health is low"
+  author: beetree-examples
+  tags:
+    - combat
+    - explore-scene
+
+blackboard:
+  - name: health_fraction
+    type: float
+    default: 1.0
+    description: "Current health as a fraction of maximum"
+  - name: recharge_below
+    type: float
+    default: 0.4
+    description: "Retreat to recharge when health_fraction is under this"
+  - name: target
+    type: Entity
+    description: "Nearest enemy"
+
+tree:
+  type: selector
+  name: commander_root
+  children:
+    - type: sequence
+      name: retreat_to_recharge
+      children:
+        - type: condition
+          name: health_low
+          node: IsHealthBelowThreshold
+          description: "Is health_fraction under recharge_below?"
+        - type: action
+          name: retreat
+          node: RetreatToCover
+          description: "Break line of sight"
+        - type: action
+          name: recharge
+          node: RechargeShield
+          description: "Wait while the shield recovers"
+    - type: sequence
+      name: charge
+      children:
+        - type: condition
+          name: has_target
+          node: HasTarget
+          description: "Is an enemy known?"
+        - type: action
+          name: charge_target
+          node: ChargeTarget
+          description: "Rush the nearest enemy"
+        - type: action
+          name: strike
+          node: MeleeStrike
+          description: "Heavy melee attack"
+    - type: action
+      name: patrol_post
+      node: HoldPosition
+      description: "Stand guard"

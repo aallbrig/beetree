@@ -1,0 +1,71 @@
+# BeeTree Example: Trooper
+# Ally rifleman: holds, takes cover under fire, retreats below 30 percent health
+# Generic combat stand-in for the Explore combat scene. Fewer than 25 nodes.
+
+version: "1.0"
+metadata:
+  name: trooper
+  description: "Ally rifleman: holds, takes cover under fire, retreats below 30 percent health"
+  author: beetree-examples
+  tags:
+    - combat
+    - explore-scene
+
+blackboard:
+  - name: health_fraction
+    type: float
+    default: 1.0
+    description: "Current health as a fraction of maximum"
+  - name: retreat_below
+    type: float
+    default: 0.3
+    description: "Retreat when health_fraction drops under this"
+  - name: cover_position
+    type: Vector3
+    description: "Nearest cover point"
+
+tree:
+  type: selector
+  name: trooper_root
+  children:
+    - type: sequence
+      name: retreat_when_hurt
+      children:
+        - type: condition
+          name: health_low
+          node: IsHealthBelowThreshold
+          description: "Is health_fraction under retreat_below?"
+        - type: action
+          name: retreat
+          node: RetreatToRally
+          description: "Fall back to the rally point"
+    - type: sequence
+      name: take_cover_under_fire
+      children:
+        - type: condition
+          name: under_fire
+          node: IsUnderFire
+          description: "Is a threat shooting at us?"
+        - type: condition
+          name: has_cover
+          node: HasCover
+          description: "Is a cover point known?"
+        - type: action
+          name: move_to_cover
+          node: MoveToCover
+          description: "Run to cover_position"
+    - type: sequence
+      name: engage
+      children:
+        - type: condition
+          name: sees_enemy
+          node: SeesEnemy
+          description: "Is an enemy in view?"
+        - type: action
+          name: shoot
+          node: ShootNearestEnemy
+          description: "Fire at the nearest enemy"
+    - type: action
+      name: hold_position
+      node: HoldPosition
+      description: "Stay put and watch"
