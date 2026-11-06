@@ -61,7 +61,7 @@ export function outline(root: NodeSpec, onSelect?: (path: Path) => void): Outlin
       }
     },
     setProblems(problems) {
-      const byId = new Map(problems.map((p) => [pathId(p.path), p.message]));
+      const byId = new Map(problems.map((p) => [pathId(p.path), `${p.message}. Fix: ${p.fix}`]));
       for (const [bid, btn] of buttons) {
         const msg = byId.get(bid);
         if (msg) {

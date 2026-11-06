@@ -415,7 +415,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     renderProps();
     const found = findProblems(spec.tree);
     ol.setProblems(found);
-    const issues = found.map((p) => p.message);
+    const issues = found.map((p) => `${p.message}. Fix: ${p.fix}`);
     clear(status);
     if (issues.length) status.append(...issues.map((m) => h('div', {}, m)));
     else status.textContent = `${countNodes(spec.tree)} nodes`;
