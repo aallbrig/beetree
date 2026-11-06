@@ -8,8 +8,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "beetree",
-	Short: "A behavior tree ecosystem CLI for authoring, validating, and generating engine code",
+	Use:           "beetree",
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	Short:         "A behavior tree ecosystem CLI for authoring, validating, and generating engine code",
 	Long: `BeeTree is a behavior tree ecosystem that makes it easy to author, share,
 and deploy behavior trees to any game engine.
 
@@ -26,7 +28,7 @@ Quick start:
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
 }

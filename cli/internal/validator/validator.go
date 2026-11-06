@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aallbrig/beetree-cli/internal/model"
 )
@@ -99,7 +100,7 @@ func validateNode(node *model.NodeSpec, path string) []error {
 	}
 
 	if !model.IsValidNodeType(node.Type) {
-		errs = append(errs, fmt.Errorf("%s: unknown node type %q", path, node.Type))
+		errs = append(errs, fmt.Errorf("%s: unknown node type %q%s", path, node.Type, nodeTypeHint(node.Type)))
 		return errs
 	}
 
@@ -123,4 +124,39 @@ func validateNode(node *model.NodeSpec, path string) []error {
 	}
 
 	return errs
+}
+
+// nodeTypeHint suggests the closest valid node type, or lists them all.
+func nodeTypeHint(got string) string {
+	valid := model.NodeTypeNames()
+	best, bestDist := "", 1<<30
+	for _, name := range valid {
+		if d := editDistance(got, name); d < bestDist {
+			best, bestDist = name, d
+		}
+	}
+	if best != "" && bestDist <= 3 {
+		return fmt.Sprintf(" (did you mean %q?)", best)
+	}
+	return fmt.Sprintf(" (valid types: %s)", strings.Join(valid, ", "))
+}
+
+func editDistance(a, b string) int {
+	prev := make([]int, len(b)+1)
+	for j := range prev {
+		prev[j] = j
+	}
+	for i := 1; i <= len(a); i++ {
+		cur := make([]int, len(b)+1)
+		cur[0] = i
+		for j := 1; j <= len(b); j++ {
+			cost := 1
+			if a[i-1] == b[j-1] {
+				cost = 0
+			}
+			cur[j] = min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost)
+		}
+		prev = cur
+	}
+	return prev[len(b)]
 }
