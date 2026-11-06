@@ -147,3 +147,7 @@ tree:
 ];
 
 export const sampleById = (id: string): Sample | undefined => SAMPLES.find((s) => s.id === id);
+
+/** Resolves a `?template=guard` style slug to a built-in template. */
+export const sampleBySlug = (slug: string | null): Sample | undefined =>
+  slug ? sampleById(`sample:${slug}`) : undefined;

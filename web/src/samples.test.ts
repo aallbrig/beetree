@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { classify } from './scene/behaviors';
-import { SAMPLES, sampleById } from './samples';
+import { SAMPLES, sampleById, sampleBySlug } from './samples';
 import { findProblems, isLeaf, parseSpec, walk } from './spec';
 
 describe('built-in templates', () => {
@@ -41,5 +41,14 @@ describe('scene tree references', () => {
       ...[...scenes.matchAll(/'(sample:[a-z]+)'/g)].map((m) => m[1]),
     ];
     for (const id of ids) expect(sampleById(id ?? ''), String(id)).toBeDefined();
+  });
+});
+
+describe('template slugs', () => {
+  it('resolves every home-page slug to a template', () => {
+    for (const slug of ['shopkeeper', 'guard', 'coward', 'boss', 'companion'])
+      expect(sampleBySlug(slug)?.id).toBe(`sample:${slug}`);
+    expect(sampleBySlug('nope')).toBeUndefined();
+    expect(sampleBySlug(null)).toBeUndefined();
   });
 });
