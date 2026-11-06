@@ -56,8 +56,13 @@ done
 grep -Eq 'href="?/site-map/[" >]' "$PUBLIC/index.html" || { echo "footer must link /site-map/" >&2; exit 1; }
 
 # footer trust links resolve, and the privacy page names what the code stores
-for l in /privacy/ /about/ https://github.com/aallbrig/beetreecraft/releases https://github.com/aallbrig/beetreecraft/issues/new; do
+for l in /privacy/ /about/ https://github.com/aallbrig/beetreecraft/releases https://github.com/aallbrig/beetreecraft/issues/new https://github.com/aallbrig/beetreecraft/security/policy; do
   sed -n '/<footer/,/<\/footer>/p' "$PUBLIC/index.html" | grep -Eq "href=\"?$l[\" >]" || { echo "footer must link $l" >&2; exit 1; }
+done
+# the security policy the footer links to exists and names the private reporting path
+SEC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/SECURITY.md"
+for t in 'security/advisories/new' 'Supported versions' 'public issues'; do
+  grep -q "$t" "$SEC" || { echo "SECURITY.md must mention: $t" >&2; exit 1; }
 done
 for t in Cognito DynamoDB birthdate SHA-256 'tracking'; do
   grep -q "$t" "$PUBLIC/privacy/index.html" || { echo "privacy page must mention: $t" >&2; exit 1; }
