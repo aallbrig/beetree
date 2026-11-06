@@ -35,6 +35,10 @@ beetree generate godot trees/guard.beetree.yaml
 
 `generate` accepts `unity`, `unreal` or `godot`. Generated files marked as stubs are yours to edit and are never overwritten; everything else is regenerated each run.
 
+## Step through a tree
+
+A dry run shows one trace. To see how a tree reacts when a leaf fails, run `beetree simulate trees/guard.beetree.yaml --step`. It pauses at each leaf and asks you to choose Success, Failure or Running, then shows how the status moves up through the composites, so you can test the branch you worry about instead of the one the dry run happens to take. It uses the same walker as the TUI.
+
 ## Use it in CI
 
 `beetree validate` exits non-zero on an invalid tree, so it works as a gate:
