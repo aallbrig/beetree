@@ -162,10 +162,10 @@ A **sequence** runs its children **in order, left to right**, and stops at the f
 
 {{< codetabs >}}
 {{< tab id="agnostic" label="Agnostic" lang="text" >}}
-Sequence(children):               // N children
+Sequence(children):
     tick():
-        for i = 1 to N:
-            childStatus = children[i].tick()
+        for each child in children, in order:
+            childStatus = child.tick()
             if childStatus == Running: return Running
             else if childStatus == Failure: return Failure
         return Success
@@ -224,10 +224,10 @@ A **fallback** (also called a **selector**) is the mirror image: it tries its ch
 
 {{< codetabs >}}
 {{< tab id="agnostic" label="Agnostic" lang="text" >}}
-Fallback(children):               // N children
+Fallback(children):
     tick():
-        for i = 1 to N:
-            childStatus = children[i].tick()
+        for each child in children, in order:
+            childStatus = child.tick()
             if childStatus == Running: return Running
             else if childStatus == Success: return Success
         return Failure
@@ -288,12 +288,16 @@ A **parallel** ticks **all** its children on every tick. You choose a threshold 
 
 {{< codetabs >}}
 {{< tab id="agnostic" label="Agnostic" lang="text" >}}
-Parallel(children, M):            // N children, success threshold M
+Parallel(children, M):            // N = number of children, success threshold M
     tick():
-        for i = 1 to N:
-            childStatus[i] = children[i].tick()
-        if count(childStatus == Success) >= M: return Success
-        else if count(childStatus == Failure) > N - M: return Failure
+        successes = 0
+        failures = 0
+        for each child in children:   // every child is ticked every time
+            childStatus = child.tick()
+            if childStatus == Success: successes += 1
+            else if childStatus == Failure: failures += 1
+        if successes >= M: return Success
+        else if failures > N - M: return Failure
         return Running
 {{< /tab >}}
 {{< tab id="unity" label="Unity C#" lang="csharp" >}}
@@ -375,11 +379,12 @@ Inverter(child):
 Retry(child, maxFailures):           // let the child fail up to N times
     failures = 0
     tick():
-        if failures >= maxFailures: return Failure   // child is not ticked
         status = child.tick()
+        if status == Running: return Running
         if status == Failure:
             failures += 1
-            return (failures < maxFailures) ? Running : Failure
+            if failures < maxFailures: return Running    // try again next tick
+        failures = 0                                     // finished: start fresh next time
         return status
 {{< /tab >}}
 {{< tab id="unity" label="Unity C#" lang="csharp" >}}
@@ -403,10 +408,11 @@ public class Retry : Node   // let the child fail up to N times
 
     public override Status Tick()
     {
-        if (failures >= max) return Status.Failure;   // give up without ticking the child
         var status = child.Tick();
-        if (status == Status.Failure) failures++;
-        return status == Status.Failure && failures < max ? Status.Running : status;
+        if (status == Status.Running) return Status.Running;
+        if (status == Status.Failure && ++failures < max) return Status.Running; // try again next tick
+        failures = 0;                                  // finished: start fresh next time
+        return status;
     }
 }
 {{< /tab >}}
@@ -428,11 +434,12 @@ class Retry extends BTNode:   # let the child fail up to N times
     func _init(c: BTNode, n: int): child = c; max_failures = n
 
     func tick() -> Status:
-        if failures >= max_failures: return Status.FAILURE   # give up without ticking the child
         var status := child.tick()
+        if status == Status.RUNNING: return Status.RUNNING
         if status == Status.FAILURE:
             failures += 1
-            return Status.RUNNING if failures < max_failures else Status.FAILURE
+            if failures < max_failures: return Status.RUNNING   # try again next tick
+        failures = 0                                            # finished: start fresh next time
         return status
 {{< /tab >}}
 {{< tab id="unreal" label="Unreal C++" lang="cpp" >}}
@@ -461,13 +468,10 @@ public:
 
     EStatus Tick() override
     {
-        if (Failures >= MaxFailures) return EStatus::Failure; // give up without ticking the child
         const EStatus Status = Child->Tick();
-        if (Status == EStatus::Failure)
-        {
-            ++Failures;
-            return Failures < MaxFailures ? EStatus::Running : EStatus::Failure;
-        }
+        if (Status == EStatus::Running) return EStatus::Running;
+        if (Status == EStatus::Failure && ++Failures < MaxFailures) return EStatus::Running; // try again next tick
+        Failures = 0;                                  // finished: start fresh next time
         return Status;
     }
 };
