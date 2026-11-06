@@ -479,15 +479,20 @@ public:
 A guard that flees when hurt, attacks when it sees the player and otherwise patrols is a fallback of three branches:
 
 ```yaml
+version: "1.0"
+metadata:
+  name: guard
 tree:
   type: selector            # Fallback: first branch that works wins
   name: guard_ai
   children:
     - type: sequence        # branch 1: flee when hurt
+      name: flee
       children:
         - { type: condition, name: low_health }
         - { type: action, name: run_to_cover }
     - type: sequence        # branch 2: attack when the player is visible
+      name: attack_player
       children:
         - { type: condition, name: sees_player }
         - { type: action, name: attack }
