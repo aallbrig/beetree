@@ -55,6 +55,15 @@ for l in /app/ /learn/behavior-trees/ /docs/ /docs/api/ /docs/mcp/ /references/ 
 done
 grep -Eq 'href="?/site-map/[" >]' "$PUBLIC/index.html" || { echo "footer must link /site-map/" >&2; exit 1; }
 
+# footer trust links resolve, and the privacy page names what the code stores
+for l in /privacy/ /about/ https://github.com/aallbrig/beetreecraft/releases https://github.com/aallbrig/beetreecraft/issues/new; do
+  sed -n '/<footer/,/<\/footer>/p' "$PUBLIC/index.html" | grep -Eq "href=\"?$l[\" >]" || { echo "footer must link $l" >&2; exit 1; }
+done
+for t in Cognito DynamoDB birthdate SHA-256 'tracking'; do
+  grep -q "$t" "$PUBLIC/privacy/index.html" || { echo "privacy page must mention: $t" >&2; exit 1; }
+done
+grep -q 'Andrew Allbright' "$PUBLIC/about/index.html" || { echo "about page must name the maintainer" >&2; exit 1; }
+
 # the home page names the trope templates and links to the live preview
 for pair in "shopkeeper:Shopkeeper's routine" 'guard:Guard' 'coward:Coward' 'boss:Boss with phases' 'companion:Loyal companion'; do
   slug="${pair%%:*}"; t="${pair#*:}"

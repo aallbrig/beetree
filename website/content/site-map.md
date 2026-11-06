@@ -35,3 +35,9 @@ Every part of BeeTreeCraft, grouped the way the top navigation groups it. Machin
 
 - [Sign in](/app/#/signin)
 - [Sign up](/app/#/signup)
+
+## About
+
+- [About](/about/): who runs the project and how to reach them
+- [Privacy](/privacy/): what the site stores
+- [Changelog](https://github.com/aallbrig/beetreecraft/releases)
