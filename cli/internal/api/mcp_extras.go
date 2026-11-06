@@ -1,6 +1,7 @@
 package api
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -31,6 +32,13 @@ tree:
           node: WaitAtWaypoint
 `
 
+// schemaJSON is the tree format JSON Schema. It is a copy of
+// website/static/schemas/beetree.schema.json (go:embed cannot reach outside
+// the module); TestMCPSchemaMatchesPublished keeps the two identical.
+//
+//go:embed beetree.schema.json
+var schemaJSON string
+
 type mcpResource struct {
 	URI         string `json:"uri"`
 	Name        string `json:"name"`
@@ -41,6 +49,7 @@ type mcpResource struct {
 func mcpResources() []mcpResource {
 	return []mcpResource{
 		{URI: "beetree://node-types", Name: "Node types", Description: "Node types, decorators, render formats and engines as JSON.", MimeType: "application/json"},
+		{URI: "beetree://schema/beetree", Name: "Tree format JSON Schema", Description: "The JSON Schema for .beetree.yaml, as published at /schemas/beetree.schema.json.", MimeType: "application/schema+json"},
 		{URI: "beetree://examples/patrol", Name: "Starter spec: patrol", Description: "A small valid .beetree.yaml to copy the format from.", MimeType: "application/yaml"},
 	}
 }
@@ -51,6 +60,8 @@ func readMCPResource(uri string) (string, string, bool) {
 		types, decs := nodeTypes()
 		b, _ := json.MarshalIndent(map[string]any{"nodeTypes": types, "decorators": decs, "engines": Engines, "renderFormats": RenderFormats}, "", "  ")
 		return string(b), "application/json", true
+	case "beetree://schema/beetree":
+		return schemaJSON, "application/schema+json", true
 	case "beetree://examples/patrol":
 		return starterSpec, "application/yaml", true
 	}
@@ -90,7 +101,7 @@ func promptText(name string, args map[string]string) (string, error) {
 	}
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "Design a behavior tree for this game character: %s\n\n", character)
-	sb.WriteString("1. Read the beetree://node-types and beetree://examples/patrol resources for the format.\n")
+	sb.WriteString("1. Read the beetree://schema/beetree, beetree://node-types and beetree://examples/patrol resources for the format.\n")
 	sb.WriteString("2. Write the spec as .beetree.yaml text.\n")
 	sb.WriteString("3. Call validate_tree and fix every error it reports.\n")
 	sb.WriteString("4. Call simulate_tree (or simulate_start and simulate_answer) to check the failure paths behave as intended.\n")

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -164,9 +165,9 @@ func TestMCPResourcesAndPrompts(t *testing.T) {
 
 	_, r := rpc(h, "", 1, "resources/list", nil)
 	list := r["result"].(map[string]any)["resources"].([]any)
-	require.Len(t, list, 2)
+	require.Len(t, list, 3)
 
-	for _, uri := range []string{"beetree://node-types", "beetree://examples/patrol"} {
+	for _, uri := range []string{"beetree://node-types", "beetree://schema/beetree", "beetree://examples/patrol"} {
 		_, r = rpc(h, "", 2, "resources/read", map[string]any{"uri": uri})
 		c := r["result"].(map[string]any)["contents"].([]any)[0].(map[string]any)
 		assert.Equal(t, uri, c["uri"])
@@ -190,4 +191,11 @@ func TestMCPResourcesAndPrompts(t *testing.T) {
 
 	_, r = rpc(h, "", 6, "prompts/get", map[string]any{"name": "design_behavior_tree"})
 	assert.NotNil(t, r["error"])
+}
+
+func TestMCPSchemaMatchesPublished(t *testing.T) {
+	published, err := os.ReadFile("../../../website/static/schemas/beetree.schema.json")
+	require.NoError(t, err)
+	assert.Equal(t, string(published), schemaJSON, "copy website/static/schemas/beetree.schema.json to cli/internal/api/beetree.schema.json")
+	assert.True(t, json.Valid([]byte(schemaJSON)))
 }
