@@ -241,3 +241,17 @@ items:
     author: "Christopher Iliffe Sprague and Petter Ogren"
     summary: "Gives the first continuous-time formulation of behavior trees, treating them as discontinuous dynamical systems, and derives sufficient conditions for a tree to converge to a desired region of the state space. Control-theory heavy, aimed at robotics, but it shows why a tree that switches between policies can still be guaranteed to reach its goal."
     score: 12
+  - title: "Book Excerpt: Game AI Uncovered, Volume One"
+    url: "https://gamedeveloper.com/programming/book-excerpt-game-ai-uncovered-volume-one"
+    kind: Chapter
+    year: "2024"
+    author: "Paul Roberts and Sarat Rallabandi"
+    summary: "Covers behavior tree basics (composites, tasks, decorators, shared blackboards) through a strategy-game patrol example, then argues that large trees get hard to debug and are not reactive. Proposes Reactive Behaviour Trees: a long-term stack for default behavior and a reactive stack of small trees pushed and popped by a monitor. Read it for a practical answer to the question of where interrupts belong."
+    score: 13
+  - title: "Execution Semantics of Behavior Trees in Robotic Applications"
+    url: "https://arxiv.org/abs/2408.00090"
+    kind: Paper
+    year: "2024"
+    author: "Enrico Ghiorzi, Christian Henkel, Matteo Palmas, Michaela Klauck and Armando Tacchella"
+    summary: "Notes that subtle differences between implementations can make the same behavior tree act differently, and proposes an abstract data type that formalizes tree structure and execution. Useful background for why an engine-agnostic tree format must pin down tick, running and halting semantics."
+    score: 13
