@@ -255,3 +255,15 @@ items:
     author: "Enrico Ghiorzi, Christian Henkel, Matteo Palmas, Michaela Klauck and Armando Tacchella"
     summary: "Notes that subtle differences between implementations can make the same behavior tree act differently, and proposes an abstract data type that formalizes tree structure and execution. Useful background for why an engine-agnostic tree format must pin down tick, running and halting semantics."
     score: 13
+  - title: "BehaviorTree.CPP: Subtrees and port remapping"
+    url: "https://www.behaviortree.dev/docs/tutorial-basics/tutorial_06_subtree_ports"
+    kind: Article
+    author: "Davide Faconti and the BehaviorTree.CPP contributors"
+    summary: "Tutorial 6 of the BehaviorTree.CPP docs. A subtree looks like one leaf to its parent but gets its own blackboard, so ports are remapped explicitly in the tree file with no change to node code. A worked MainTree and MoveRobot example shows the pattern for keeping large trees free of name clashes."
+    score: 13
+  - title: "BehaviorTree.CPP: Sequence versus ReactiveSequence with async actions"
+    url: "https://www.behaviortree.dev/docs/tutorial-basics/tutorial_04_sequence"
+    kind: Article
+    author: "Davide Faconti and the BehaviorTree.CPP contributors"
+    summary: "Tutorial 4 of the BehaviorTree.CPP docs. Shows why a plain Sequence checks a condition once while a ReactiveSequence re-checks it every tick and halts a running action when it fails, using a battery check guarding a move action, with the expected tick output."
+    score: 13
