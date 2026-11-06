@@ -4,6 +4,13 @@ import { parse } from 'yaml';
 import {
   addChild,
   addVar,
+  addCustomNode,
+  formatParams,
+  getCustomNodes,
+  parseList,
+  parseParams,
+  removeCustomNode,
+  updateCustomNode,
   getBlackboard,
   parseDefault,
   removeVar,
@@ -266,5 +273,62 @@ describe('blackboard editing', () => {
     expect(getBlackboard(spec)[0]).toEqual({ name: 'speed', type: 'float' });
     expect(parseDefault('bool', 'true')).toBe(true);
     expect(parseDefault('string', '12')).toBe('12');
+  });
+});
+
+describe('custom node editing', () => {
+  it('parses and formats parameter text', () => {
+    const ps = parseParams('animation_name:string, speed:float=1.5, loop:bool=true, bare');
+    expect(ps).toEqual([
+      { name: 'animation_name', type: 'string' },
+      { name: 'speed', type: 'float', default: 1.5 },
+      { name: 'loop', type: 'bool', default: true },
+      { name: 'bare', type: 'string' },
+    ]);
+    expect(parseParams(formatParams(ps))).toEqual(ps);
+    expect(parseList(' a, ,b ')).toEqual(['a', 'b']);
+  });
+
+  it('adds, edits, round-trips and removes a custom node', () => {
+    const spec = newSpec('cn');
+    expect(addCustomNode(spec, 'PlayAnimation')).toBe('PlayAnimation');
+    expect(addCustomNode(spec, 'PlayAnimation', 'condition')).toBe('PlayAnimation_2');
+    expect(
+      updateCustomNode(spec, 'PlayAnimation', {
+        description: 'Play a clip',
+        parameters: parseParams('speed:float=1'),
+        blackboard_reads: ['target'],
+      }),
+    ).toBe(true);
+    expect(updateCustomNode(spec, 'PlayAnimation_2', { name: 'PlayAnimation' })).toBe(false);
+    expect(updateCustomNode(spec, 'nope', { description: 'x' })).toBe(false);
+    const back = parseSpec(stringifySpec(spec));
+    expect(getCustomNodes(back)[0]).toEqual({
+      name: 'PlayAnimation',
+      type: 'action',
+      description: 'Play a clip',
+      parameters: [{ name: 'speed', type: 'float', default: 1 }],
+      blackboard_reads: ['target'],
+    });
+    updateCustomNode(back, 'PlayAnimation', { parameters: [], description: '' });
+    expect(getCustomNodes(back)[0]).toEqual({
+      name: 'PlayAnimation',
+      type: 'action',
+      blackboard_reads: ['target'],
+    });
+    expect(removeCustomNode(back, 'PlayAnimation')).toBe(true);
+    expect(removeCustomNode(back, 'PlayAnimation_2')).toBe(true);
+    expect(back.custom_nodes).toBeUndefined();
+  });
+
+  it('keeps the full-enemy-ai custom nodes through import and export', () => {
+    const text = readFileSync(
+      new URL('../../examples/full-enemy-ai.beetree.yaml', import.meta.url),
+      'utf8',
+    );
+    const spec = parseSpec(text);
+    const defs = getCustomNodes(spec);
+    expect(defs.length).toBeGreaterThan(0);
+    expect(getCustomNodes(parseSpec(stringifySpec(spec)))).toEqual(defs);
   });
 });

@@ -451,3 +451,148 @@ export function parseDefault(type: string, text: string): unknown {
   }
   return t;
 }
+
+/** One typed parameter of a custom node. */
+export interface CustomParam {
+  name: string;
+  type: string;
+  default?: unknown;
+}
+
+/** A user-defined action or condition type, declared once and used by leaves. */
+export interface CustomNode {
+  name: string;
+  type: 'action' | 'condition';
+  description?: string;
+  parameters?: CustomParam[];
+  blackboard_reads?: string[];
+  blackboard_writes?: string[];
+}
+
+/** The custom node definitions of a spec; entries that are not well-formed are skipped. */
+export function getCustomNodes(spec: TreeSpec): CustomNode[] {
+  if (!Array.isArray(spec.custom_nodes)) return [];
+  const out: CustomNode[] = [];
+  for (const v of spec.custom_nodes as unknown[]) {
+    if (
+      isRecord(v) &&
+      typeof v.name === 'string' &&
+      (v.type === 'action' || v.type === 'condition')
+    ) {
+      out.push({ ...v, name: v.name, type: v.type });
+    }
+  }
+  return out;
+}
+
+function setCustomNodes(spec: TreeSpec, defs: CustomNode[]): void {
+  if (defs.length === 0) delete spec.custom_nodes;
+  else spec.custom_nodes = defs;
+}
+
+/** Add a custom node with a unique name; returns the name used. */
+export function addCustomNode(
+  spec: TreeSpec,
+  name = 'NewNode',
+  type: 'action' | 'condition' = 'action',
+): string {
+  const defs = getCustomNodes(spec);
+  const taken = new Set(defs.map((d) => d.name));
+  let unique = name;
+  for (let i = 2; taken.has(unique); i++) unique = `${name}_${i}`;
+  setCustomNodes(spec, [...defs, { name: unique, type }]);
+  return unique;
+}
+
+/** Change a custom node; empty description, parameters or lists remove the key. False if unknown or a rename collides. */
+export function updateCustomNode(
+  spec: TreeSpec,
+  name: string,
+  patch: {
+    name?: string;
+    type?: 'action' | 'condition';
+    description?: string;
+    parameters?: CustomParam[];
+    blackboard_reads?: string[];
+    blackboard_writes?: string[];
+  },
+): boolean {
+  const defs = getCustomNodes(spec);
+  const idx = defs.findIndex((d) => d.name === name);
+  const cur = defs[idx];
+  if (!cur) return false;
+  const next: CustomNode = { ...cur };
+  if (patch.name !== undefined) {
+    const n = patch.name.trim();
+    if (n === '' || (n !== name && defs.some((d) => d.name === n))) return false;
+    next.name = n;
+  }
+  if (patch.type !== undefined) next.type = patch.type;
+  if (patch.description !== undefined) {
+    if (patch.description === '') delete next.description;
+    else next.description = patch.description;
+  }
+  if (patch.parameters !== undefined) {
+    if (patch.parameters.length === 0) delete next.parameters;
+    else next.parameters = patch.parameters;
+  }
+  if (patch.blackboard_reads !== undefined) {
+    if (patch.blackboard_reads.length === 0) delete next.blackboard_reads;
+    else next.blackboard_reads = patch.blackboard_reads;
+  }
+  if (patch.blackboard_writes !== undefined) {
+    if (patch.blackboard_writes.length === 0) delete next.blackboard_writes;
+    else next.blackboard_writes = patch.blackboard_writes;
+  }
+  defs[idx] = next;
+  setCustomNodes(spec, defs);
+  return true;
+}
+
+export function removeCustomNode(spec: TreeSpec, name: string): boolean {
+  const defs = getCustomNodes(spec);
+  const rest = defs.filter((d) => d.name !== name);
+  if (rest.length === defs.length) return false;
+  setCustomNodes(spec, rest);
+  return true;
+}
+
+/** Read "speed:float=1.5, clip:string" into parameters; blank entries are dropped, type defaults to string. */
+export function parseParams(text: string): CustomParam[] {
+  const out: CustomParam[] = [];
+  for (const part of text.split(',')) {
+    const t = part.trim();
+    if (t === '') continue;
+    const eq = t.indexOf('=');
+    const head = (eq === -1 ? t : t.slice(0, eq)).trim();
+    const colon = head.indexOf(':');
+    const name = (colon === -1 ? head : head.slice(0, colon)).trim();
+    if (name === '') continue;
+    const type = colon === -1 ? 'string' : head.slice(colon + 1).trim() || 'string';
+    const p: CustomParam = { name, type };
+    if (eq !== -1) {
+      const d = parseDefault(type, t.slice(eq + 1));
+      if (d !== undefined) p.default = d;
+    }
+    out.push(p);
+  }
+  return out;
+}
+
+/** The inverse of parseParams, for the text box. */
+export function formatParams(params: CustomParam[] | undefined): string {
+  return (params ?? [])
+    .map(
+      (p) =>
+        `${p.name}:${p.type}${p.default === undefined ? '' : `=${typeof p.default === 'string' ? p.default : JSON.stringify(p.default)}`}`,
+    )
+    .join(', ');
+}
+
+/** Split a comma list of blackboard keys. */
+export function parseList(text: string): string[] {
+  return text
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s !== '');
+}
