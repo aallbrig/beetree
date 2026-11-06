@@ -37,11 +37,11 @@ describe('built-in templates', () => {
 
 describe('scene tree references', () => {
   it('resolves every built-in sample id used by the demo scene and the add-agent default', async () => {
-    const { DEMO_SCENE } = await import('./scene/loader');
+    const { SCENES } = await import('./scene/registry');
     const { readFileSync } = await import('node:fs');
     const scenes = readFileSync(new URL('./views/scenes.ts', import.meta.url), 'utf8');
     const ids = [
-      ...DEMO_SCENE.map((a) => a.treeId),
+      ...SCENES.flatMap((sc) => sc.agents.map((a) => a.treeId)),
       ...[...scenes.matchAll(/'(sample:[a-z]+)'/g)].map((m) => m[1]),
     ];
     for (const id of ids) expect(sampleById(id ?? ''), String(id)).toBeDefined();
