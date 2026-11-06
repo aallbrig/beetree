@@ -81,11 +81,13 @@ func mcpTools() []mcpTool {
 		{Name: "get_tree", Description: "Fetch a tree, including its spec, by id. Private trees need the owner's token.", InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("tree id")})},
 		{Name: "create_tree", Description: "Save a new tree to the signed-in user's account. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "name": strProp("display name (defaults to spec metadata.name)"), "description": strProp("short description"), "visibility": strProp("public | private (default private)"), "tags": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})},
 		{Name: "update_tree", Description: "Replace the spec of a tree you own. Omitted name, description, visibility and tags keep their current values. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id", "spec"}, map[string]any{"id": strProp("id of the tree to update"), "spec": spec, "name": strProp("new display name"), "description": strProp("new short description"), "visibility": strProp("public | private"), "tags": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})},
+		{Name: "delete_tree", Description: "Permanently delete a tree you own. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("id of the tree to delete")})},
+		{Name: "list_my_scenes", Description: "List the signed-in user's Explore scenes. Requires a bearer token.", needsAuth: true, InputSchema: objSchema(nil, map[string]any{})},
 		{Name: "list_my_trees", Description: "List the signed-in user's trees. Requires a bearer token.", needsAuth: true, InputSchema: objSchema(nil, map[string]any{})},
 	}
 	for i := range tools {
 		n := tools[i].Name
-		tools[i].Annotations = mcpAnnotations{ReadOnlyHint: n != "create_tree" && n != "update_tree", DestructiveHint: n == "update_tree"}
+		tools[i].Annotations = mcpAnnotations{ReadOnlyHint: n != "create_tree" && n != "update_tree" && n != "delete_tree", DestructiveHint: n == "update_tree" || n == "delete_tree"}
 	}
 	return tools
 }
@@ -367,6 +369,21 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 			return fail(fmt.Errorf("save failed"))
 		}
 		return toolJSON(t)
+	case "delete_tree":
+		old, err := s.Store.GetTree(ctx, a.ID)
+		if err != nil || old.OwnerID != claims.Sub {
+			return fail(fmt.Errorf("tree not found among your trees; use list_my_trees for ids"))
+		}
+		if err := s.Store.DeleteTree(ctx, old.ID); err != nil {
+			return fail(fmt.Errorf("delete failed"))
+		}
+		return toolJSON(map[string]string{"deleted": old.ID})
+	case "list_my_scenes":
+		sc, err := s.Store.ListScenesByOwner(ctx, claims.Sub)
+		if err != nil {
+			return fail(fmt.Errorf("lookup failed"))
+		}
+		return toolJSON(listOf(sc))
 	case "list_my_trees":
 		ts, err := s.Store.ListTreesByOwner(ctx, claims.Sub)
 		if err != nil {
