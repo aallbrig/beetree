@@ -31,7 +31,20 @@ done
 tar -C "$ROOT/website/public" -czf "$DIST/beetreecraft-site_${VERSION}.tar.gz" .
 (cd "$DIST" && sha256sum ./*.tar.gz ./*.zip > SHA256SUMS)
 
+# release notes: each merged PR's Summary since the previous tag, then GitHub's generated list
+PREV="$(git -C "$ROOT" describe --tags --abbrev=0 2>/dev/null || true)"
+NOTES="$DIST/NOTES.md"
+{
+  echo "Live at https://beetreecraft.com (the footer shows $VERSION). Assets: CLI archives per platform, the static site bundle and SHA256SUMS."
+  echo
+  echo "## What shipped"
+  for n in $( (git -C "$ROOT" log ${PREV:+$PREV..}HEAD --merges --format=%s | grep -oE 'pull request #[0-9]+' | grep -oE '[0-9]+') || true ); do
+    echo
+    echo "### $(gh pr view "$n" --json title -q .title) (#$n)"
+    gh pr view "$n" --json body -q .body | awk '/^## Summary/{f=1;next} /^## /{f=0} f' | grep -v '^$' || true
+  done
+} > "$NOTES"
+
 git -C "$ROOT" tag -a "$VERSION" -m "$VERSION"
 git -C "$ROOT" push -q origin "$VERSION"
-gh release create "$VERSION" --title "$VERSION" --notes "Live at https://beetreecraft.com (the footer shows $VERSION). Assets: CLI archives per platform, the static site bundle and SHA256SUMS." \
-  --generate-notes "$DIST"/*.tar.gz "$DIST"/*.zip "$DIST/SHA256SUMS"
+gh release create "$VERSION" --title "$VERSION" --notes-file "$NOTES" --generate-notes "$DIST"/*.tar.gz "$DIST"/*.zip "$DIST/SHA256SUMS"
