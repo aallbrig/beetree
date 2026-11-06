@@ -81,6 +81,63 @@ tree:
         - {type: action, name: wait_and_rest}
 `,
   },
+  {
+    id: 'sample:boss',
+    title: 'Boss with phases',
+    yaml: `version: "1.0"
+metadata:
+  name: boss
+  description: Ranged opener, melee up close, retreat and heal when hurt
+tree:
+  type: selector
+  name: boss_ai
+  children:
+    - type: sequence
+      name: desperate_phase
+      children:
+        - {type: condition, name: health_is_low}
+        - {type: action, name: retreat_to_cover}
+        - {type: action, name: heal_self}
+    - type: sequence
+      name: melee_phase
+      children:
+        - {type: condition, name: target_in_range}
+        - {type: action, name: melee_attack}
+    - type: sequence
+      name: ranged_phase
+      children:
+        - {type: condition, name: can_see_target}
+        - {type: action, name: shoot_projectile}
+    - {type: action, name: look_around}
+`,
+  },
+  {
+    id: 'sample:companion',
+    title: 'Loyal companion',
+    yaml: `version: "1.0"
+metadata:
+  name: companion
+  description: Defend the owner when a threat appears, otherwise stay close
+tree:
+  type: selector
+  name: companion_ai
+  children:
+    - type: sequence
+      name: defend_owner
+      children:
+        - {type: condition, name: can_see_target}
+        - type: selector
+          name: engage
+          children:
+            - type: sequence
+              name: strike
+              children:
+                - {type: condition, name: target_in_range}
+                - {type: action, name: melee_attack}
+            - {type: action, name: chase_target}
+    - {type: action, name: idle_near_owner}
+`,
+  },
 ];
 
 export const sampleById = (id: string): Sample | undefined => SAMPLES.find((s) => s.id === id);
