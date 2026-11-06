@@ -10,7 +10,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/getkin/kin-openapi v0.152.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/looplab/fsm v1.0.2
+	github.com/looplab/fsm v1.0.4
 	github.com/rivo/tview v0.0.0-20240728114935-65571ae51e71
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/spf13/cobra v1.8.1
