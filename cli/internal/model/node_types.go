@@ -1,5 +1,7 @@
 package model
 
+import "sort"
+
 var coreNodeTypes = map[string]bool{
 	"action":    true,
 	"condition": true,
@@ -80,4 +82,17 @@ func BuiltinDecorators() map[string]bool {
 		result[k] = v
 	}
 	return result
+}
+
+// NodeTypeNames returns every valid core and extension node type, sorted.
+func NodeTypeNames() []string {
+	names := make([]string, 0, len(coreNodeTypes)+len(extensionNodeTypes))
+	for k := range coreNodeTypes {
+		names = append(names, k)
+	}
+	for k := range extensionNodeTypes {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	return names
 }

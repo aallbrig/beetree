@@ -323,3 +323,14 @@ func TestValidate_SubtreeRefValid(t *testing.T) {
 	errs := Validate(spec)
 	assert.Empty(t, errs)
 }
+
+func TestValidate_UnknownNodeTypeSuggests(t *testing.T) {
+	spec := &model.TreeSpec{Version: "1.0", Metadata: model.Metadata{Name: "t"}, Tree: model.NodeSpec{Type: "selectr", Name: "root"}}
+	errs := Validate(spec)
+	require.NotEmpty(t, errs)
+	assert.Contains(t, errs[0].Error(), `did you mean "selector"?`)
+
+	spec.Tree.Type = "zzzzzzzzzzzz"
+	errs = Validate(spec)
+	assert.Contains(t, errs[0].Error(), "valid types: action,")
+}

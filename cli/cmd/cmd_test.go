@@ -930,3 +930,9 @@ func TestBuilderCommand_Help(t *testing.T) {
 	assert.Contains(t, output, "confirms if unsaved")
 	assert.Contains(t, output, "[file]")
 }
+
+func TestRoot_ErrorsDoNotDumpUsage(t *testing.T) {
+	output, err := executeCommand("validate", filepath.Join(t.TempDir(), "missing.yaml"))
+	require.Error(t, err)
+	assert.NotContains(t, output, "Usage:")
+}
