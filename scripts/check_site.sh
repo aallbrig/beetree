@@ -24,6 +24,11 @@ for l in /app/ /learn/behavior-trees/ /docs/ /docs/api/ /docs/mcp/ /references/ 
 done
 grep -Eq 'href="?/site-map/[" >]' "$PUBLIC/index.html" || { echo "footer must link /site-map/" >&2; exit 1; }
 
+# sign-up belongs below the fold: the hero section must not link to it
+hero=$(tr -d '\n' < "$PUBLIC/index.html" | grep -oE '<section class="?hero[" >].*' | sed 's#</section>.*##')
+[ -n "$hero" ] || { echo "home hero not found" >&2; exit 1; }
+if printf '%s' "$hero" | grep -q '#/signup'; then echo "hero must not link to sign-up" >&2; exit 1; fi
+
 # every root-relative href in the built HTML must resolve (the /app/ SPA owns its #/ routes)
 bad=0
 while IFS= read -r link; do
