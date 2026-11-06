@@ -1,4 +1,5 @@
 import { api, ApiError } from '../api';
+import { editAction, SHORTCUT_HELP } from '../shortcuts';
 import { outline, type Outline } from '../components/outline';
 import { clear, h, toast } from '../dom';
 import { copyText, downloadText, fileName } from '../exporter';
@@ -200,6 +201,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
       undoBtn,
       redoBtn,
     ),
+    h('p', { class: 'muted', style: 'font-size:.85rem;margin:.25rem 0' }, SHORTCUT_HELP),
     outlineHost,
     propsHost,
   );
@@ -583,10 +585,24 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     restore(history.redo());
   });
   const onKey = (e: KeyboardEvent): void => {
-    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
     const t = e.target;
     if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) return;
     if (t instanceof HTMLSelectElement) return;
+    const act = editAction(e);
+    if (act) {
+      const btn = {
+        remove: rmBtn,
+        duplicate: dupBtn,
+        up: upBtn,
+        down: downBtn,
+        outdent: outBtn,
+        indent: inBtn,
+      }[act];
+      btn.click();
+      e.preventDefault();
+      return;
+    }
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
     const k = e.key.toLowerCase();
     if (k === 'z') restore(e.shiftKey ? history.redo() : history.undo());
     else if (k === 'y') restore(history.redo());
