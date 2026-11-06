@@ -22,6 +22,9 @@ import {
   revealPath,
   visiblePaths,
   duplicateAt,
+  addSibling,
+  wrapAt,
+  retype,
   indent,
   outdent,
   getNode,
@@ -383,5 +386,41 @@ describe('collapse and find in large trees', () => {
     const vis = visiblePaths(root, collapsed, idOf).map((p) => p.join());
     expect(vis).toContain('13,7');
     expect(vis).not.toContain('12,0');
+  });
+});
+
+describe('builder gap fixes from authoring the scene 2 trees', () => {
+  it('wraps a node, and the root, in a new composite', () => {
+    const spec = newSpec();
+    const before = countNodes(spec.tree);
+    expect(wrapAt(spec.tree, [0], 'sequence')).toEqual([0, 0]);
+    expect(getNode(spec.tree, [0])?.type).toBe('sequence');
+    expect(countNodes(spec.tree)).toBe(before + 1);
+    expect(wrapAt(spec.tree, [], 'selector')).toEqual([0]);
+    expect(spec.tree.type).toBe('selector');
+    expect(spec.tree.children?.length).toBe(1);
+    expect(getNode(spec.tree, [0])?.name).not.toBe(spec.tree.name);
+    const names = [...walk(spec.tree)].map(([n]) => n.name);
+    expect(new Set(names).size).toBe(names.length);
+    expect(typeof wrapAt(spec.tree, [0], 'action')).toBe('string');
+  });
+  it('changes type within composites and leaves only', () => {
+    const spec = newSpec();
+    expect(retype(spec.tree, [], 'sequence')).toBeUndefined();
+    expect(spec.tree.type).toBe('sequence');
+    expect(retype(spec.tree, [], 'action')).toMatch(/cannot become/);
+    const leaf = [0, 0];
+    const t = getNode(spec.tree, leaf);
+    if (t && t.type === 'condition') {
+      expect(retype(spec.tree, leaf, 'action')).toBeUndefined();
+      expect(getNode(spec.tree, leaf)?.type).toBe('action');
+    }
+  });
+  it('adds a sibling after the selection', () => {
+    const spec = newSpec();
+    const n = spec.tree.children?.length ?? 0;
+    expect(addSibling(spec.tree, [0], makeNode(spec.tree, 'action'))).toEqual([1]);
+    expect(spec.tree.children?.length).toBe(n + 1);
+    expect(typeof addSibling(spec.tree, [], makeNode(spec.tree, 'action'))).toBe('string');
   });
 });
