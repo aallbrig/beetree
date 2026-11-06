@@ -233,3 +233,13 @@ func TestNodeCount(t *testing.T) {
 	count := NodeCount(&spec.Tree)
 	assert.Equal(t, 5, count) // root(selector) + engage(sequence) + has_target + attack + patrol
 }
+
+func TestParseFile_ErrorHints(t *testing.T) {
+	_, err := ParseFile("/nonexistent/file.beetree.yaml")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "hint: check the path")
+
+	_, err = ParseFile(t.TempDir())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "is a directory")
+}
