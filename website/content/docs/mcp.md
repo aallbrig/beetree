@@ -72,14 +72,18 @@ Prompt `design_behavior_tree` (`prompts/get`) takes `character` and an optional 
 
 ## Try it with curl
 
+Both calls send your key in `X-API-Key`; without it the server answers 401.
+
 ```bash
 curl -s https://api.beetreecraft.com/mcp \
+  -H "X-API-Key: $BEETREE_API_KEY" \
   -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
 ```bash
 curl -s https://api.beetreecraft.com/mcp \
+  -H "X-API-Key: $BEETREE_API_KEY" \
   -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"validate_tree","arguments":{"spec":"version: \"1.0\"\nmetadata:\n  name: demo\ntree:\n  type: action\n  name: hello\n"}}}'
 ```
