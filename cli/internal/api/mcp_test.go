@@ -178,6 +178,25 @@ func TestMCPAccountTools(t *testing.T) {
 	require.False(t, isErr, text)
 	assert.Contains(t, text, "items")
 
+	mk := func(vis string) string {
+		r := do(h, "POST", "/v1/scenes", "alice", map[string]any{"name": vis + "-scene", "visibility": vis})
+		require.Equal(t, 201, r.Code, string(r.Body))
+		var sc Scene
+		require.NoError(t, json.Unmarshal(r.Body, &sc))
+		return sc.ID
+	}
+	pubID, privID := mk("public"), mk("private")
+	text, isErr = call("", "get_scene", map[string]any{"id": pubID})
+	require.False(t, isErr, text)
+	assert.Contains(t, text, "public-scene")
+	_, isErr = call("bob", "get_scene", map[string]any{"id": privID})
+	assert.True(t, isErr, "private scenes are hidden from other users")
+	_, isErr = call("", "get_scene", map[string]any{"id": privID})
+	assert.True(t, isErr, "private scenes are hidden from anonymous callers")
+	text, isErr = call("alice", "get_scene", map[string]any{"id": privID})
+	require.False(t, isErr, text)
+	assert.Contains(t, text, "private-scene")
+
 	priv, _ := call("alice", "create_tree", map[string]any{"spec": goodSpec})
 	var pt Tree
 	require.NoError(t, json.Unmarshal([]byte(priv), &pt))

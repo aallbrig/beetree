@@ -82,6 +82,7 @@ func mcpTools() []mcpTool {
 		{Name: "create_tree", Description: "Save a new tree to the signed-in user's account. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"spec"}, map[string]any{"spec": spec, "name": strProp("display name (defaults to spec metadata.name)"), "description": strProp("short description"), "visibility": strProp("public | private (default private)"), "tags": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})},
 		{Name: "update_tree", Description: "Replace the spec of a tree you own. Omitted name, description, visibility and tags keep their current values. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id", "spec"}, map[string]any{"id": strProp("id of the tree to update"), "spec": spec, "name": strProp("new display name"), "description": strProp("new short description"), "visibility": strProp("public | private"), "tags": map[string]any{"type": "array", "items": map[string]any{"type": "string"}}})},
 		{Name: "delete_tree", Description: "Permanently delete a tree you own. Requires a bearer token.", needsAuth: true, InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("id of the tree to delete")})},
+		{Name: "get_scene", Description: "Fetch an Explore scene, including its layout and agents, by id. Private scenes need the owner's token; list_my_scenes gives ids.", InputSchema: objSchema([]string{"id"}, map[string]any{"id": strProp("scene id")})},
 		{Name: "list_my_scenes", Description: "List the signed-in user's Explore scenes. Requires a bearer token.", needsAuth: true, InputSchema: objSchema(nil, map[string]any{})},
 		{Name: "list_my_trees", Description: "List the signed-in user's trees. Requires a bearer token.", needsAuth: true, InputSchema: objSchema(nil, map[string]any{})},
 	}
@@ -336,6 +337,12 @@ func (s *Server) runTool(r *http.Request, name string, a toolArgs, claims Claims
 			return fail(fmt.Errorf("tree not found"))
 		}
 		return toolJSON(t)
+	case "get_scene":
+		sc, err := s.Store.GetScene(ctx, a.ID)
+		if err != nil || (sc.Visibility != VisibilityPublic && claims.Sub != sc.OwnerID) {
+			return fail(fmt.Errorf("scene not found; use list_my_scenes for your scene ids"))
+		}
+		return toolJSON(sc)
 	case "create_tree":
 		t, err := s.createTreeFor(r, claims, treeRequest{Name: a.Name, Description: a.Description, Visibility: a.Visibility, Tags: a.Tags, Spec: a.Spec})
 		if err != nil {
