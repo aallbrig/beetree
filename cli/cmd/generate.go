@@ -26,6 +26,10 @@ First run generates everything including stubs. Subsequent runs regenerate
 tree definitions but skip existing stubs unless --overwrite is passed.
 
 Use --all to generate for all .beetree.yaml files found in the trees/ directory.`,
+	Args: cobra.NoArgs,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return fmt.Errorf("specify an engine: unity, unreal or godot (for example: beetree generate godot tree.beetree.yaml)")
+	},
 }
 
 func addGenerateFlags(cmd *cobra.Command) {

@@ -101,7 +101,20 @@ func TestValidateCommand_NoArgs(t *testing.T) {
 
 func TestValidateCommand_FileNotFound(t *testing.T) {
 	_, err := executeCommand("validate", "/nonexistent/file.yaml")
-	assert.Error(t, err)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot read")
+}
+
+func TestGenerateCommand_NoEngineFails(t *testing.T) {
+	_, err := executeCommand("generate")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "specify an engine")
+}
+
+func TestVersionFlag(t *testing.T) {
+	out, err := executeCommand("--version")
+	require.NoError(t, err)
+	assert.Contains(t, out, "beetree version")
 }
 
 func TestInitCommand(t *testing.T) {
@@ -435,9 +448,9 @@ func TestGenerateCommand_AllWithFileConflict(t *testing.T) {
 }
 
 func TestGenerateCommand_InvalidEngine(t *testing.T) {
-	output, _ := executeCommand("generate", "invalid", "test.yaml")
-	// Cobra treats unknown subcommands as an error and shows usage
-	assert.Contains(t, output, "Usage")
+	_, err := executeCommand("generate", "invalid", "test.yaml")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown command")
 }
 
 func TestGenerateCommand_AllFlag(t *testing.T) {
