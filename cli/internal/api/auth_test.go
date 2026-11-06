@@ -100,3 +100,36 @@ func TestCognitoVerifier(t *testing.T) {
 		assert.ErrorIs(t, err, ErrUnauthenticated)
 	})
 }
+
+func TestCognitoVerifierFailsClosedWhenUnconfigured(t *testing.T) {
+	v, key := newTestVerifier(t)
+	v.ClientID = ""
+	tok := sign(t, key, jwt.MapClaims{
+		"iss": "https://cognito-idp.us-east-1.amazonaws.com/pool", "exp": time.Now().Add(time.Hour).Unix(),
+		"token_use": "id", "sub": "u"})
+	_, err := v.Verify(context.Background(), tok)
+	assert.ErrorIs(t, err, ErrUnauthenticated)
+}
+
+func TestCognitoVerifierThrottlesFailedJWKSFetches(t *testing.T) {
+	var hits int
+	down := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hits++
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(down.Close)
+	v := &CognitoVerifier{
+		Region: "us-east-1", PoolID: "pool", ClientID: "client",
+		HTTPClient: &http.Client{Transport: rewriteTransport{target: down.Listener.Addr().String()}},
+	}
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	tok := sign(t, key, jwt.MapClaims{
+		"iss": "https://cognito-idp.us-east-1.amazonaws.com/pool", "exp": time.Now().Add(time.Hour).Unix(),
+		"token_use": "id", "aud": "client", "sub": "u"})
+	for range 5 {
+		_, err := v.Verify(context.Background(), tok)
+		assert.ErrorIs(t, err, ErrUnauthenticated)
+	}
+	assert.Equal(t, 1, hits, "a failing JWKS endpoint is fetched once a minute, not per request")
+}

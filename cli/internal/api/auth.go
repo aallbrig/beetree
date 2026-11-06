@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"strings"
@@ -87,6 +88,10 @@ func (v *CognitoVerifier) issuer() string {
 
 // Verify implements Authenticator.
 func (v *CognitoVerifier) Verify(ctx context.Context, token string) (Claims, error) {
+	// Fail closed: an unset client ID would match a token with no audience.
+	if v.ClientID == "" || v.PoolID == "" || v.Region == "" {
+		return Claims{}, fmt.Errorf("%w: verifier is not configured", ErrUnauthenticated)
+	}
 	parsed, err := jwt.Parse(token, func(t *jwt.Token) (any, error) {
 		kid, _ := t.Header["kid"].(string)
 		return v.key(ctx, kid)
@@ -138,9 +143,11 @@ func (v *CognitoVerifier) key(ctx context.Context, kid string) (*rsa.PublicKey, 
 		return k, nil
 	}
 	// refetch at most once a minute so unknown kids cannot hammer Cognito
-	if v.keys != nil && time.Since(v.fetched) < time.Minute {
+	if !v.fetched.IsZero() && time.Since(v.fetched) < time.Minute {
 		return nil, errors.New("unknown signing key")
 	}
+	// Count the attempt even when it fails, so an outage is not hammered.
+	v.fetched = time.Now()
 	if err := v.refresh(ctx); err != nil {
 		return nil, err
 	}
@@ -176,7 +183,7 @@ func (v *CognitoVerifier) refresh(ctx context.Context) error {
 			E   string `json:"e"`
 		} `json:"keys"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&doc); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&doc); err != nil {
 		return err
 	}
 	keys := map[string]*rsa.PublicKey{}
