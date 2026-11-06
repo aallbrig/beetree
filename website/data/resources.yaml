@@ -179,3 +179,17 @@ items:
     author: "Jicong Ao, Fan Wu, Yansong Wu, Abdalla Swikir and Sami Haddadin"
     summary: "Prompts language models to produce long-horizon assembly plans directly in behavior tree format, comparing four in-context learning methods and fine-tuned smaller models in simulation and on a real robot. It shows which prompting choices raise the success rate of generated trees. Accepted at ICRA 2025."
     score: 13
+  - title: "Learning of Behavior Trees for Autonomous Agents"
+    url: "https://arxiv.org/abs/1504.05811"
+    kind: Paper
+    year: "2015"
+    author: "Michele Colledanchise, Ramviyas Parasuraman and Petter Ögren"
+    summary: "Evolves behavior trees with genetic programming instead of writing them by hand, and tests the result on the open-source Mario AI benchmark at several difficulty settings. It argues for trees over finite state machines because they stay modular and reactive as they grow. Published in IEEE Transactions on Games in 2019; read it to see what an automatically found tree looks like and where hand authoring still wins."
+    score: 13
+  - title: "Are Behavior Trees a Thing of the Past?"
+    url: "https://gamedeveloper.com/programming/are-behavior-trees-a-thing-of-the-past-"
+    kind: Article
+    year: "2016"
+    author: "Jakob Rasmussen"
+    summary: "A critique of behavior trees from the utility AI side. It works one shooter example two ways, where the tree grows many branches and the utility version needs one table of about ten scorers, and it notes where utility needs tuning. The author sells a utility toolkit, so read it as an argued position, and as a good prompt for when to add scoring to a selector."
+    score: 11
