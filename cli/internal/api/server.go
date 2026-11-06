@@ -26,6 +26,10 @@ type Server struct {
 	// tests and local development; production leaves it false so every request
 	// needs a signed-in session or an API key.
 	AllowAnonymous bool
+	// PublicTTL is how long the visitor showcase snapshot lives (default 24 hours).
+	PublicTTL time.Duration
+
+	public publicCache
 }
 
 // Route is one API operation. The route table drives both registration and the
@@ -41,6 +45,7 @@ func (s *Server) Routes() []Route {
 	return []Route{
 		{"GET", "/v1/health", s.health},
 		{"GET", "/v1/openapi.json", s.openapi},
+		{"GET", "/v1/public/trees", s.publicTrees},
 		{"GET", "/v1/node-types", s.getNodeTypes},
 		{"POST", "/v1/validate", s.validate},
 		{"POST", "/v1/simulate", s.simulate},

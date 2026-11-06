@@ -131,6 +131,29 @@ paths:
       responses:
         '200': {description: Generated files}
         '422': {$ref: '#/components/responses/Error'}
+  /v1/public/trees:
+    get:
+      summary: Visitor showcase of public trees (no credentials)
+      operationId: publicTrees
+      tags: [Trees]
+      security: []
+      description: A snapshot of public trees refreshed daily, without spec bodies. Signed-in users and API clients should use GET /v1/trees for live results.
+      parameters:
+        - {name: q, in: query, schema: {type: string}, description: 'Match name, description or tags'}
+        - {name: sort, in: query, schema: {type: string, enum: [recent, popular]}}
+      responses:
+        '200':
+          description: The snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: '#/components/schemas/Tree'}
+                  generatedAt: {type: string, format: date-time}
+                  note: {type: string}
   /v1/trees:
     get:
       summary: List public trees
