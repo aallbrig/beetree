@@ -6,6 +6,7 @@ import { copyText, downloadText, fileName } from '../exporter';
 import { History } from '../history';
 import { navigate, type Cleanup, type Ctx } from '../router';
 import { pathId } from '../engine/bt';
+import { SAMPLES, sampleById } from '../samples';
 import { World, type Agent } from '../scene/world';
 import {
   addChild,
@@ -287,6 +288,27 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     ),
   );
 
+  const templateSel = h(
+    'select',
+    { 'aria-label': 'Start from a template', id: 'template-picker' },
+    h('option', { value: '' }, 'Empty tree'),
+    ...SAMPLES.map((t) => h('option', { value: t.id }, t.title)),
+  );
+  const templateRow = h(
+    'div',
+    {},
+    h('label', { for: 'template-picker' }, 'Start from a template'),
+    templateSel,
+  );
+  templateSel.addEventListener('change', () => {
+    const t = sampleById(templateSel.value);
+    templateSel.value = '';
+    if (!t) return;
+    if (countNodes(spec.tree) > 1 && !window.confirm('Replace the tree you are editing?')) return;
+    yamlArea.value = t.yaml;
+    applyYaml();
+  });
+
   const saveBtn = h(
     'button',
     { class: 'btn primary', type: 'button' },
@@ -297,6 +319,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     'div',
     { class: 'card stack' },
     h('h2', {}, treeId ? 'Edit tree' : 'New tree'),
+    ...(treeId ? [] : [templateRow]),
     h('div', {}, h('label', {}, 'Name'), nameIn),
     h('div', {}, h('label', {}, 'Description'), descIn),
     h(
