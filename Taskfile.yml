@@ -217,12 +217,13 @@ tasks:
       - bin/beetree docs -o website/content/docs/cli-reference.md
 
   docs:check:
-    desc: Fail if the generated CLI reference is stale
+    desc: Fail if the generated CLI reference is stale or a doc names a flag the binary lacks
     deps: [build:cli]
     cmds:
       - |
         bin/beetree docs -o /tmp/beetree-cli-reference.md
         diff -u website/content/docs/cli-reference.md /tmp/beetree-cli-reference.md || { echo "run 'task docs:cli'"; exit 1; }
+        scripts/check_doc_flags.sh
 
   site:vendor:
     desc: Copy Swagger UI assets into the Hugo static dir (generated, not committed)
