@@ -9,6 +9,7 @@ import {
   parseSpec,
   removeAt,
   rename,
+  findProblems,
   stringifySpec,
   walk,
 } from './spec';
@@ -78,5 +79,15 @@ describe('spec', () => {
   it('walks every node depth-first', () => {
     const names = [...walk(newSpec().tree)].map(([n]) => n.name);
     expect(names).toEqual(['root', 'chase', 'has_target', 'chase_target', 'patrol']);
+  });
+});
+
+describe('findProblems', () => {
+  it('points at the childless sequence by path', () => {
+    const spec = newSpec();
+    const res = addChild(spec.tree, [], makeNode(spec.tree, 'sequence'));
+    expect(Array.isArray(res)).toBe(true);
+    const found = findProblems(spec.tree).filter((p) => p.message.includes('needs at least one'));
+    expect(found.map((p) => p.path)).toContainEqual(res);
   });
 });

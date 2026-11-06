@@ -8,7 +8,6 @@ import {
   countNodes,
   DECORATORS,
   getNode,
-  isComposite,
   isLeaf,
   makeNode,
   moveSibling,
@@ -17,26 +16,14 @@ import {
   parseSpec,
   removeAt,
   rename,
+  findProblems,
   stringifySpec,
-  walk,
   type NodeType,
   type Path,
   type TreeSpec,
 } from '../spec';
 
 const DRAFT_KEY = 'beetree.draft';
-
-function problems(spec: TreeSpec): string[] {
-  const out: string[] = [];
-  for (const [n] of walk(spec.tree)) {
-    const kids = n.children?.length ?? 0;
-    if (isComposite(n.type) && kids === 0)
-      out.push(`${n.name}: a ${n.type} needs at least one child`);
-    if (n.type === 'decorator' && kids !== 1)
-      out.push(`${n.name}: a decorator needs exactly one child`);
-  }
-  return out;
-}
 
 export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
   const treeId = ctx.params[0];
@@ -286,7 +273,9 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     clear(outlineHost);
     outlineHost.append(ol.el);
     renderProps();
-    const issues = problems(spec);
+    const found = findProblems(spec.tree);
+    ol.setProblems(found);
+    const issues = found.map((p) => p.message);
     status.textContent = issues.length
       ? `${issues[0] ?? ''}${issues.length > 1 ? ` (+${issues.length - 1} more)` : ''}`
       : `${countNodes(spec.tree)} nodes`;

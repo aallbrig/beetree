@@ -574,3 +574,13 @@ input[type='checkbox'] {
 .foot .ver {
   font-size: 0.8em;
 }
+
+.node[data-problem] {
+  outline: 1px dashed var(--warn);
+}
+.node[data-problem]::after {
+  content: '!';
+  color: var(--warn);
+  font-weight: bold;
+  margin-left: 0.4rem;
+}

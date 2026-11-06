@@ -1,7 +1,7 @@
 import type { Status } from '../engine/bt';
 import { pathId } from '../engine/bt';
 import { h } from '../dom';
-import type { NodeSpec, Path } from '../spec';
+import type { NodeSpec, Path, Problem } from '../spec';
 
 const ICONS: Record<string, string> = {
   action: '▶',
@@ -16,6 +16,7 @@ export interface Outline {
   el: HTMLElement;
   setStatuses(statuses: ReadonlyMap<string, Status>): void;
   setSelected(path: Path | undefined): void;
+  setProblems(problems: readonly Problem[]): void;
 }
 
 /** A collapsible-free, keyboard-accessible tree outline with live status dots. */
@@ -55,6 +56,18 @@ export function outline(root: NodeSpec, onSelect?: (path: Path) => void): Outlin
         const s = statuses.get(id);
         if (s) btn.dataset.status = s;
         else delete btn.dataset.status;
+      }
+    },
+    setProblems(problems) {
+      const byId = new Map(problems.map((p) => [pathId(p.path), p.message]));
+      for (const [bid, btn] of buttons) {
+        const msg = byId.get(bid);
+        if (msg) {
+          btn.dataset.problem = msg;
+          btn.title = msg;
+        } else {
+          delete btn.dataset.problem;
+        }
       }
     },
     setSelected(path) {
