@@ -95,6 +95,17 @@ describe('findProblems', () => {
   });
 });
 
+describe('findProblems with several bad nodes', () => {
+  it('reports one problem per bad node, each naming its node', () => {
+    const spec = newSpec();
+    for (let i = 0; i < 3; i++) addChild(spec.tree, [], makeNode(spec.tree, 'sequence'));
+    const found = findProblems(spec.tree).filter((p) => p.message.includes('needs at least one'));
+    expect(found).toHaveLength(3);
+    const names = new Set(found.map((p) => p.message.split(':')[0]));
+    expect(names.size).toBe(3);
+  });
+});
+
 describe('restructuring', () => {
   it('duplicates a subtree with unique names', () => {
     const spec = newSpec();
