@@ -254,3 +254,53 @@ func TestMCPTemplatesMatchBuilder(t *testing.T) {
 	_, r := rpc(h, "", 2, "resources/read", map[string]any{"uri": "beetree://templates/../schema"})
 	assert.NotNil(t, r["error"])
 }
+
+// TestMCPDocsMatchServer keeps website/content/docs/mcp.md honest: every tool,
+// resource and prompt the server lists is documented, and every name the
+// tables document is real.
+func TestMCPDocsMatchServer(t *testing.T) {
+	src, err := os.ReadFile("../../../website/content/docs/mcp.md")
+	require.NoError(t, err)
+	doc := string(src)
+
+	h := newTestServer(t)
+	names := func(method, key, field string) []string {
+		_, r := rpc(h, "", 1, method, nil)
+		var out []string
+		for _, it := range r["result"].(map[string]any)[key].([]any) {
+			out = append(out, it.(map[string]any)[field].(string))
+		}
+		require.NotEmpty(t, out, method)
+		return out
+	}
+	tools := names("tools/list", "tools", "name")
+	resources := names("resources/list", "resources", "uri")
+	prompts := names("prompts/list", "prompts", "name")
+
+	for _, n := range append(append([]string{}, tools...), prompts...) {
+		assert.Contains(t, doc, "`"+n+"`", "mcp.md does not mention %q", n)
+	}
+	for _, u := range resources {
+		// templates/<name> style entries are documented with a placeholder
+		if i := strings.LastIndex(u, "/"); strings.HasPrefix(u, "beetree://templates/") && i > 0 {
+			u = u[:i+1]
+		}
+		assert.Contains(t, doc, u, "mcp.md does not mention resource %q", u)
+	}
+
+	// Reverse: names in the first column of a table row must exist.
+	known := map[string]bool{}
+	for _, n := range append(append([]string{}, tools...), prompts...) {
+		known[n] = true
+	}
+	cell := regexp.MustCompile("`([a-z]+(?:_[a-z]+)+)`")
+	for _, line := range strings.Split(doc, "\n") {
+		if !strings.HasPrefix(line, "| `") {
+			continue
+		}
+		first := strings.SplitN(line, "|", 3)[1]
+		for _, m := range cell.FindAllStringSubmatch(first, -1) {
+			assert.True(t, known[m[1]], "mcp.md documents %q but the server has no such tool or prompt", m[1])
+		}
+	}
+}
