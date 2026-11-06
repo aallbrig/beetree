@@ -48,3 +48,6 @@ sources/
 *.key
 .claude/settings.local.json
 .claude/projects/
+
+# agent loop state
+.agent-loop/

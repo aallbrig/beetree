@@ -29,7 +29,30 @@ if (!app) throw new Error('missing #app');
 let menuOpen = false;
 const nav = h('nav', { class: 'nav', 'aria-label': 'Main' });
 const main = h('main', { id: 'main' });
-app.append(nav, main);
+const version = h('small', { class: 'ver' });
+const foot = h(
+  'footer',
+  { class: 'foot' },
+  h(
+    'p',
+    {},
+    'BeeTreeCraft · ',
+    h('a', { href: 'https://github.com/aallbrig/beetreecraft' }, 'Source on GitHub'),
+    ' · ',
+    h('a', { href: '/references/' }, 'References and credits'),
+    ' · ',
+    h('a', { href: '/sitemap.xml' }, 'Sitemap'),
+    ' ',
+    version,
+  ),
+);
+app.append(nav, main, foot);
+void fetch('/version.json')
+  .then((r) => r.json() as Promise<{ version?: string }>)
+  .then((v) => {
+    if (v.version) version.textContent = `· ${v.version}`;
+  })
+  .catch(() => undefined);
 
 function renderNav(): void {
   clear(nav);
