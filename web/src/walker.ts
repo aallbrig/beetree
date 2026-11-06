@@ -18,6 +18,8 @@ export interface SimStep {
   event: SimEvent;
   /** Set on resolve events. */
   status?: Status;
+  /** Set on resolve events: why the node ended with this status. */
+  reason?: string;
   path: Path;
 }
 
@@ -62,6 +64,21 @@ function evaluate(node: NodeSpec, results: Status[], next: number): Status | und
   return next >= count ? 'success' : undefined;
 }
 
+/** Why a composite resolved, naming the child that decided it. */
+function explain(node: NodeSpec, results: Status[], status: Status): string {
+  const child = (node.children ?? [])[results.length - 1]?.name ?? 'a child';
+  const exhausted = (node.children ?? []).length === results.length;
+  if (node.type === 'parallel') {
+    if (status === 'failure') return 'at least one child failed';
+    return status === 'running' ? 'at least one child is still running' : 'every child succeeded';
+  }
+  if (status === 'running') return `${child} is still running`;
+  if (node.type === 'selector') {
+    return status === 'success' ? `${child} succeeded` : 'every child failed';
+  }
+  return status === 'failure' ? `${child} failed` : exhausted ? 'every child succeeded' : '';
+}
+
 export class SimWalker {
   state: SimState = 'ready';
   current: { node: NodeSpec; path: Path } | undefined;
@@ -87,6 +104,10 @@ export class SimWalker {
       depth: this.stack.length,
       event: 'resolve',
       status: resolved,
+      reason:
+        resolved === status
+          ? `answered ${status}`
+          : `answered ${status}, ${cur.node.decorator ?? 'decorator'} made it ${resolved}`,
       path: cur.path,
     });
     this.current = undefined;
@@ -142,6 +163,7 @@ export class SimWalker {
         depth: frame.depth,
         event: 'resolve',
         status: resolved,
+        reason: explain(frame.node, frame.results, resolved),
         path: frame.path,
       });
       this.stack.pop();

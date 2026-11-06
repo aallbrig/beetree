@@ -469,7 +469,7 @@ export async function builderView(ctx: Ctx): Promise<Cleanup | undefined> {
     dbgTrace.textContent = w.trace
       .map(
         (s) =>
-          `${'  '.repeat(s.depth)}${s.event === 'enter' ? '>' : '<'} ${s.name}${s.status ? ` -> ${s.status}` : ''}`,
+          `${'  '.repeat(s.depth)}${s.event === 'enter' ? '>' : '<'} ${s.name}${s.status ? ` -> ${s.status}` : ''}${s.reason ? ` (${s.reason})` : ''}`,
       )
       .join('\n');
   }
