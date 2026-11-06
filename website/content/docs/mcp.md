@@ -56,6 +56,8 @@ Every tool needs a valid API key. Tools marked (account) also act on your accoun
 | `get_tree` | Fetch a tree and its spec by id (private trees only for their owner) |
 | `create_tree` (account) | Save a tree to your account |
 | `update_tree` (account) | Replace the spec of a tree you own; omitted fields keep their values |
+| `delete_tree` (account) | Permanently delete a tree you own |
+| `list_my_scenes` (account) | List your Explore scenes |
 | `list_my_trees` (account) | List your trees |
 
 Errors from a tool come back inside the result with `isError: true`, so the model can read them and try again.

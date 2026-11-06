@@ -85,8 +85,8 @@ func TestMCPToolsList(t *testing.T) {
 		assert.NotEmpty(t, m["description"])
 		ann, ok := m["annotations"].(map[string]any)
 		require.True(t, ok, "%s needs annotations", m["name"])
-		assert.Equal(t, m["name"] != "create_tree" && m["name"] != "update_tree", ann["readOnlyHint"], m["name"])
-		assert.Equal(t, m["name"] == "update_tree", ann["destructiveHint"], m["name"])
+		assert.Equal(t, m["name"] != "create_tree" && m["name"] != "update_tree" && m["name"] != "delete_tree", ann["readOnlyHint"], m["name"])
+		assert.Equal(t, m["name"] == "update_tree" || m["name"] == "delete_tree", ann["destructiveHint"], m["name"])
 		assert.Equal(t, "object", m["inputSchema"].(map[string]any)["type"])
 	}
 	for _, want := range []string{"validate_tree", "render_tree", "simulate_tree", "generate_code", "search_trees", "get_tree", "create_tree", "update_tree", "list_my_trees", "list_node_types"} {
@@ -170,11 +170,23 @@ func TestMCPAccountTools(t *testing.T) {
 	_, isErr = call("", "update_tree", map[string]any{"id": tree.ID, "spec": goodSpec})
 	assert.True(t, isErr, "anonymous callers are refused")
 
+	_, isErr = call("bob", "delete_tree", map[string]any{"id": tree.ID})
+	assert.True(t, isErr, "only the owner may delete")
+	_, isErr = call("", "delete_tree", map[string]any{"id": tree.ID})
+	assert.True(t, isErr, "anonymous callers are refused")
+	text, isErr = call("alice", "list_my_scenes", map[string]any{})
+	require.False(t, isErr, text)
+	assert.Contains(t, text, "items")
+
 	priv, _ := call("alice", "create_tree", map[string]any{"spec": goodSpec})
 	var pt Tree
 	require.NoError(t, json.Unmarshal([]byte(priv), &pt))
 	_, isErr = call("bob", "get_tree", map[string]any{"id": pt.ID})
 	assert.True(t, isErr, "private trees are hidden from other users")
+	text, isErr = call("alice", "delete_tree", map[string]any{"id": pt.ID})
+	require.False(t, isErr, text)
+	_, isErr = call("alice", "get_tree", map[string]any{"id": pt.ID})
+	assert.True(t, isErr, "deleted tree is gone")
 }
 
 func TestMCPBadCalls(t *testing.T) {
