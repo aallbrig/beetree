@@ -10,6 +10,7 @@ import {
   getNode,
   makeNode,
   moveSibling,
+  setPolicy,
   newSpec,
   parseSpec,
   removeAt,
@@ -202,4 +203,30 @@ describe('example trees survive import then export', () => {
       expect(parse(stringifySpec(parseSpec(text)))).toEqual(parse(text));
     });
   }
+});
+
+describe('parallel policies', () => {
+  const make = () => {
+    const root = makeNode(newSpec().tree, 'parallel');
+    return root;
+  };
+  it('sets, exports and clears success and failure policies', () => {
+    const spec = newSpec();
+    spec.tree = make();
+    expect(setPolicy(spec.tree, [], 'success_policy', 'require_all')).toBeUndefined();
+    expect(setPolicy(spec.tree, [], 'failure_policy', 'require_one')).toBeUndefined();
+    const out = parse(stringifySpec(spec)) as {
+      tree: { success_policy: string; failure_policy: string };
+    };
+    expect(out.tree.success_policy).toBe('require_all');
+    expect(out.tree.failure_policy).toBe('require_one');
+    setPolicy(spec.tree, [], 'success_policy', '');
+    expect(spec.tree.success_policy).toBeUndefined();
+  });
+  it('rejects unknown values and non-parallel nodes', () => {
+    const n = make();
+    expect(setPolicy(n, [], 'success_policy', 'bogus')).toMatch(/must be one of/);
+    const seq = makeNode(newSpec().tree, 'sequence');
+    expect(setPolicy(seq, [], 'success_policy', 'require_all')).toMatch(/only parallel/);
+  });
 });
